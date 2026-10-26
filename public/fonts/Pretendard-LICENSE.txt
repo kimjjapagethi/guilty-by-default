@@ -1,0 +1,5 @@
+Pretendard — SIL Open Font License 1.1
+Copyright (c) 2021, Kil Hyung-jin (https://github.com/orioncactus/pretendard), with Reserved Font Name 'Pretendard'.
+Pretendard is based on Inter and Source Han Sans (Noto Sans CJK), each under the SIL OFL 1.1.
+License text: https://openfontlicense.org
+(이 안내문은 간단한 고지입니다. 정확한 전문은 위 저장소에서 확인해 주세요.)

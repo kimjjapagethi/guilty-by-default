@@ -1,16 +1,16 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Guilty by Default · 옆 화면</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800&display=swap">
+<link rel="stylesheet" href="ds.css">
 <style>
-:root { --bg:#07090e; --ink:#e8ecf4; --muted:#8f99ab; --line:#232b3b; --pink:#ff7aa6; --green:#3fd6a6; }
+:root { --bg:var(--burgundy-dark); --ink:var(--ivory); --muted:color-mix(in srgb, var(--ivory) 66%, var(--burgundy-dark)); --line:color-mix(in srgb, var(--ivory) 20%, var(--burgundy-dark)); --pink:var(--paleblue); --green:var(--paleblue); }
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: 'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif; overflow: hidden; word-break: keep-all; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: var(--font-body); overflow: hidden; word-break: keep-all; }
 .screen { height: 100%; display: grid; grid-template-rows: auto 1fr auto; padding: 4vmin; gap: 3vmin; }
 .top { display: flex; justify-content: space-between; align-items: baseline; font-size: 2.2vmin; color: var(--muted); }
-.top b { color: var(--ink); font-size: 2.6vmin; }
+.top b { color: var(--ink); font-size: 2.8vmin; font-family: var(--font-display); }
 .stage { position: relative; display: grid; align-content: center; }
-.line { font-size: 6.4vmin; font-weight: 800; line-height: 1.35; text-align: center; opacity: 0; transition: opacity 1.2s; }
+.line { font-family: var(--font-display); font-size: 6.4vmin; font-weight: 700; line-height: 1.35; text-align: center; opacity: 0; transition: opacity 1.2s; }
 .line.on { opacity: 1; }
 .line em { font-style: normal; color: var(--pink); }
 .chart { display: none; }
@@ -38,7 +38,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); 
     <div class="line" id="line"></div>
     <div class="chart" id="chart">
       <div class="cols" id="cols"></div>
-      <div class="cap">칸마다 ‘제재한다’를 고른 사람의 비율</div>
+      <div class="cap">칸마다 ‘당사자에게 책임을 묻는다’를 고른 사람의 비율</div>
       <div class="sub" id="sub"></div>
     </div>
   </div>
@@ -47,7 +47,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); 
 <script>
 (function () {
   'use strict';
-  var LINES = ['“폐기하면 되잖아.”', '“그래도 돼지잖아.”', '같은 사고. 다른 이름.', '같은 사고인데, <em>어디서</em> 답이 바뀌었나요?', '<em>제재</em>할까요?'];
+  var LINES = ['“폐기하면 되잖아.”', '“그래도 돼지잖아.”', '같은 사고. 다른 이름.', '같은 사고인데, <em>어디서</em> 답이 바뀌었나요?', '누구에게 <em>책임</em>을 물을까요?'];
   var LAB = ['수레', '1칸', '2칸', '3칸', '4칸'], st = null, mode = 'idle', li = 0, lineEl = document.getElementById('line'), chart = document.getElementById('chart');
   var STEPTXT = { start: '누군가 시작했습니다', s0: '누군가 수레 앞에 서 있습니다', history: '누군가 이야기를 읽고 있습니다', s1: '누군가 1칸 앞에서 고민합니다', s2: '누군가 2칸 앞에서 고민합니다', s3: '누군가 3칸 앞에서 고민합니다', s4: '누군가 4칸 앞에서 고민합니다' };
   function pct(v) { return Math.round(v * 100); }

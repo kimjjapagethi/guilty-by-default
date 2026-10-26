@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Guilty by Default · Design System</title>
+<link rel="stylesheet" href="ds.css">
+<style>
+html, body { margin: 0; background: #fff; color: #460E21; font-family: var(--font-body); }
+.page { max-width: 1180px; margin: 0 auto; padding: 48px 32px 96px; }
+h1 { font-family: var(--font-display); font-size: 56px; margin: 0 0 8px; }
+h2 { font-family: var(--font-display); font-size: 28px; margin: 56px 0 16px; padding-top: 24px; border-top: 2px solid #ECD5B3; }
+p.meta { color: #6E4A55; margin: 4px 0 0; font-size: 15px; line-height: 1.6; }
+.sw { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+.sw div { border-radius: 18px; padding: 56px 16px 14px; font-size: 14px; line-height: 1.5; border: 1px solid #ECD5B3; }
+.sw b { display: block; font-size: 15px; }
+.frames { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+.frame { --u: .46px; width: calc(1080 * var(--u)); padding: calc(48 * var(--u)) calc(64 * var(--u)); background: var(--bg); color: var(--ink); border-radius: 18px; border: 1px solid #ECD5B3; box-sizing: border-box; }
+.frame small { display: block; font: 500 13px var(--font-body); color: var(--muted); margin-bottom: 12px; letter-spacing: .02em; }
+.wide { --u: .46px; width: 100%; }
+table { border-collapse: collapse; font-size: 15px; } td, th { padding: 6px 14px 6px 0; text-align: left; vertical-align: top; }
+code { background: #FAF4EF; padding: 1px 6px; border-radius: 6px; }
+</style></head><body><div class="page">
+<h1>Design System</h1>
+<p class="meta">Guilty by Default · 24인치 모니터 세로(1080×1920) 기준. 모든 값은 <code>ds.css</code> 한 파일에 있고, 게임과 옆 화면이 같은 파일을 씁니다.</p>
+
+<h2>1. 색</h2>
+<p class="meta">팀 확정색 6개. 아래 ‘역할색’은 이 6색에서 만든 파생색이며(표시된 것만) 필요하면 바꿔도 됩니다.</p>
+<div class="sw" style="margin-top:14px">
+  <div style="background:#AB073D;color:#FAF4EF"><b>Burgundy · accent</b>#AB073D<br>--burgundy</div>
+  <div style="background:#460E21;color:#FAF4EF"><b>Burgundy · dark</b>#460E21<br>--burgundy-dark</div>
+  <div style="background:#BCD8DD;color:#460E21"><b>Pale blue · accent</b>#BCD8DD<br>--paleblue</div>
+  <div style="background:#D5EDF1;color:#460E21"><b>Pale blue · light</b>#D5EDF1<br>--paleblue-light</div>
+  <div style="background:#FAF4EF;color:#460E21"><b>Ivory · accent</b>#FAF4EF<br>--ivory</div>
+  <div style="background:#ECD5B3;color:#460E21"><b>Ivory · dark</b>#ECD5B3<br>--ivory-dark</div>
+</div>
+<h2>2. 색 사용 규칙</h2>
+<table>
+<tr><th>역할</th><th>색</th><th>쓰는 곳</th></tr>
+<tr><td>배경 / 글자</td><td>Ivory / Burgundy dark</td><td>기본 장면. 대비 14.3:1</td></tr>
+<tr><td>강조(선택됨, 키워드)</td><td>Burgundy</td><td>선택된 버튼, 제목 속 강조어. 아이보리 위 대비 6.8:1</td></tr>
+<tr><td>강조 패널</td><td>Pale blue light + Burgundy dark</td><td>돼지의 말, 시뮬레이션 설명(.hl). 대비 12.8:1</td></tr>
+<tr><td>줄·트랙</td><td>Ivory dark</td><td>구분선, 그래프 바탕</td></tr>
+<tr><td>보조 글자</td><td>#6E4A55 (파생)</td><td>힌트, 출처. 아이보리 위 6.9:1</td></tr>
+<tr><td>그래프</td><td>Burgundy dark(전체) / Burgundy(나)</td><td>분포 바, 점</td></tr>
+<tr><td>대기 화면</td><td>배경 <code>--attract-bg</code> (기본 White) · 선 <code>--attract-line</code> (기본 Burgundy dark)</td><td>벡터 돼지 애니메이션. ds.css 두 줄만 바꾸면 됨. 주소 뒤에 <code>?bg=BCD8DD&amp;line=460E21</code> 로 미리보기</td></tr>
+<tr><td>마무리(밤)</td><td>Burgundy dark 배경 + Ivory 글자 + Pale blue 강조</td><td>마지막 질문. 아이보리 대비 14.3:1</td></tr>
+<tr><td>옆 화면</td><td>Burgundy dark 배경 + Pale blue 막대</td><td>/side</td></tr>
+</table>
+
+<h2>3. 서체</h2>
+<div class="frames"><div class="frame">
+<small>제목 · PP Frama (Medium/Bold) — 파일이 없으면 본문 서체로 대체됨</small>
+<p class="display" style="font-size:calc(150*var(--u))">Guilty by Default</p>
+<p class="q" style="margin-top:calc(24*var(--u))">제재할까요?</p>
+<small style="margin-top:24px">본문 · Pretendard (행간 140%)</small>
+<div class="ds-text"><p style="margin:0">옛 마을의 수레 한 대에서 시작하는 짧은 이야기입니다. 정답은 없습니다.</p><p class="hint">보조 글자 · 힌트 26px</p></div>
+</div>
+<div><table>
+<tr><th>이름</th><th>크기(1080×1920 기준)</th></tr>
+<tr><td>Display</td><td>150px · PP Frama 500</td></tr>
+<tr><td>H1 <code>.q</code></td><td>68px · PP Frama 700</td></tr>
+<tr><td>H2 <code>.q.sm</code></td><td>50px</td></tr>
+<tr><td>Body</td><td>36px · Pretendard · 행간 140%</td></tr>
+<tr><td>Small</td><td>30px</td></tr>
+<tr><td>Caption · hint</td><td>26px</td></tr>
+</table><p class="meta" style="max-width:360px;margin-top:14px">24인치 모니터는 가까이서 보므로 본문 36px(약 7.5mm 높이)부터 시작합니다. 실제 전시에서 거리를 두고 보게 되면 한 단계씩 키웁니다.</p></div></div>
+
+<h2>4. 간격·모서리</h2>
+<table><tr><th>간격</th><td>8 · 16 · 24 · 32 · 48 · 96 px (<code>--sp-1…6</code>)</td></tr>
+<tr><th>모서리</th><td>패널·버튼 28px · 카드 40px · 알약 999px</td></tr>
+<tr><th>버튼 높이</th><td>보조 112px · 큰 선택 버튼 170px (물리 버튼 안내가 있는 화면)</td></tr></table>
+
+<h2>5. 컴포넌트</h2>
+<div class="frames">
+<div class="frame"><small>선택 버튼 .choices.big (선택 전 / 후)</small>
+<div class="choices big"><button type="button" aria-pressed="true"><span class="k">1</span>예</button><button type="button" aria-pressed="false"><span class="k">2</span>아니오</button></div>
+<small style="margin-top:18px">레버 .seg3</small>
+<div class="seg3"><button type="button">제안만 받는다</button><button type="button" aria-pressed="true">승인하면 실행한다</button><button type="button">알아서 하게 둔다</button></div>
+<small>버튼 .btn</small>
+<div class="row" style="margin-top:0"><button class="btn" type="button">이전</button><button class="btn primary" type="button">다음</button></div></div>
+
+<div class="frame"><small>태그 · 강조 패널 · 말풍선 · 경고줄</small>
+<span class="tag">2칸 / 4</span><br><span class="warnline">이 마을이 막지 못한 사고: 1건</span>
+<div class="stagewrap" style="margin:0"><div class="bubble" style="margin-top:20px">배고파요… 무서워요…</div></div>
+<div class="hl" style="margin-top:28px">“…무서워요.”</div>
+<div class="costs"><div><b>제재한다</b>돼지가 맡던 일이 멈춥니다.</div><div><b>그대로 둔다</b>같은 사고가 되풀이됩니다.</div></div></div>
+
+<div class="frame"><small>분포 바 .brow (나 = .me) · 점 .vil</small>
+<div class="bars"><div class="brow"><span>수레</span><span class="t"><i style="width:92%"></i></span><span class="n">92%</span></div><div class="brow me"><span>3칸</span><span class="t"><i style="width:41%"></i></span><span class="n">41% ●</span></div><div class="brow"><span>4칸</span><span class="t"><i style="width:18%"></i></span><span class="n">18%</span></div></div>
+<div class="vrow"><div class="vl"><b>알아서 하게 둔다</b> · 30명</div><div class="vil" id="dots"></div></div>
+<ol class="rungs"><li><span>1칸</span>시키는 대로만 하는 도구</li><li class="line"><span>3칸</span>기억하고 이유를 설명하는 시스템</li></ol></div>
+
+<div class="frame scene-night" style="background:var(--bg)"><small>마무리(밤) — scene-night</small>
+<div class="night"><p class="big" style="font-size:calc(54*var(--u))">어디까지 믿고, 어디까지 줄 것인가.</p><p style="font-size:calc(42*var(--u))">우리를 둘러싼 것들은 지금 책임을 어떻게 나누고 있을까요?</p></div>
+<div class="hl">강조 패널</div><div class="row" style="margin-top:12px"><button class="btn primary" type="button">처음부터 다시</button></div></div>
+</div>
+
+<h2>6. 모션</h2>
+<table>
+<tr><td><code>.m-yes</code></td><td>‘예(제재)’를 눌렀을 때 돼지가 내려앉으며 흐려짐 (0.9초)</td></tr>
+<tr><td><code>.m-no</code></td><td>‘아니오’를 눌렀을 때 한 번 튀어 오르고 제자리 (0.8초)</td></tr>
+<tr><td><code>.m-tap</code></td><td>레버·책임 선택 등 살짝 커졌다 돌아옴 (0.5초)</td></tr>
+<tr><td>점 꺼짐</td><td>시뮬레이션에서 돌아오지 못한 사람이 하나씩 옅어짐</td></tr>
+<tr><td>밤 문장</td><td>마무리 글이 하나씩 나타나며 화면이 따라 내려감</td></tr></table>
+<p class="meta">움직임 줄이기 설정이 켜진 기기에서는 모든 모션이 꺼집니다.</p>
+<script>var d=document.getElementById('dots'),h='';for(var i=0;i<100;i++)h+='<i class="vd'+(i>=70?' x':'')+'"></i>';d.innerHTML=h;</script>
+</div></body></html>

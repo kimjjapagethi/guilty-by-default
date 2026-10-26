@@ -1,0 +1,180 @@
+/* ==========================================================================
+   Guilty by Default — Design System (ds.css)
+   기준 화면: 24인치 모니터 세로 1080 x 1920. 모든 크기는 u()로 쓰며 --u(1px)에 비례합니다.
+   --u 를 줄이면(예: .45px) 같은 컴포넌트를 작게 볼 수 있습니다(design.html).
+   ========================================================================== */
+
+/* ---------- 서체 ----------
+   제목: PP Frama (유료 서체 — 파일은 직접 넣어야 합니다. public/fonts/README.txt 참고)
+   본문/한글: Noto Sans KR. PP Frama 에는 한글이 없을 가능성이 높아 한글은 자동으로 본문 서체로 대체됩니다. */
+@font-face { font-family: 'PP Frama'; font-weight: 200; font-display: swap; src: url('fonts/PPFrama/PPFrama-Extralight.otf') format('opentype'); }
+@font-face { font-family: 'PP Frama'; font-weight: 400 700; font-display: swap; src: url('fonts/PPFrama/PPFrama-Regular.otf') format('opentype'); }
+@font-face { font-family: 'PP Frama'; font-weight: 800 900; font-display: swap; src: url('fonts/PPFrama/PPFrama-Black.otf') format('opentype'); }
+@font-face { font-family: 'Pretendard Variable'; font-weight: 45 920; font-style: normal; font-display: swap;
+  src: local('Pretendard Variable'), url('fonts/PretendardVariable.woff2') format('woff2-variations'); } /* 본문·한글: Pretendard (SIL OFL) */
+
+:root {
+  --u: 1px;
+
+  /* ---------- 팔레트 (팀 확정색) ---------- */
+  --burgundy:        #AB073D;  /* accent */
+  --burgundy-dark:   #460E21;  /* dark */
+  --paleblue:        #BCD8DD;  /* accent */
+  --paleblue-light:  #D5EDF1;  /* light */
+  --ivory:           #FAF4EF;  /* accent */
+  --ivory-dark:      #ECD5B3;  /* dark */
+
+  /* ---------- 역할(semantic) : 기본 = 아이보리 장면 ---------- */
+  --bg:       var(--ivory);
+  --ink:      var(--burgundy-dark);
+  --muted:    #6E4A55;                                   /* 파생색: 본문 보조 글자 (아이보리 위 대비 6.9:1) */
+  --line:     var(--ivory-dark);
+  --accent:   var(--burgundy);
+  --on-accent: var(--ivory);
+  --surface:  var(--paleblue-light);                     /* 강조 패널 */
+  --surface-ink: var(--burgundy-dark);
+  --soft:     color-mix(in srgb, var(--ivory-dark) 42%, var(--ivory));  /* 파생색: 연한 행 배경 */
+  --bar:      var(--burgundy-dark);
+  --bar-me:   var(--burgundy);
+  --btn:      var(--burgundy-dark);
+  --btn-ink:  var(--ivory);
+  --font-display: 'PP Frama', 'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  --font-body: 'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  --lh-body: 1.4;   /* 본문 행간 140% */
+
+  /* 대기 화면(돼지 영상) 색 — 여기만 바꾸면 됩니다. 주소 뒤에 ?bg=BCD8DD&line=460E21 처럼 붙여 미리 볼 수도 있습니다 */
+  --attract-bg: #D5EDF1;
+  --attract-line: #460E21;
+
+}
+/* 크기 토큰: --u 를 바꾼 영역(.frame)에서도 다시 계산되도록 따로 선언 */
+:root, .frame {
+  /* 크기 스케일 (1080x1920 기준 px) */
+  --fs-display: calc(150 * var(--u));
+  --fs-h1: calc(68 * var(--u));
+  --fs-h2: calc(50 * var(--u));
+  --fs-body: calc(36 * var(--u));
+  --fs-small: calc(30 * var(--u));
+  --fs-cap: calc(26 * var(--u));
+  --sp-1: calc(8 * var(--u));  --sp-2: calc(16 * var(--u)); --sp-3: calc(24 * var(--u));
+  --sp-4: calc(32 * var(--u)); --sp-5: calc(48 * var(--u)); --sp-6: calc(96 * var(--u));
+  --r-card: calc(40 * var(--u)); --r-btn: calc(28 * var(--u)); --r-pill: 999px;
+}
+/* 장면 변형 */
+[data-scene="attract"] { --bg: var(--attract-bg); }                                    /* 대기 화면 바탕 */
+[data-scene="turn"], [data-scene="turn2"], [data-scene="credits"], [data-scene="recap"], [data-scene="warning"], .scene-night {                                              /* 마무리: 짙은 버건디 */
+  --bg: var(--burgundy-dark); --ink: var(--ivory);
+  --muted: color-mix(in srgb, var(--ivory) 68%, var(--burgundy-dark));
+  --line: color-mix(in srgb, var(--ivory) 22%, var(--burgundy-dark));
+  --accent: var(--paleblue); --on-accent: var(--burgundy-dark);
+  --surface: color-mix(in srgb, var(--ivory) 10%, var(--burgundy-dark)); --surface-ink: var(--ivory);
+  --soft: color-mix(in srgb, var(--ivory) 7%, var(--burgundy-dark));
+  --bar: var(--paleblue); --bar-me: var(--ivory); --btn: var(--ivory); --btn-ink: var(--burgundy-dark);
+}
+
+/* ---------- 기본 타이포 ---------- */
+.ds-text { font-family: var(--font-body); font-size: var(--fs-body); line-height: var(--lh-body); color: var(--ink); word-break: keep-all; overflow-wrap: anywhere; }
+.display { font-family: var(--font-display); font-weight: 500; font-size: var(--fs-display); line-height: 1; letter-spacing: -.01em; margin: 0; }
+.q { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-h1); line-height: 1.25; margin: 0 0 var(--sp-3); text-wrap: balance; }
+.q em { font-style: normal; color: var(--accent); }
+.q.sm { font-size: var(--fs-h2); margin: var(--sp-4) 0 var(--sp-2); }
+.brand { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-small); }
+.tag { display: inline-block; font-size: var(--fs-cap); font-weight: 700; color: var(--muted); border: calc(2 * var(--u)) solid var(--line); border-radius: var(--r-pill); padding: 0 var(--sp-3); margin-bottom: var(--sp-2); }
+.lede { color: var(--muted); margin: var(--sp-2) 0 var(--sp-4); }
+.prose p { margin: 0 0 var(--sp-2); max-width: 28em; }
+.prose strong, .prose b { font-weight: 800; }
+.hint, .prose p.small, p.small { font-size: var(--fs-cap); color: var(--muted); line-height: var(--lh-body); }
+.hint { margin-top: var(--sp-2); }
+.hint a { color: inherit; }
+
+/* ---------- 패널 ---------- */
+.hl { background: var(--surface); color: var(--surface-ink); border-radius: var(--r-btn); padding: var(--sp-2) var(--sp-4); margin: var(--sp-2) 0; font-weight: 700; }
+.note { background: var(--soft); border: calc(2 * var(--u)) solid var(--line); border-radius: var(--r-btn); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-cap); margin-top: var(--sp-3); }
+.warnline { background: var(--accent); color: var(--on-accent); border-radius: var(--r-pill); padding: 0 var(--sp-3); font-size: var(--fs-cap); font-weight: 700; display: inline-block; margin: 0 0 var(--sp-3); }
+
+/* ---------- 버튼 ---------- */
+.row { display: flex; gap: var(--sp-3); flex-wrap: wrap; margin-top: var(--sp-5); align-items: center; }
+.btn { font-family: inherit; font-size: var(--fs-small); font-weight: 700; color: var(--ink); background: transparent; cursor: pointer;
+  border: calc(3 * var(--u)) solid var(--line); border-radius: var(--r-pill); padding: var(--sp-2) var(--sp-5); min-height: calc(112 * var(--u)); }
+.btn.primary { background: var(--btn); color: var(--btn-ink); border-color: var(--btn); }
+.btn[disabled] { opacity: .35; cursor: not-allowed; }
+.choices { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin: var(--sp-3) 0; }
+.choices button { font-family: inherit; font-size: var(--fs-body); font-weight: 700; color: var(--ink); background: var(--bg); text-align: left; cursor: pointer;
+  border: calc(3 * var(--u)) solid var(--line); border-radius: var(--r-btn); padding: var(--sp-3) var(--sp-4); }
+.choices button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.choices.big button { flex: 1 1 40%; min-height: calc(170 * var(--u)); font-size: calc(52 * var(--u)); text-align: center; display: grid; place-items: center; position: relative; }
+.choices .k { position: absolute; left: var(--sp-3); top: var(--sp-2); font-family: var(--font-display); font-size: var(--fs-cap); font-weight: 500; opacity: .6; margin: 0; }
+.seg3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-2); margin: var(--sp-3) 0; }
+.seg3 button { font-family: inherit; font-size: var(--fs-small); font-weight: 700; line-height: 1.4; color: var(--ink); background: var(--bg); cursor: pointer;
+  border: calc(3 * var(--u)) solid var(--line); border-radius: var(--r-btn); padding: var(--sp-3) var(--sp-2); min-height: calc(150 * var(--u)); }
+.seg3 button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+:focus-visible { outline: calc(6 * var(--u)) solid var(--accent); outline-offset: calc(4 * var(--u)); }
+
+/* ---------- 돼지/말풍선/비용 ---------- */
+.stagewrap { display: flex; flex-direction: column; align-items: center; gap: var(--sp-3); margin: var(--sp-2) 0 var(--sp-4); }
+.pigart { display: grid; place-items: center; }
+.pigart svg, .pigart img { display: block; max-width: 100%; }
+.bubble { position: relative; background: var(--soft); border: calc(3 * var(--u)) solid var(--line); border-radius: var(--r-btn); padding: var(--sp-2) var(--sp-4); font-weight: 700; text-align: center; max-width: 92%; }
+.bubble::before { content: ""; position: absolute; top: calc(-14 * var(--u)); left: 50%; margin-left: calc(-12 * var(--u)); width: calc(22 * var(--u)); height: calc(22 * var(--u)); background: var(--soft); border-left: calc(3 * var(--u)) solid var(--line); border-top: calc(3 * var(--u)) solid var(--line); transform: rotate(45deg); }
+.costs { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); margin: var(--sp-3) 0; }
+.costs div { border: calc(3 * var(--u)) solid var(--line); border-radius: var(--r-btn); padding: var(--sp-2) var(--sp-3); font-size: var(--fs-small); line-height: var(--lh-body); }
+.costs b { display: block; font-size: var(--fs-small); }
+.rungs { list-style: none; padding: 0; margin: var(--sp-3) 0; display: grid; gap: var(--sp-1); }
+.rungs li { display: flex; gap: var(--sp-3); align-items: baseline; background: var(--soft); border-radius: var(--sp-3); padding: calc(3 * var(--u)) var(--sp-3); font-size: var(--fs-cap); }
+.rungs li.line { outline: calc(4 * var(--u)) solid var(--accent); font-weight: 800; }
+.rungs li span { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* ---------- 바·분포 ---------- */
+.mr { display: grid; grid-template-columns: calc(230 * var(--u)) 1fr calc(120 * var(--u)); gap: var(--sp-3); align-items: center; margin: var(--sp-3) 0; font-size: var(--fs-small); }
+.mr .mv { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+.stack { display: flex; height: calc(32 * var(--u)); border-radius: calc(16 * var(--u)); overflow: hidden; background: var(--line); }
+.stack .ok { background: var(--bar); }
+.stack .gap { background: repeating-linear-gradient(45deg, var(--accent) 0 calc(8 * var(--u)), var(--surface) calc(8 * var(--u)) calc(16 * var(--u))); flex: 1; }
+.legend { display: flex; gap: var(--sp-3); font-size: var(--fs-cap); color: var(--muted); flex-wrap: wrap; }
+.legend i { display: inline-block; width: calc(28 * var(--u)); height: calc(28 * var(--u)); border-radius: calc(6 * var(--u)); vertical-align: calc(-4 * var(--u)); margin-right: var(--sp-1); }
+.bars { display: grid; gap: var(--sp-2); margin-top: var(--sp-3); }
+.brow { display: grid; grid-template-columns: calc(230 * var(--u)) 1fr calc(150 * var(--u)); gap: var(--sp-2); align-items: center; font-size: var(--fs-small); white-space: nowrap; }
+.brow .t { height: calc(30 * var(--u)); background: var(--line); border-radius: calc(15 * var(--u)); overflow: hidden; }
+.brow .t i { display: block; height: 100%; background: var(--bar); border-radius: calc(15 * var(--u)); }
+.brow.me .t i { background: var(--bar-me); }
+.brow.me .n { font-weight: 800; color: var(--accent); }
+.brow .n { font-variant-numeric: tabular-nums; text-align: right; color: var(--muted); }
+.vrow { margin: var(--sp-2) 0; }
+.vrow.me { background: var(--soft); border-radius: var(--r-btn); padding: var(--sp-2) var(--sp-3); margin-left: calc(-24 * var(--u)); margin-right: calc(-24 * var(--u)); }
+.vl { font-size: var(--fs-small); margin-bottom: var(--sp-1); }
+.vil { display: grid; grid-template-columns: repeat(25, 1fr); gap: calc(6 * var(--u)); }
+.vd { aspect-ratio: 1; border-radius: 50%; background: var(--bar); }
+.vd.x { animation: dim .6s ease forwards; }
+@keyframes dim { to { background: var(--line); } }
+.vn { font-size: var(--fs-cap); color: var(--muted); margin-top: var(--sp-1); font-variant-numeric: tabular-nums; }
+
+/* ---------- 결과 ---------- */
+.sec { border-top: calc(3 * var(--u)) solid var(--line); margin-top: var(--sp-3); padding-top: var(--sp-2); }
+.sec h3 { margin: 0 0 var(--sp-2); font-size: var(--fs-h2); font-family: var(--font-display); }
+.sec p { margin: var(--sp-1) 0; }
+.lad { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--sp-2); margin: var(--sp-3) 0; }
+.lad div { text-align: center; background: var(--soft); border-radius: var(--r-btn); padding: var(--sp-1) 0; font-size: var(--fs-cap); line-height: 1.4; }
+.lad div svg, .lad div img { margin: 0 auto var(--sp-1); display: block; }
+.lad .flip { outline: calc(5 * var(--u)) solid var(--accent); }
+.lad b { display: block; }
+textarea.out { width: 100%; min-height: calc(220 * var(--u)); font: inherit; font-size: var(--fs-cap); background: var(--soft); color: var(--ink); border: calc(2 * var(--u)) solid var(--line); border-radius: var(--r-btn); padding: var(--sp-2); }
+
+/* ---------- 마무리(밤) ---------- */
+.night p { font-size: calc(42 * var(--u)); line-height: var(--lh-body); margin: 0 0 var(--sp-4); }
+.night .big { font-size: calc(54 * var(--u)); font-weight: 800; line-height: 1.4; }
+.night .fade { opacity: 0; animation: rise 1.2s ease forwards; }
+@keyframes rise { from { opacity: 0; transform: translateY(calc(16 * var(--u))); } to { opacity: 1; transform: none; } }
+.credits { margin-top: var(--sp-5); border-top: calc(3 * var(--u)) solid var(--line); padding-top: var(--sp-3); font-size: var(--fs-small); color: var(--muted); line-height: 1.9; }
+.credits b { color: var(--ink); font-family: var(--font-display); }
+.credits span { display: inline-block; min-width: calc(260 * var(--u)); }
+.credits p { font-size: var(--fs-cap); margin: var(--sp-2) 0 0; }
+
+/* ---------- 모션 ---------- */
+@keyframes m-yes { 0% { transform: none; opacity: 1; } 25% { transform: translateY(calc(30 * var(--u))) rotate(-4deg) scale(.96); } 60% { transform: translateY(calc(20 * var(--u))) rotate(2deg) scale(.96); opacity: .8; } 100% { transform: translateY(calc(14 * var(--u))) scale(.97); opacity: .85; } }
+@keyframes m-no { 0% { transform: none; } 30% { transform: translateY(calc(-44 * var(--u))) scale(1.03); } 55% { transform: translateY(0) scale(.99); } 75% { transform: translateY(calc(-14 * var(--u))); } 100% { transform: none; } }
+@keyframes m-tap { 0% { transform: none; } 40% { transform: scale(1.04); } 100% { transform: none; } }
+.m-yes { animation: m-yes .9s cubic-bezier(.3,.7,.3,1) forwards; }
+.m-no  { animation: m-no .8s ease; }
+.m-tap { animation: m-tap .5s ease; }
+@keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(calc(-18 * var(--u))); } }
+@media (prefers-reduced-motion: reduce) { .m-yes, .m-no, .m-tap, .vd.x { animation: none; } .night .fade { opacity: 1; animation: none; } .vd.x { background: var(--line); } }

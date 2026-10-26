@@ -27,13 +27,12 @@ function clean(b) {
   if (!b || typeof b !== 'object') return null;
   var a = b.ans || {}, e = b.e || {};
   for (var k = 0; k <= 4; k++) if (!yn(a[k])) return null;
-  for (var j = 1; j <= 3; j++) if (e[j] !== 'a' && e[j] !== 'b') return null;
   if (!yn(b.last) || !yn(b.cross)) return null;
   if (![0, 1, 2].includes(b.a)) return null;
   var sid = String(b.sid || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40);
   if (!sid) return null;
   return { sid: sid, t: Date.now(), src: b.src === 'kiosk' ? 'kiosk' : 'browser', test: !!b.test,
-    ans: { 0: a[0], 1: a[1], 2: a[2], 3: a[3], 4: a[4] }, a: b.a, last: b.last, e: { 1: e[1], 2: e[2], 3: e[3] }, cross: b.cross };
+    ans: { 0: a[0], 1: a[1], 2: a[2], 3: a[3], 4: a[4] }, a: b.a, last: b.last, e: { 1: null, 2: null, 3: null }, cross: b.cross };
 }
 function flip(p) { for (var k = 2; k <= 4; k++) if (p.ans[k] !== p.ans[1]) return k; return 0; }
 
@@ -48,7 +47,7 @@ function stats() {
   r.lastYes = L.filter(function (p) { return p.last === 'yes'; }).length / n;
   r.aiYes = L.filter(function (p) { return p.cross === 'yes'; }).length / n;
   r.aiDiffers = L.filter(function (p) { return (p.cross === 'yes') !== (p.ans[3] === 'yes'); }).length / n;
-  r.blamePig = L.filter(function (p) { return p.e[1] === 'a'; }).length / n;
+  r.blamePig = L.filter(function (p) { return false; }).length / n;
   return r;
 }
 
@@ -68,11 +67,19 @@ function body(req, cb) {
   req.on('data', function (c) { d += c; if (d.length > 20000) { req.destroy(); } });
   req.on('end', function () { try { cb(JSON.parse(d || '{}')); } catch (e) { cb(null); } });
 }
-var TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.mp4': 'video/mp4', '.woff2': 'font/woff2', '.json': 'application/json' };
+var TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.mp4': 'video/mp4', '.woff2': 'font/woff2', '.woff': 'font/woff', '.otf': 'font/otf', '.ttf': 'font/ttf', '.gif': 'image/gif', '.webm': 'video/webm', '.css': 'text/css; charset=utf-8', '.json': 'application/json' };
 
 http.createServer(function (req, res) {
   var u = new URL(req.url, 'http://x'), ip = req.socket.remoteAddress || '';
   if (u.pathname === '/api/config') return json(res, 200, { mode: MODE });
+  if (u.pathname === '/api/attract') { /* public/attract 폴더의 이미지를 이름순(숫자 인식)으로 나열. config.json: {"fps":4,"mode":"flipbook"|"fade","hold":3} */
+    var dir = path.join(PUBLIC, 'attract'), files = [], cfg = {};
+    try { files = fs.readdirSync(dir).filter(function (f) { return /\.(png|jpe?g|webp|gif|svg)$/i.test(f) && f[0] !== '.'; }).sort(function (a, b) { return a.localeCompare(b, 'en', { numeric: true }); }); } catch (e) {}
+    try { cfg = JSON.parse(fs.readFileSync(path.join(dir, 'config.json'), 'utf8')); } catch (e) {}
+    var video = ['attract/opening_pig.mp4', 'opening_pig.mp4'].filter(function (f) { return fs.existsSync(path.join(PUBLIC, f)) || fs.existsSync(path.join(__dirname, f)); })[0] || null;
+    var vector = fs.existsSync(path.join(dir, 'pig-vector.json')) ? 'attract/pig-vector.json' : null;
+    return json(res, 200, { vector: vector, video: video, files: files, fps: cfg.fps, mode: cfg.mode, hold: cfg.hold });
+  }
   if (u.pathname === '/api/stats') return json(res, 200, stats());
   if (u.pathname === '/api/stream') {
     res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', Connection: 'keep-alive' });
@@ -106,13 +113,21 @@ http.createServer(function (req, res) {
     return json(res, 404, { ok: false });
   }
   /* static */
-  var rel = u.pathname === '/' ? '/index.html' : u.pathname === '/side' ? '/side.html' : decodeURIComponent(u.pathname);
+  var rel = u.pathname === '/' ? '/index.html' : u.pathname === '/side' ? '/side.html' : u.pathname === '/design' ? '/design.html' : decodeURIComponent(u.pathname);
   var file = path.normalize(path.join(PUBLIC, rel));
   if (file.indexOf(PUBLIC) !== 0) { res.writeHead(403); return res.end(); }
-  fs.readFile(file, function (err, data) {
-    if (err) { res.writeHead(404); return res.end('not found'); }
-    res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
-    res.end(data);
+  if (!fs.existsSync(file) && path.basename(file) === 'opening_pig.mp4') file = path.join(__dirname, 'opening_pig.mp4'); /* 프로젝트 폴더 바로 아래에 둬도 됨 */
+  fs.stat(file, function (err, st) {
+    if (err || !st.isFile()) { res.writeHead(404); return res.end('not found'); }
+    var type = TYPES[path.extname(file)] || 'application/octet-stream', range = req.headers.range;
+    if (range && /^bytes=/.test(range)) { /* 영상 반복 재생을 위해 Range 요청 지원 */
+      var m = /bytes=(\d*)-(\d*)/.exec(range), start = m[1] ? +m[1] : 0, end = m[2] ? Math.min(+m[2], st.size - 1) : st.size - 1;
+      if (start > end || start >= st.size) { res.writeHead(416, { 'Content-Range': 'bytes */' + st.size }); return res.end(); }
+      res.writeHead(206, { 'Content-Type': type, 'Content-Range': 'bytes ' + start + '-' + end + '/' + st.size, 'Accept-Ranges': 'bytes', 'Content-Length': end - start + 1 });
+      return fs.createReadStream(file, { start: start, end: end }).pipe(res);
+    }
+    res.writeHead(200, { 'Content-Type': type, 'Content-Length': st.size, 'Accept-Ranges': 'bytes', 'Cache-Control': 'no-cache' });
+    fs.createReadStream(file).pipe(res);
   });
 }).listen(PORT, function () {
   console.log('[Guilty by Default] MODE=' + MODE + '  http://localhost:' + PORT + '  (옆 화면: /side)');

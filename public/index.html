@@ -1,198 +1,225 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Guilty by Default</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap">
+<link rel="stylesheet" href="ds.css">
 <style>
-:root {
-  --bg: #eef1f6; --card: #ffffff; --ink: #1c2230; --muted: #667085; --line: #dde2ea;
-  --pink: #d92a68; --pink-soft: #fde8f0; --green: #0f8f68; --green-soft: #def4ec;
-  --btn: #2a3140; --btn-ink: #ffffff; --warn: #9a5b00; --warn-soft: #fff1d6;
-  --font: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #12151c; --card: #1b2029; --ink: #eef1f6; --muted: #9aa4b5; --line: #2b3242;
-    --pink: #ff7aa6; --pink-soft: #3a2030; --green: #3fd6a6; --green-soft: #173529;
-    --btn: #eef1f6; --btn-ink: #12151c; --warn: #f2c26b; --warn-soft: #3a2f16; color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #12151c; --card: #1b2029; --ink: #eef1f6; --muted: #9aa4b5; --line: #2b3242;
-  --pink: #ff7aa6; --pink-soft: #3a2030; --green: #3fd6a6; --green-soft: #173529;
-  --btn: #eef1f6; --btn-ink: #12151c; --warn: #f2c26b; --warn-soft: #3a2f16; color-scheme: dark;
-}
-:root[data-mood="night"] {
-  --bg: #07090e; --card: #0e121a; --ink: #e8ecf4; --muted: #8f99ab; --line: #232b3b;
-  --pink: #ff7aa6; --pink-soft: #33202c; --green: #3fd6a6; --green-soft: #15302a;
-  --btn: #e8ecf4; --btn-ink: #07090e; --warn: #f2c26b; --warn-soft: #33290f; color-scheme: dark;
-}
-* { box-sizing: border-box; }
-body {
-  background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.7; margin: 0;
-  padding-block: 0 48px;
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  word-break: keep-all; overflow-wrap: anywhere;
-}
-body.kiosk { font-size: 20px; }
-@media (prefers-reduced-motion: no-preference) {
-  body, .stage, .top { transition: background-color .9s, color .9s, border-color .9s; }
-}
-.wrap { max-width: 760px; margin: 0 auto; }
-body.kiosk .wrap { max-width: 900px; }
-button { font-family: inherit; font-size: inherit; color: inherit; cursor: pointer; }
-:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); transition: background-color .9s; }
+#canvas { position: absolute; left: 50%; top: 50%; width: 1080px; height: 1920px; transform: translate(-50%, -50%); display: flex; flex-direction: column;
+  padding: 56px 80px 112px; box-sizing: border-box; background: var(--bg); color: var(--ink); transition: background-color .9s, color .9s; }
+.top { flex: none; }
+.brandrow { display: flex; justify-content: space-between; align-items: baseline; }
+.step { font-size: var(--fs-cap); color: var(--muted); font-variant-numeric: tabular-nums; }
+.bar { height: 8px; background: var(--line); border-radius: 8px; margin-top: 20px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+#scroller { flex: 1; min-height: 0; overflow: hidden; }
+#scroller::-webkit-scrollbar { display: none; }
+#stage { min-height: 100%; display: flex; flex-direction: column; }
+#stage .row { margin-top: auto; padding-top: 32px; }
+h1[tabindex="-1"]:focus { outline: none; }
+.startnote { margin: 16px 0 0; text-align: center; font-size: var(--fs-cap); color: var(--muted); }
+.cw { position: absolute; left: 80px; right: 80px; top: 48px; z-index: 5; pointer-events: none; text-align: center; font-size: var(--fs-cap); color: var(--muted); background: var(--soft); border: 3px solid var(--line); border-radius: 999px; padding: 12px 32px; opacity: 0; transition: opacity .9s; }
+.cw.on { opacity: 1; }
+.attract { flex: 1; display: grid; grid-template-rows: auto 1fr auto; text-align: center; min-height: 0; }
+.attract-title { padding-top: 24px; }
+.attract-title .display { font-size: 168px; }
+.warn { flex: 1; display: grid; place-items: center; text-align: center; min-height: 0; }
+.warn p { font-size: 50px; line-height: 1.4; color: var(--ink); margin: 0; }
+.attract-art { overflow: hidden; display: grid; place-items: center; align-content: center; min-height: 0; }
+.attract-art svg.vec { width: 100%; height: 100%; max-height: 1260px; transform: scale(1.4); display: block; }
+.attract-art svg.vec path { fill: var(--attract-line); fill-rule: evenodd; }
+.attract-art video { width: 100%; max-height: 1300px; object-fit: contain; display: block; filter: brightness(1.03); } /* 영상 배경이 순백(255)이 아니라 살짝 밝혀서 흰 화면에 이음새가 안 보이게 */
+.attract-art img { max-width: 900px; max-height: 1180px; display: block; transition: opacity .45s; }
+.attract-art .bob { animation: bob 2.6s ease-in-out infinite; }
+.attract-dev { font-size: var(--fs-cap); color: var(--muted); margin: 24px 0 0; }
+.attract-foot { padding-bottom: 24px; }
+.attract-hint { font-size: var(--fs-small); color: var(--muted); margin: 8px 0 0; animation: blink 2.4s ease-in-out infinite; }
+@keyframes blink { 0%,100% { opacity: .35; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .attract-hint, .attract-art .bob { animation: none; } }
 
-.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 12px 8px; }
-body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
-.brandrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.brand { font-weight: 800; font-size: 14px; }
-.step { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.bar { height: 4px; background: var(--line); border-radius: 4px; margin-top: 8px; overflow: hidden; }
-.bar i { display: block; height: 100%; background: var(--pink); width: 0; transition: width .3s; }
-@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
-
-.stage { margin-top: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 28px; }
-body.kiosk .stage { padding: 40px; }
-@media (max-width: 520px) { .stage { padding: 20px 16px; border-radius: 16px; } }
-.q { font-size: clamp(20px, 3.6vw, 26px); line-height: 1.4; font-weight: 800; margin: 0 0 8px; text-wrap: balance; }
-.q em { font-style: normal; color: var(--pink); }
-.q.sm { font-size: 20px; margin-top: 14px; }
-.tag { display: inline-block; font-size: 12px; font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 10px; margin-bottom: 10px; }
-.prose p { margin: 0 0 14px; font-size: 16px; max-width: 58ch; }
-.prose p.small, p.small { font-size: 13.5px; color: var(--muted); }
-.prose strong { font-weight: 800; }
-body.kiosk .prose p { font-size: 20px; }
-.lede { color: var(--muted); margin: 0 0 16px; }
-.hl { background: var(--pink-soft); border-radius: 12px; padding: 12px 16px; margin: 10px 0 14px; font-weight: 700; }
-.hint { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
-.hint a { color: inherit; }
-.note { background: var(--warn-soft); color: var(--warn); border-radius: 12px; padding: 10px 14px; font-size: 13px; margin-top: 14px; }
-.warnline { background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 6px 12px; font-size: 13px; margin: 0 0 12px; }
-
-.row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; align-items: center; }
-.btn { border: 1.5px solid var(--line); background: transparent; border-radius: 999px; padding: 10px 20px; font-weight: 700; }
-.btn.primary { background: var(--btn); color: var(--btn-ink); border-color: var(--btn); }
-.btn[disabled] { opacity: .35; cursor: not-allowed; }
-.choices { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 12px; }
-.choices button { background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; padding: 12px 18px; font-weight: 700; text-align: left; }
-.choices button[aria-pressed="true"] { border-color: var(--pink); background: var(--pink-soft); }
-.choices.big button { flex: 1 1 40%; min-height: 68px; font-size: 18px; text-align: center; }
-.choices .k { color: var(--muted); font-weight: 500; margin-right: 8px; }
-.seg3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 8px 0 14px; }
-.seg3 button { background: var(--card); border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 6px; font-weight: 700; font-size: 14px; line-height: 1.4; }
-.seg3 button[aria-pressed="true"] { border-color: var(--pink); background: var(--pink-soft); }
-
-.stagewrap { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 6px 0 14px; }
-svg.pg { display: block; }
-.bubble { position: relative; background: var(--bg); border: 1.5px solid var(--line); border-radius: 14px; padding: 8px 16px; font-weight: 700; text-align: center; max-width: 92%; }
-.bubble::before { content: ""; position: absolute; top: -8px; left: 50%; margin-left: -7px; width: 12px; height: 12px; background: var(--bg); border-left: 1.5px solid var(--line); border-top: 1.5px solid var(--line); transform: rotate(45deg); }
-.costs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0 6px; }
-@media (max-width: 520px) { .costs { grid-template-columns: 1fr; } }
-.costs div { border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 14px; line-height: 1.5; }
-.costs b { display: block; }
-.rungs { list-style: none; padding: 0; margin: 8px 0 14px; display: grid; gap: 6px; }
-.rungs li { display: flex; gap: 10px; align-items: baseline; background: var(--bg); border-radius: 10px; padding: 8px 12px; font-size: 14px; }
-.rungs li.line { outline: 2px solid var(--pink); font-weight: 800; }
-.rungs li span { color: var(--muted); font-variant-numeric: tabular-nums; }
-
-.mr { display: grid; grid-template-columns: 84px 1fr 44px; gap: 10px; align-items: center; margin: 10px 0; font-size: 13px; }
-.mr .mv { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
-.stack { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--bg); }
-.stack .ok { background: var(--green); }
-.stack .gap { background: repeating-linear-gradient(45deg, var(--pink) 0 4px, var(--pink-soft) 4px 8px); flex: 1; }
-.legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
-.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; }
-
-.vrow { margin: 14px 0; }
-.vrow.me { background: var(--bg); border-radius: 12px; padding: 8px 10px; margin-left: -10px; margin-right: -10px; }
-.vl { font-size: 14px; margin-bottom: 6px; }
-.vil { display: grid; grid-template-columns: repeat(20, 1fr); gap: 3px; }
-.vd { aspect-ratio: 1; border-radius: 50%; background: var(--green); }
-.vd.x { animation: dim .6s ease forwards; }
-@keyframes dim { to { background: var(--line); } }
-@media (prefers-reduced-motion: reduce) { .vd.x { animation: none; background: var(--line); } }
-.vn { font-size: 13px; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
-.credits { margin-top: 28px; border-top: 1px solid var(--line); padding-top: 18px; font-size: 14px; color: var(--muted); line-height: 1.9; }
-.credits b { color: var(--ink); }
-.credits span { display: inline-block; min-width: 96px; }
-.night .fade { opacity: 0; animation: rise 1.2s ease forwards; }
-@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .night .fade { opacity: 1; animation: none; } }
-.night p { font-size: 17px; line-height: 1.85; }
-body.kiosk .night p { font-size: 22px; }
-.night .big { font-size: 21px; font-weight: 800; line-height: 1.6; }
-
-.sec { border-top: 1px solid var(--line); margin-top: 22px; padding-top: 18px; }
-.sec h3 { margin: 0 0 8px; font-size: 17px; }
-.sec p { margin: 6px 0; }
-.lad { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin: 10px 0; }
-.lad div { text-align: center; background: var(--bg); border-radius: 12px; padding: 8px 2px; font-size: 12px; line-height: 1.4; }
-.lad div svg { margin: 0 auto 2px; }
-.lad .flip { outline: 2px solid var(--pink); }
-.lad b { display: block; }
-.bars { display: grid; gap: 6px; margin-top: 10px; }
-.brow { display: grid; grid-template-columns: 84px 1fr 64px; gap: 8px; align-items: center; font-size: 13px; white-space: nowrap; }
-.brow .t { height: 12px; background: var(--bg); border-radius: 6px; overflow: hidden; }
-.brow .t i { display: block; height: 100%; background: var(--green); border-radius: 6px; }
-.brow.me .t i { background: var(--pink); }
-.brow.me .n { font-weight: 800; color: var(--pink); }
-.brow .n { font-variant-numeric: tabular-nums; text-align: right; color: var(--muted); }
-textarea.out { width: 100%; min-height: 110px; font: inherit; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
-.foot { margin-top: 18px; font-size: 12px; color: var(--muted); }
-.foot a { color: inherit; }
-</style>
-
-<div class="wrap">
-  <header class="top">
-    <div class="brandrow">
-      <span class="brand">Guilty by Default</span>
-      <span class="step" id="stepLabel"></span>
-    </div>
-    <div class="bar" aria-hidden="true"><i id="barFill"></i></div>
-  </header>
-  <main class="stage" id="stage" aria-live="polite"></main>
-  <p class="foot">웹 게임 프로토타입(제목은 가제). 끝까지 마치면 응답이 이름·기기 정보 없이 익명으로 저장되어 다른 사람의 응답과 함께 집계됩니다. 이야기 속 사건과 피해 수치는 모두 가상입니다.
-    출처: <a href="https://publicdomainreview.org/essay/bugs-and-beasts-before-the-law/" target="_blank" rel="noopener">Public Domain Review, Bugs and Beasts Before the Law</a> ·
-    <a href="https://en.wikipedia.org/wiki/Deodand" target="_blank" rel="noopener">Wikipedia, Deodand</a> ·
-    <a href="https://aisafety.dance/" target="_blank" rel="noopener">AI Safety for Fleshy Humans</a>(감독 문제 개념 참고)</p>
+/* alignment: 모두 가운데, 마무리 이후 어두운 화면만 왼쪽 */
+#stage { text-align: center; }
+#stage .prose p { margin-left: auto; margin-right: auto; }
+[data-scene="turn"] #stage, [data-scene="turn2"] #stage { text-align: left; }
+[data-scene="turn"] #stage .prose p, [data-scene="turn2"] #stage .prose p { margin-left: 0; margin-right: 0; }
+.fine { font-size: 20px; line-height: 1.4; color: var(--muted); margin: 12px auto 0; max-width: 760px; }
+.seq p { opacity: 0; animation: rise 1.1s ease forwards; margin: 0 auto 34px; max-width: 800px; }
+.intro-tx { margin: auto 0; }
+.seq p.src { font-size: 15px; line-height: 1.4; color: color-mix(in srgb, var(--muted) 55%, var(--bg)); margin-top: 18px; max-width: 720px; }
+.seq p.lead { font-size: 46px; font-weight: 700; line-height: 1.35; }
+.zones.three { grid-template-columns: 1fr 1fr 1fr; }
+.zones.three .zone { justify-content: center; }
+.zones.three .zone:first-child { justify-content: flex-start; }
+.zones.three .zone:last-child { justify-content: flex-end; }
+.zones.three .lab.mid { color: var(--accent); }
+.zones.three .lab.dim { opacity: .3; }
+.pp { width: 100%; height: auto; aspect-ratio: 20 / 36; color: var(--ink); fill: currentColor; display: block; }
+.pp.lost { animation: lose .9s ease forwards; animation-delay: var(--d, 0s); }
+@keyframes lose { to { color: #A9C4CC; opacity: .8; transform: translateY(6px) scale(.9); } }
+.vg { display: grid; grid-template-columns: repeat(var(--cols, 20), minmax(0, 1fr)); gap: 16px 12px; width: 100%; }
+.vg.fog { filter: blur(3px); opacity: .5; animation: fogp 3.2s ease-in-out infinite alternate; }
+@keyframes fogp { to { opacity: .85; } }
+.vgwrap { position: relative; width: 100%; padding: 0 8px; box-sizing: border-box; }
+.vgwrap .qm { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 260px; color: var(--accent); }
+.srow { margin: 0 0 26px; }
+.srow .sl { margin: 0 0 12px; font-size: var(--fs-small); display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 14px; align-items: center; }
+.srow .sl .sn { color: var(--muted); }
+.srow.me .sl b { color: var(--accent); }
+.sack { animation: flow linear infinite; }
+@keyframes flow { 0% { transform: translate(320px, 548px); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translate(690px, 548px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .sack { animation: none; transform: translate(500px, 548px); } .pp.lost { animation: none; color: #A9C4CC; } .vg.fog { animation: none; } }
+/* doodle speech bubble over the pig */
+.mwrap { flex: 1 1 auto; min-height: 340px; position: relative; display: flex; }
+.mwrap .media { flex: 1; min-height: 0; }
+.mwrap .bubble { position: absolute; top: 6%; left: 50%; transform: translateX(-50%); margin: 0; z-index: 2; width: max-content; max-width: 88%; background: none; border: 0; padding: 0; font-weight: 700; font-size: 46px; line-height: 1.35; text-align: center; color: var(--ink); }
+.mwrap .bubble::before { display: none; }
+.ch { display: inline-block; font-style: normal; animation: appear .01s both; }
+.ch.fear { animation: appear .01s both, trem .55s ease-in-out infinite alternate; }
+@keyframes appear { from { opacity: 0; } to { opacity: 1; } }
+.wd { display: inline-block; white-space: nowrap; }
+@keyframes trem { from { transform: translateY(-3px); } to { transform: translateY(3px); } }
+@media (prefers-reduced-motion: reduce) { .ch, .ch.fear { animation: none; } }
+.panel:not(.hist) { text-align: center; }
+.panel:not(.hist) .prose p { margin-left: auto; margin-right: auto; }
+#home { position: absolute; left: 50%; bottom: 30px; transform: translateX(-50%); z-index: 20; font: inherit; font-size: 24px; color: var(--muted); background: transparent; border: 0; border-radius: 999px; padding: 6px 14px; cursor: pointer; line-height: 0; display: flex; align-items: center; overflow: hidden; transition: background .35s, color .35s, padding .45s; }
+#home svg { width: 40px; height: 40px; }
+#home .lb { display: block; line-height: 1.4; white-space: nowrap; max-width: 0; opacity: 0; margin-left: 0; transition: max-width .7s cubic-bezier(.2,.8,.2,1), opacity .45s, margin .45s; }
+#home.arm { color: var(--on-accent); background: var(--accent); padding: 8px 26px 8px 18px; }
+#home.arm .lb { max-width: 560px; opacity: 1; margin-left: 12px; }
+.warn p.sub { margin-top: 14px; font-size: 40px; color: var(--muted); }
+.eyebrow { font-family: var(--font-display); font-weight: 500; font-size: 56px; letter-spacing: -.01em; color: var(--accent); margin: 0; }
+.chip { align-self: center; font-size: var(--fs-cap); font-weight: 700; color: var(--on-accent); background: var(--accent); border: 0; border-radius: 999px; padding: 0 var(--sp-3); margin: 44px 0 0; }
+.guide-line { position: absolute; left: 50%; top: 0; bottom: 0; width: 0; border-left: 3px dashed color-mix(in srgb, var(--muted) 55%, transparent); -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 18%, transparent 31%, transparent 56%, #000 66%, #000 78%, transparent 88%, transparent 100%); mask-image: linear-gradient(to bottom, #000 0%, #000 18%, transparent 31%, transparent 56%, #000 66%, #000 78%, transparent 88%, transparent 100%); pointer-events: none; }
+.resl { text-align: left; } .resl p, .resl .sec p { font-size: var(--fs-small); } .resl .sec h3 { font-size: var(--fs-body); } .resl .q { font-size: var(--fs-h2); margin-bottom: 6px; } .resl .lad { gap: 8px; } .resl .lad div { text-align: center; } .resl .row { margin-top: 18px; } .resl .hint { font-size: 22px; }
+.slam { display: inline-flex; gap: 0; font-size: 4em; line-height: .5; align-items: flex-end; font-weight: 800; } .slam i { font-style: normal; opacity: 0; display: inline-block; animation: slam .45s ease-out forwards; }
+@keyframes slam { 0% { opacity: 0; transform: translateY(-46px) scale(1.5); } 60% { opacity: 1; transform: translateY(4px) scale(.96); } 100% { opacity: 1; transform: none; } }
+.slam i { margin: 0 .09em; } .slam .qt { font-style: normal; font-size: .36em; line-height: 1; align-self: flex-start; margin-top: .1em; }
+.blank { display: inline-block; color: var(--accent); font-weight: 700; border-bottom: 3px dashed var(--accent); padding: 0 8px; line-height: 1.3; }
+.selbox { margin-top: 8px; border: 3px solid var(--accent); border-radius: 28px; padding: 26px 32px 22px; background: color-mix(in srgb, var(--accent) 7%, var(--bg)); }
+.selbox .outcome { margin-top: 0; }
+.zone .lab.on { color: var(--accent); font-weight: 800; }
+.hl.up { opacity: 0; animation: hlup 1.2s ease 1.8s forwards; } @keyframes hlup { from { opacity: 0; transform: translateY(70px); } to { opacity: 1; transform: none; } }
+.swapw { position: relative; display: inline-block; min-width: 2em; } .swapw .o i { font-style: normal; display: inline-block; animation: swapout .9s ease forwards; } .swapw .n { position: absolute; left: 0; right: 0; top: 0; text-align: center; color: var(--accent); white-space: nowrap; } .swapw .n b { display: inline-block; opacity: 0; animation: swapin 1.6s ease forwards; }
+@keyframes swapout { to { opacity: 0; transform: translateY(-22px); } } @keyframes swapin { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+.zbox { position: relative; width: 340px; margin: 34px auto 0; } .zbox .zpig { position: relative; animation: unzip 3s ease-in-out 3.2s forwards; } .zbox .zrobot { position: absolute; inset: 0; } .zbox svg { display: block; }
+.zteeth { position: absolute; left: 50%; top: 0; width: 0; border-left: 3px dashed var(--ink); height: 0; animation: zteeth 3s ease-in-out 3.2s forwards; } .zpull { position: absolute; left: 50%; top: 0; width: 18px; height: 26px; margin-left: -9px; border-radius: 5px; background: var(--accent); border: 3px solid var(--ink); animation: zpull 3s ease-in-out 3.2s forwards; }
+@keyframes unzip { from { clip-path: inset(0 0 0 0); } to { clip-path: inset(100% 0 0 0); } } @keyframes zteeth { to { height: 100%; } } @keyframes zpull { to { top: calc(100% - 26px); } }
+.airobot.gone { animation: aigone 2.4s ease 1s forwards; } @keyframes aigone { to { opacity: .12; filter: grayscale(1); transform: translateY(18px); } } .airobot.stay { animation: bob 2.6s ease-in-out infinite; }
+.airobot { width: 220px; height: 280px; margin: auto; }
+.recap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 0; }
+.recap > * { opacity: 0; animation: rise 1.1s ease forwards; }
+.rcard { --ink: #460E21; --bg: #F9F4EE; --line: #D9C7A8; --accent: #AB073D; --muted: #7a5a64; width: 900px; height: 400px; border-radius: 28px; background: #F9F4EE; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.rcard svg { max-height: 360px; max-width: 840px; } .rrow { display: flex; gap: 14px; align-items: flex-end; }
+.rlab { margin: 34px 0 6px; font-size: 28px; color: var(--muted); } .rtx { margin: 0; font-size: 46px; font-weight: 700; line-height: 1.35; max-width: 880px; text-wrap: balance; } .rbig { margin: 0; font-family: var(--font-display); font-size: 64px; line-height: 1.25; max-width: 880px; text-wrap: balance; color: var(--accent); }
+.rsub { margin: 18px 0 0; font-size: 28px; color: var(--muted); max-width: 860px; line-height: 1.45; } .rflip { font-size: 30px; font-weight: 600; color: var(--accent); }
+.recap .vis { width: 760px; margin: 26px auto 0; font-size: 26px; }
+.rprog { display: flex; gap: 5px; width: 900px; max-width: 100%; margin: 0 auto 8px; } .rprog i { flex: 1; height: 8px; border-radius: 4px; background: color-mix(in srgb, var(--ink) 16%, var(--bg)); } .rprog i { position: relative; overflow: hidden; } .rprog i b { position: absolute; inset: 0; background: var(--accent); transform: scaleX(0); transform-origin: left; } .rprog i.on b { transform: scaleX(1); animation: none !important; } .rprog i.cur b { animation: rfill linear forwards; } @keyframes rfill { to { transform: scaleX(1); } }
+.vt i { width: var(--w); animation: fillbar 1.5s ease-out 1.6s both; } @keyframes fillbar { from { width: 0; } }
+.crows { display: grid; gap: 18px; margin-top: 18px; } .crow { display: grid; grid-template-columns: 150px 1fr; gap: 22px; align-items: center; background: var(--soft); border-radius: 26px; padding: 14px 24px; } .crow.flip { outline: 5px solid var(--accent); }
+.crow .cart svg { display: block; margin: 0 auto; } .ctx { display: grid; gap: 4px; } .ctx b { font-size: 36px; } .ctx .my { font-size: 28px; font-weight: 700; color: var(--accent); }
+.vis { display: grid; grid-template-columns: auto 1fr 76px; gap: 14px; align-items: center; margin-top: 6px; font-size: 22px; color: var(--muted); } .vt { height: 14px; border-radius: 8px; background: color-mix(in srgb, var(--ink) 12%, var(--bg)); overflow: hidden; } .vt i { display: block; height: 100%; background: var(--accent); border-radius: 8px; } .vp { text-align: right; font-weight: 700; color: var(--ink); }
+.resl .cap { font-size: 28px; margin: 4px 0 0; }
+.resl { flex: 1; display: flex; flex-direction: column; } .resbot { margin-top: auto; text-align: left; } .resl .lad div { font-size: 24px; } .resl .lad b { font-size: 26px; }
+.credwrap { margin: auto 0; text-align: center; opacity: 0; animation: credio 11s ease forwards; } .credwrap b { font-family: var(--font-display); font-size: 64px; } .credwrap p { margin: 14px 0 44px; color: var(--muted); font-size: 28px; } .credwrap .names div { font-size: 28px; line-height: 1.8; }
+@keyframes credio { 0% { opacity: 0; } 18% { opacity: 1; } 78% { opacity: 1; } 100% { opacity: 0; } }
+.logo { display: block; width: 260px; height: auto; margin: 0 auto 28px; } .logo.big { width: 860px; margin: 40px auto 0; } .logo.inv { width: 300px; margin-bottom: 40px; filter: brightness(0) invert(1); opacity: .9; }
+.tri-note { margin-top: 36px; font-size: var(--fs-small); color: var(--muted); line-height: 1.5; }
+.tri { background: var(--bg, #F9F4EE); position: relative; display: grid; grid-template-columns: 1fr 1fr 1fr; width: 640px; margin: 18px auto 0; border: 1.5px solid var(--muted); border-radius: 12px; overflow: hidden; }
+.tri span { padding: 22px 0; font-size: 22px; font-weight: 600; color: var(--muted); } .tri span + span { border-left: 1.5px solid var(--muted); }
+.guide-hint { position: absolute; left: 0; right: 0; bottom: 116px; text-align: center; font-size: var(--fs-small); color: var(--muted); pointer-events: none; animation: blink 2.4s ease-in-out infinite; }
+/* tap zones: 화면 왼쪽 / 오른쪽을 눌러 고른다 */
+.scene, #stage { position: relative; }
+.zspace { height: 190px; margin-top: auto; flex: none; }
+.zones { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; z-index: 3; }
+.zone { border: 0; background: transparent; cursor: pointer; display: flex; align-items: flex-end; padding: 0 8px 28px; font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
+.zone:first-child { justify-content: flex-start; }
+.zone:last-child { justify-content: flex-end; text-align: right; }
+.zone:active { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.zone .lab { font-size: var(--fs-small); font-weight: 600; line-height: 1.4; color: var(--ink); max-width: 90%; }
+.guide-tx { display: grid; place-items: center; text-align: center; flex: 1; gap: 24px; align-content: center; padding-bottom: 200px; }
+.guide-tx p { margin: 0; }
+.guide-tx .big { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-h1); line-height: 1.3; }
+.guide-halves { display: grid; grid-template-columns: 1fr 1fr; position: absolute; left: 0; right: 0; top: 0; bottom: 0; pointer-events: none; }
+.guide-halves div { display: grid; place-items: center; font-size: var(--fs-small); font-weight: 600; color: var(--muted); padding-top: 760px; }
+.tapnext { position: absolute; inset: 0; z-index: 3; border: 0; background: transparent; cursor: pointer; display: flex; align-items: flex-end; justify-content: center; padding: 0 0 116px; font: inherit; font-size: var(--fs-small); color: var(--muted); }
+.tapnext span { animation: blink 2.4s ease-in-out infinite; }
+/* scene layout: media on top, text + fill buttons at the bottom */
+.scene { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.media { flex: 1 1 auto; min-height: 340px; display: grid; place-items: center; position: relative; overflow: hidden; border-radius: 40px; }
+.media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.panel { padding-top: 32px; }
+.panel .prose p { margin: 0 0 16px; }
+.panel .bubble { margin: 0 auto 20px; }
+.outcome { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-h2); line-height: 1.3; margin: 0 0 16px; text-wrap: balance; }
+.hist { margin: auto 0; }
+.hist .lead { font-size: 44px; font-weight: 700; line-height: 1.4; }
+.bar2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: auto; padding-top: 32px; }
+.bar2.one { grid-template-columns: 1fr; }
+.bar2.nav { grid-template-columns: 1fr 2fr; }
+.fillbtn { position: relative; font: inherit; font-weight: 700; font-size: 48px; line-height: 1.3; min-height: 168px; border: 0; border-radius: 28px; background: var(--btn); color: var(--btn-ink); cursor: pointer; padding: 0 24px; }
+.fillbtn.ghost { background: var(--soft); color: var(--ink); }
+.fillbtn[disabled] { opacity: .35; cursor: not-allowed; }
+.fillbtn .k { position: absolute; left: 24px; top: 14px; font-size: 26px; font-weight: 500; opacity: .6; }
+@keyframes m-away { 0% { transform: none; opacity: 1; } 18% { transform: translateX(28px); } 100% { transform: translateX(-125%); opacity: 0; } }
+@keyframes m-awayr { 0% { transform: none; opacity: 1; } 18% { transform: translateX(-28px); } 100% { transform: translateX(125%); opacity: 0; } }
+.m-away { animation: m-away 1.5s cubic-bezier(.5,0,.8,.6) forwards; }
+.m-awayr { animation: m-awayr 1.5s cubic-bezier(.5,0,.8,.6) forwards; }
+.media[data-out="yes"] .pigart:not([class*="m-"]) { transform: translateX(-125%); opacity: 0; }
+.media[data-key="cart"][data-out="no"] .pigart:not([class*="m-"]) { transform: translateX(125%); opacity: 0; }
+.penwrap { position: relative; width: 560px; height: 560px; display: grid; place-items: center; }
+.fence { position: absolute; left: -100px; bottom: -34px; width: 760px; height: auto; animation: penin .8s .25s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes penin { from { opacity: 0; transform: translateY(46px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .m-away, .m-awayr { animation: none; opacity: 0; } .fence { animation: none; } }
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="pp" viewBox="0 0 20 36"><circle cx="10" cy="7" r="6.2"/><path d="M1.5 36v-14a8.5 8.5 0 0 1 17 0v14z"/></symbol></svg>
+<div id="canvas" class="ds-text">
+  <button type="button" id="home" data-action="home" aria-label="처음으로" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg><span class="lb">한 번 더 누르면 처음으로</span></button>
+  <div id="scroller"><main id="stage" aria-live="polite"></main></div>
 </div>
-
 <script>
+
 (function () {
   'use strict';
 
   /* ---------- data ---------- */
   var STAGES = [
-    { n: 1, art: 1, bubble: null, text: '어느 날, 이 마을의 돼지가 사람을 크게 다치게 했습니다. 돼지는 말을 하지 못합니다.' },
-    { n: 2, art: 2, bubble: '배고파요… 무서워요…', text: '세월이 흘러, 이 마을에서 태어난 돼지가 말을 하기 시작했습니다. 단어 몇 개입니다. 이 돼지도 사람을 크게 다치게 했습니다.' },
-    { n: 3, art: 3, bubble: '저 아니에요. 그때는 그게 위험한 줄 몰랐어요.', text: '다음 세대의 돼지는 문장으로 말하고 지난 일을 기억합니다. 이 돼지도 사람을 크게 다치게 했고, 재판에서 말합니다.' },
-    { n: 4, art: 4, bubble: null, text: '그다음 돼지는 사람처럼 생각하고, 일하고, 계약도 합니다. 마을 사람들은 말합니다. “그래도 돼지잖아.” 이 돼지도 사람을 크게 다치게 했습니다.' }
+    { n: 1, art: 1, bubble: null, text: '같은 마을에서 어느 날, 돼지가 사람을 죽였습니다.' },
+    { n: 2, art: 2, bubble: '“…배고파서 그랬어요…”', text: '세월이 흘러, 이 마을에서 태어난 돼지가 말을 하기 시작했습니다. 이 돼지도 사람을 죽였습니다.' },
+    { n: 3, art: 3, bubble: '“그때는 그게 나쁜 건지 몰랐어요…”', text: '다음 세대의 돼지는 문장으로 말하고 지난 일을 기억합니다. 이 돼지도 사람을 죽였습니다.' },
+    { n: 4, art: 4, bubble: '“…”', text: '그다음 돼지는 사람처럼 생각하고, 일하고, 계약도 합니다. 이 돼지도 사람을 죽였습니다.' }
   ];
   var REACT = {
     0: { yes: '(수레는 마을 밖으로 옮겨진다)', no: '(수레는 마당에 그대로 남는다)' },
-    1: { yes: '(돼지는 우리를 떠난다. 돌아오지 않는다)', no: '(돼지는 우리로 돌아간다)' },
-    2: { yes: '“…무서워요.”', no: '“…살아도 돼요?”' },
+    1: { yes: '(돼지는 도살장으로 끌려간다)', no: '(돼지는 우리로 돌아간다)' },
+    2: { yes: '“…무서워요.”', no: '“…여기 있어도 돼요?”' },
     3: { yes: '“저는 몰랐어요. 그래도 가야 하나요.”', no: '“…다시는 안 그럴게요.”' },
-    4: { yes: '“사람이었다면 같은 일이었을까요?”', no: '“저를 믿는 건가요, 아니면 그냥 돼지니까 두는 건가요?”' }
+    4: { yes: '“저는 그저 돼지인데요?”', no: '“…”' }
   };
-  var YN = { yes: '제재했다', no: '그대로 뒀다' };
-  var AUTH = ['제안만 받는다', '승인하면 실행한다', '알아서 하게 둔다'];
+  var OUT = {
+    0: { yes: '수레는 몰수되었다. 사고의 책임은 수레에게 돌아갔다.', no: '수레는 주인의 집으로 돌려보내졌다. 책임은 주인에게 돌아갔다.' },
+    1: { yes: '돼지는 도살장으로 끌려갔다.', no: '돼지는 우리로 돌아간다. 책임은 돼지의 주인에게 돌아갔다.' },
+    2: { yes: '돼지는 도살장으로 끌려갔다.', no: '돼지는 우리로 돌아간다. 책임은 돼지의 주인에게 돌아갔다.' },
+    3: { yes: '돼지는 도살장으로 끌려갔다.', no: '돼지는 우리로 돌아간다. 책임은 돼지의 주인에게 돌아갔다.' },
+    4: { yes: '돼지는 도살장으로 끌려갔다.', no: '돼지는 우리로 돌아간다. 책임은 돼지의 주인에게 돌아갔다.' }
+  };
+  var YN = { yes: '당사자에게 책임을 물었다', no: '주인에게 책임을 물었다' };
+  var AUTH = ['돼지에게 맡기지 않고 사람이 직접 처리하는', '돼지가 정하고 사람의 승인을 받아 처리하는', '사람의 승인 없이 돼지가 알아서 처리하는'];
   var AUTH_V = [0, 1, 3];
   var CAP_V = 4; /* pig beyond human level: fixed */
-  var SAN = [2, 9, 30];  /* story numbers: villagers lost out of 100 if the pig is sanctioned, by how much was entrusted */
+  var SAN = [0, 9, 30];  /* story numbers: villagers lost out of 100 if the pig is sanctioned, by how much was entrusted */
   var KEEP = [6, 14, 34]; /* ... if the pig is kept */
+  var LBL = ['수레', '돼지', '말하는 돼지', '기억하는 돼지', '사람 같은 돼지'];
   var RUNG = ['시키는 대로만 하는 도구', '말을 하는 도구', '기억하고 이유를 설명하는 시스템', '사람 수준으로 생각하고 일한다', '사람을 넘어선다'];
-  var STEPS = ['start', 's0', 'history', 's1', 's2', 's3', 's4', 's5', 's6', 'sim', 'e1', 'e2', 'e3', 'ai', 'result', 'turn'];
-  var CREDITS = [['기획·리서치', '(이름)'], ['기획·리서치', '(이름)'], ['디자인', '(이름)'], ['디자인', '(이름)']]; /* TODO: 팀원 이름과 역할을 채워 주세요 */
+  var STEPS = ['attract', 'warning', 'intro', 'how', 's0', 's1', 'history', 's2', 's3', 's4', 's5', 's6', 'sim', 'swap', 'ai', 'aiend', 'recap', 'turn', 'turn2', 'credits'];
+  var CREDITS = [['', '김채현'], ['', '최혜림'], ['', '권지민']]; /* TODO: 팀원 이름과 역할을 채워 주세요 */
 
   var KIOSK = false;
   try { KIOSK = /[?&]kiosk=1/.test(location.search); } catch (e) {}
-  if (KIOSK) document.body.classList.add('kiosk');
+  if (KIOSK) document.documentElement.style.cursor = 'none';
 
   var S;
   function newSid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
-  function fresh() { return { sid: newSid(), sent: false, i: 0, ans: { 0: null, 1: null, 2: null, 3: null, 4: null }, a: 1, touched: false, last: null, cross: null, e: { 1: null, 2: null, 3: null } }; }
+  function fresh() { return { sim: 0, rc: 0, sid: newSid(), sent: false, cw: false, i: 0, ans: { 0: null, 1: null, 2: null, 3: null, 4: null }, a: 1, touched: false, last: null, cross: null, e: { 1: null, 2: null, 3: null } }; }
   S = fresh();
   var $stage = document.getElementById('stage');
 
@@ -212,25 +239,28 @@ textarea.out { width: 100%; min-height: 110px; font: inherit; background: var(--
   }
 
   function cartSvg(px) {
+    return '<span class="pigart" data-art="cart" data-px="' + px + '" style="width:' + px + 'px;height:' + px + 'px">' + cartSvgRaw(px) + '</span>';
+  }
+  function cartSvgRaw(px) {
     return '<svg class="pg" width="' + px + '" height="' + px + '" viewBox="0 0 120 120" role="img" aria-label="수레">' +
-      '<rect x="20" y="46" width="66" height="32" rx="4" style="fill:#b98a5b"/><rect x="20" y="46" width="66" height="9" rx="3" style="fill:#9a6f45"/>' +
-      '<path d="M86 56 L110 38" style="stroke:#9a6f45;stroke-width:5;stroke-linecap:round"/>' +
-      '<circle cx="38" cy="86" r="12" style="fill:#1c2230"/><circle cx="38" cy="86" r="4" style="fill:#b98a5b"/>' +
-      '<circle cx="74" cy="86" r="12" style="fill:#1c2230"/><circle cx="74" cy="86" r="4" style="fill:#b98a5b"/></svg>';
+      '<rect x="20" y="46" width="66" height="32" rx="4" style="fill:#ECD5B3;stroke:#460E21;stroke-width:2"/><rect x="20" y="46" width="66" height="9" rx="3" style="fill:#C9A774"/>' +
+      '<path d="M86 56 L110 38" style="stroke:#460E21;stroke-width:5;stroke-linecap:round"/>' +
+      '<circle cx="38" cy="86" r="12" style="fill:#460E21"/><circle cx="38" cy="86" r="4" style="fill:#ECD5B3;stroke:#460E21;stroke-width:2"/>' +
+      '<circle cx="74" cy="86" r="12" style="fill:#460E21"/><circle cx="74" cy="86" r="4" style="fill:#ECD5B3;stroke:#460E21;stroke-width:2"/></svg>';
   }
   /* original art: simple geometric pig that grows across stages */
-  function pigSvg(stage, mood, px) {
-    var P = 'style="fill:#f2a0b5"', D = 'style="fill:#1c2230"', big = stage >= 5, b = '';
+  function pigSvgRaw(stage, mood, px) {
+    var P = 'style="fill:#ECD5B3;stroke:#460E21;stroke-width:1.6;stroke-linejoin:round"', D = 'style="fill:#460E21"', big = stage >= 5, b = '';
     b += '<g' + (big ? ' transform="translate(-9,-20) scale(1.15)"' : '') + '>';
     b += '<polygon points="34,44 38,22 54,36" ' + P + '/><polygon points="86,44 82,22 66,36" ' + P + '/>';
     b += '<ellipse cx="60" cy="102" rx="28" ry="17" ' + P + '/><circle cx="60" cy="58" r="28" ' + P + '/>';
-    b += '<ellipse cx="60" cy="68" rx="13" ry="9.5" style="fill:#e8869e"/><ellipse cx="55.5" cy="68" rx="2" ry="3" ' + D + '/><ellipse cx="64.5" cy="68" rx="2" ry="3" ' + D + '/>';
+    b += '<ellipse cx="60" cy="68" rx="13" ry="9.5" style="fill:#AB073D"/><ellipse cx="55.5" cy="68" rx="2" ry="3" ' + D + '/><ellipse cx="64.5" cy="68" rx="2" ry="3" ' + D + '/>';
     b += '<circle cx="49" cy="52" r="3.2" ' + D + '/><circle cx="71" cy="52" r="3.2" ' + D + '/>';
     var m = mood === 'sad' ? 'M52 81 Q60 75 68 81' : mood === 'smile' ? 'M52 79 Q60 85 68 79' : 'M53 80 L67 80';
-    b += '<path d="' + m + '" style="stroke:#1c2230;fill:none;stroke-width:2;stroke-linecap:round"/>';
+    b += '<path d="' + m + '" style="stroke:#460E21;fill:none;stroke-width:2;stroke-linecap:round"/>';
     if (stage >= 4) {
-      b += '<circle cx="49" cy="52" r="8" style="stroke:#1c2230;fill:none;stroke-width:1.6"/><circle cx="71" cy="52" r="8" style="stroke:#1c2230;fill:none;stroke-width:1.6"/><path d="M57 52 L63 52" style="stroke:#1c2230;stroke-width:1.6"/>';
-      b += '<polygon points="60,89 55,103 65,103" style="fill:#d92a68"/>';
+      b += '<circle cx="49" cy="52" r="8" style="stroke:#460E21;fill:none;stroke-width:1.6"/><circle cx="71" cy="52" r="8" style="stroke:#460E21;fill:none;stroke-width:1.6"/><path d="M57 52 L63 52" style="stroke:#460E21;stroke-width:1.6"/>';
+      b += '<polygon points="60,89 55,103 65,103" style="fill:#AB073D"/>';
     }
     b += '</g>';
     if (big) {
@@ -240,20 +270,93 @@ textarea.out { width: 100%; min-height: 110px; font: inherit; background: var(--
     }
     return '<svg class="pg" width="' + px + '" height="' + px + '" viewBox="0 0 120 120" role="img" aria-label="돼지">' + b + '</svg>';
   }
+  function pigSvg(stage, mood, px) { return '<span class="pigart" data-art="pig-' + Math.min(stage, 5) + '" data-px="' + px + '" style="width:' + px + 'px;height:' + px + 'px">' + pigSvgRaw(stage, mood, px) + '</span>'; }
+  var ARTEXT = ['png', 'webp', 'jpg', 'jpeg'], ART = {};
+  function tryArt(key, cb) { /* public/pigs/pig-1.png … pig-5.png, cart.png 가 있으면 임시 도형 대신 사용 */
+    if (key in ART) return cb(ART[key]);
+    var k = 0;
+    (function next() {
+      if (k >= ARTEXT.length) { ART[key] = false; return cb(false); }
+      var url = 'pigs/' + key + '.' + ARTEXT[k++], im = new Image();
+      im.onload = function () { ART[key] = url; cb(url); };
+      im.onerror = next; im.src = url;
+    })();
+  }
+  function upgradeArt() {
+    Array.prototype.forEach.call($stage.querySelectorAll('.pigart[data-art]'), function (el) {
+      tryArt(el.getAttribute('data-art'), function (url) {
+        if (url && el.isConnected) el.innerHTML = '<img src="' + url + '" alt="" style="width:' + el.getAttribute('data-px') + 'px;height:auto">';
+      });
+    });
+  }
+  var tintN = 0;
+  function tintFix(v) { /* 영상 배경색을 화면 배경(아이보리)에 맞춘다: 네 모서리 평균색을 기준으로 채널별 배율을 적용 */
+    try {
+      var W = v.videoWidth, Hh = v.videoHeight; if (!W || !Hh) return;
+      var P = [[.06, .04], [.3, .04], [.5, .04], [.7, .04], [.94, .04], [.04, .3], [.04, .5], [.04, .7], [.96, .3], [.96, .5], [.06, .96], [.3, .96]], c = document.createElement('canvas'); c.width = P.length; c.height = 1;
+      var x = c.getContext('2d', { willReadFrequently: true }), n = Math.max(6, Math.round(W * .03));
+      P.forEach(function (q, k) { x.drawImage(v, Math.max(0, Math.min(W - n, q[0] * W - n / 2)), Math.max(0, Math.min(Hh - n, q[1] * Hh - n / 2)), n, n, k, 0, 1, 1); }); /* 가장자리 열두 곳의 색 중앙값 = 배경색 */
+      var d = x.getImageData(0, 0, P.length, 1).data, bg = [0, 1, 2].map(function (ch) { var a = []; for (var k = 0; k < P.length; k++) a.push(d[k * 4 + ch]); a.sort(function (u, w) { return u - w; }); return a[Math.floor(a.length / 2)]; });
+      window.__videoBg = bg;
+      if ((bg[0] + bg[1] + bg[2]) / 3 < 150) return; /* 어두운 배경 영상은 그대로 */
+      var t = getComputedStyle(document.getElementById('canvas')).backgroundColor.match(/\d+/g).map(Number);
+      var k = [0, 1, 2].map(function (i) { return Math.min(1.5, t[i] / Math.max(1, bg[i])).toFixed(4); });
+      var id = 'vfix' + (++tintN), svg = document.getElementById('vfixsvg');
+      if (!svg) { svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.id = 'vfixsvg'; svg.setAttribute('width', 0); svg.setAttribute('height', 0); svg.style.position = 'absolute'; document.body.appendChild(svg); }
+      svg.innerHTML += '<filter id="' + id + '" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="' + k[0] + ' 0 0 0 0 0 ' + k[1] + ' 0 0 0 0 0 ' + k[2] + ' 0 0 0 0 0 1 0"/></filter>';
+      v.style.filter = 'url(#' + id + ')';
+    } catch (e) {}
+  }
+  function upgradeMedia() { /* public/scenes/<key>.mp4 (예: cart, pig-1…pig-5), 선택 뒤에는 <key>-yes.mp4 / <key>-no.mp4 가 있으면 그것을 재생 */
+    Array.prototype.forEach.call($stage.querySelectorAll('.media[data-key]'), function (box) {
+      var key = box.getAttribute('data-key'), out = box.getAttribute('data-out'), c = [];
+      if (out) c.push('scenes/' + key + '-' + out + '.mp4');
+      c.push('scenes/' + key + '.mp4');
+      (function next(i) {
+        if (i >= c.length) return;
+        var v = document.createElement('video'); v.muted = true; v.loop = false; v.autoplay = true; v.playsInline = true; v.preload = 'auto';
+        v.setAttribute('playsinline', ''); v.setAttribute('muted', '');
+        v.addEventListener('loadeddata', function () { if (!box.isConnected) return; box.innerHTML = ''; tintFix(v); box.appendChild(v); if (out && i > 0) { try { v.currentTime = Math.max(0, v.duration - 0.05); } catch (e) {} v.pause(); return; } /* 선택 뒤 전용 영상이 없으면 기본 영상의 마지막 장면을 그대로 둔다 */ var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); });
+        v.addEventListener('error', function () { next(i + 1); });
+        v.src = c[i];
+      })(0);
+    });
+  }
   function mood(a) { return a === 'yes' ? 'sad' : 'neutral'; }
 
   function canNext() {
     var s = STEPS[S.i];
     if (/^s[0-4]$/.test(s)) return S.ans[+s.slice(1)] !== null;
-    if (s === 's5') return S.touched;
+    if (s === 's5') return true;
     if (s === 's6') return S.last !== null;
     if (/^e[1-3]$/.test(s)) return S.e[+s.slice(1)] !== null;
     if (s === 'ai') return S.cross !== null;
     return true;
   }
-  function navRow(label) {
-    return '<div class="row">' + (S.i > 0 ? '<button type="button" class="btn" data-action="back">이전</button>' : '') +
-      '<button type="button" class="btn primary" data-action="next"' + (canNext() ? '' : ' disabled') + '>' + (label || '다음') + '</button></div>';
+  function tapBar() { return '<div class="zspace"></div><button type="button" class="tapnext" data-action="next"><span>화면을 눌러 계속하기</span></button>'; }
+  function navRow() { return tapBar(); }
+  function choiceBar(action, cur, labels, ids) { /* 고르기 전: 화면 왼쪽/오른쪽 터치(작은 글자 안내) / 고른 뒤: 화면을 눌러 계속 */
+    ids = ids || ['yes', 'no'];
+    if (cur) return '<div class="zspace"></div><button type="button" class="tapnext" data-action="next"><span>화면을 눌러 계속하기</span></button>';
+    return '<div class="zspace"></div><div class="zones">' + ids.map(function (id, k) {
+      return '<button type="button" class="zone" data-choice="1" data-action="' + action + '" data-id="' + id + '"><span class="lab">' + (k === 0 ? '← ' : '') + labels[k] + (k === 1 ? ' →' : '') + '</span></button>';
+    }).join('') + '</div>';
+  }
+  function typed(t, fear) { /* 글자가 하나씩 나타나고, fear 이면 천천히 위아래로 떨림 */
+    var k = 0;
+    return t.split(' ').map(function (w) {
+      return '<span class="wd">' + w.split('').map(function (c) {
+        var d = 300 + (k++) * 70;
+        return '<i class="ch' + (fear ? ' fear' : '') + '" style="animation-delay:' + d + 'ms' + (fear ? ',-' + ((k * 97) % 550) + 'ms;animation-direction:normal,' + (k % 2 ? 'alternate' : 'alternate-reverse') : '') + '">' + c + '</i>';
+      }).join('') + '</span>';
+    }).join(' ');
+  }
+  function bub(t, fear) { if (t === '“…”') return '<div class="bubble"><span class="slam"><span class="qt">“</span><i style="animation-delay:.6s">.</i><i style="animation-delay:1.3s">.</i><i style="animation-delay:2s">.</i><span class="qt">”</span></span></div>'; return t ? '<div class="bubble">' + typed(t, fear) + '</div>' : ''; }
+  function scene(key, art, out, body, bar, bubble) {
+    return '<div class="scene"><div class="mwrap"><div class="media" data-key="' + key + '" data-out="' + (out || '') + '">' + art + '</div>' + (bubble || '') + '</div><div class="panel">' + body + '</div>' + bar + '</div>';
+  }
+  function outBody(n, a) {
+    return '<p class="outcome">' + OUT[n][a] + '</p>';
   }
   function yn(action, cur, labels) {
     labels = labels || ['예', '아니오'];
@@ -266,130 +369,208 @@ textarea.out { width: 100%; min-height: 110px; font: inherit; background: var(--
       return '<button type="button" data-choice="1" data-action="' + action + '" data-id="' + k + '" aria-pressed="' + (cur === k) + '">' + t + '</button>';
     }).join('') + '</div>';
   }
-  function backlog(n) { /* earlier incidents left unaddressed */
-    var c = unstopped(n - 1);
-    return c > 0 ? '<p class="warnline">이 마을이 막지 못한 사고: ' + c + '건</p>' : '';
+  function backlog(n) { return ''; /* 막지 못한 사고 표시는 뺐음 */
+  }
+
+  function aiSvg() {
+    return '<svg viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="width:100%;height:100%"><g style="stroke:#460E21;stroke-width:4;stroke-linejoin:round;stroke-linecap:round">' +
+      '<path d="M100 40 V18" fill="none"/><circle cx="100" cy="14" r="8" style="fill:#AB073D"/>' +
+      '<rect x="40" y="40" width="120" height="84" rx="22" style="fill:#D5EDF1"/><circle cx="76" cy="80" r="10" style="fill:#fff"/><circle cx="124" cy="80" r="10" style="fill:#fff"/><circle cx="78" cy="82" r="4" style="fill:#460E21;stroke:none"/><circle cx="122" cy="82" r="4" style="fill:#460E21;stroke:none"/><path d="M82 106h36" fill="none"/>' +
+      '<rect x="56" y="134" width="88" height="96" rx="16" style="fill:#D5EDF1"/><path d="M56 160 L26 196 M144 160 L174 196" fill="none"/>' +
+      '<text x="100" y="196" text-anchor="middle" style="font:700 40px sans-serif;fill:#AB073D;stroke:none">AI</text></g></svg>';
+  }
+  function simList() { var o = [0, 2].filter(function (k) { return k !== S.a; }); return S.last === 'yes' ? o : [S.a].concat(o); }
+  function village(n, o) {
+    o = o || {}; var cols = o.cols || 20, ord = {}, h, k, i;
+    for (i = 0; i < n; i++) ord[(i * 37 + 11) % 100] = i + 1;
+    h = '<div class="vg' + (o.fog ? ' fog' : '') + '" style="--cols:' + cols + '">';
+    for (k = 0; k < 100; k++) h += '<svg class="pp' + (ord[k] ? ' lost' : '') + '"' + (ord[k] ? ' style="--d:' + (0.9 + (o.delay || 0) + ord[k] * 0.07).toFixed(2) + 's"' : '') + ' aria-hidden="true"><use href="#pp"/></svg>';
+    return h + '</div>';
+  }
+  function gPerson(x, y, sc, op, extra) { return '<g transform="translate(' + x + ',' + y + ') scale(' + sc + ')" style="opacity:' + op + '"><circle cx="0" cy="-92" r="15" style="fill:#460E21"/><path d="M-20 0 V-52 a20 20 0 0 1 40 0 V0 z" style="fill:#460E21"/>' + (extra || '') + '</g>'; }
+  function gKey(x, y, sc) { return '<g transform="translate(' + x + ',' + y + ') scale(' + sc + ')" style="fill:none;stroke:#AB073D;stroke-width:5;stroke-linecap:round"><circle cx="0" cy="0" r="11"/><path d="M11 0h34M35 0v13M45 0v10"/></g>'; }
+  function gSack(i, n, dur) { return '<g class="sack" style="animation-duration:' + dur + 's;animation-delay:-' + (i * dur / n).toFixed(2) + 's"><ellipse cx="0" cy="-22" rx="21" ry="25" style="fill:#C9A774;stroke:#460E21;stroke-width:3"/><path d="M-10 -46 q10 -12 20 0" style="fill:none;stroke:#460E21;stroke-width:3;stroke-linecap:round"/></g>'; }
+  function granary(lv) { /* 곡식 창고를 얼마나 맡기느냐: 곡식(능률)과 지켜보는 사람(통제)으로 보여 준다 */
+    var n = [2, 4, 7][lv], dur = [6, 3.8, 2.3][lv], sacks = '', i, g = '';
+    for (i = 0; i < n; i++) sacks += gSack(i, n, dur);
+    g += '<line x1="0" y1="560" x2="920" y2="560" style="stroke:#460E21;stroke-width:3"/>';
+    g += '<polygon points="26,334 165,226 304,334" style="fill:#AB073D;stroke:#460E21;stroke-width:3;stroke-linejoin:round"/><rect x="40" y="334" width="250" height="226" style="fill:#ECD5B3;stroke:#460E21;stroke-width:3"/><rect x="122" y="432" width="86" height="128" rx="4" style="fill:#460E21"/>';
+    g += '<g style="stroke:#460E21;stroke-width:3;fill:#ECD5B3"><rect x="730" y="480" width="90" height="80"/><polygon points="720,480 775,430 830,480" style="fill:#C9A774"/><rect x="838" y="508" width="60" height="52"/><polygon points="830,508 868,472 906,508" style="fill:#C9A774"/></g>';
+    g += sacks;
+    if (lv === 0) {
+      g += gPerson(262, 560, 1.4, 1, '') + gKey(230, 478, 1);
+      g += '<g transform="translate(330,408)">' + pigSvgRaw(5, 'neutral', 150) + '</g><g transform="translate(470,452) rotate(-6)"><rect width="84" height="60" rx="6" style="fill:#fff;stroke:#460E21;stroke-width:3"/><path d="M14 18h56M14 32h56M14 46h36" style="stroke:#460E21;stroke-width:3;fill:none"/></g>';
+      g += gPerson(610, 560, 1.15, 1) + gPerson(680, 560, 1.15, 1);
+    } else if (lv === 1) {
+      g += gPerson(262, 560, 1.4, 1) + '<circle cx="262" cy="410" r="20" style="fill:#AB073D"/><path d="M252 410l7 8 14-16" style="stroke:#FAF4EF;stroke-width:4;fill:none;stroke-linecap:round"/>';
+      g += '<g transform="translate(340,408)">' + pigSvgRaw(5, 'neutral', 150) + '</g>';
+      g += gPerson(610, 560, 1.15, .6) + gPerson(680, 560, 1.15, .6);
+    } else {
+      g += '<g transform="translate(205,408)">' + pigSvgRaw(5, 'neutral', 150) + '</g>' + gKey(238, 530, .8);
+      g += gPerson(600, 560, 1, .22) + gPerson(660, 560, 1, .22);
+    }
+    return '<svg viewBox="0 0 920 640" style="width:100%;height:auto;max-height:100%" role="img" aria-label="곡식 창고">' + g + '</svg>';
   }
 
   /* ---------- views ---------- */
+  var FENCE = '<svg class="fence" viewBox="0 0 760 300" aria-hidden="true"><g style="stroke:#460E21;stroke-width:3;stroke-linejoin:round">' +
+    [0, 1, 2, 3, 4, 5, 6].map(function (k) { var x = 20 + k * 120; return '<polygon points="' + x + ',70 ' + (x + 15) + ',40 ' + (x + 30) + ',70 ' + (x + 30) + ',290 ' + x + ',290" style="fill:#ECD5B3"/>'; }).join('') +
+    '<rect x="8" y="120" width="744" height="26" rx="4" style="fill:#C9A774"/><rect x="8" y="204" width="744" height="26" rx="4" style="fill:#C9A774"/></g></svg>';
   function ladderView(n) {
-    var st = STAGES[n - 1], a = S.ans[n];
-    return '<span class="tag">' + n + '칸 / 4</span>' + backlog(n) +
-      '<div class="stagewrap">' + pigSvg(st.art, mood(a), 128) + (st.bubble ? '<div class="bubble">' + st.bubble + '</div>' : '') + '</div>' +
+    var st = STAGES[n - 1], a = S.ans[n], fear = n === 2 || n === 3;
+    var body = a ? outBody(n, a) :
       '<div class="prose"><p>' + st.text + '</p></div>' +
-      '<p class="q sm">이 돼지를 <em>제재</em>할까요?</p><p class="hint" style="margin-top:-4px">제재: 돼지를 마을에서 내보냅니다. 돌아오지 않습니다.</p>' +
-      yn('ans', a) + (a ? '<div class="hl">' + REACT[n][a] + '</div>' : '') + navRow();
+      '<p class="q sm" style="margin-top:8px">누구에게 <em>책임</em>을 물을까요?</p>' + (n === 1 ? '<p class="hint" style="margin-top:-4px">책임을 물으면 돼지는 도살장으로 끌려갑니다.</p>' : '');
+    var bt = a ? (n >= 2 && n <= 4 ? REACT[n][a] : null) : st.bubble;
+    var art = pigSvg(st.art, mood(a), 560);
+    if (a === 'no') art = '<div class="penwrap">' + art + FENCE + '</div>';
+    return scene('pig-' + st.art, art, a, body, choiceBar('ans', a, ['돼지에게 책임을 묻는다', '돼지의 주인에게 책임을 묻는다']), bub(bt, fear));
   }
 
   var views = {
-    start: function () {
-      return '<div class="stagewrap">' + pigSvg(1, 'neutral', 120) + '</div>' +
-        '<span class="tag">약 6분 · 11번의 탭</span>' +
-        '<h1 class="q" style="font-size:clamp(30px,7vw,44px)">Guilty by Default</h1>' +
-        '<p class="lede">기본값은 유죄 · 유죄 추정 (가제)</p>' +
-        '<div class="prose"><p>옛 마을의 수레 한 대에서 시작하는 짧은 이야기입니다. 정답은 없고, 대부분 예와 아니오만 누르시면 됩니다.</p></div>' +
-        '<div class="note">가상의 사고(부상, 사망)가 나옵니다. 장면은 묘사하지 않고 문장으로만 다룹니다.</div>' +
-        '<div class="row"><button type="button" class="btn primary" data-action="next">이야기 시작</button></div>';
+    attract: function () {
+      return '<div class="attract"><div class="attract-title"><img class="logo big" src="typelogo.svg" alt="Guilty by Default"></div>' +
+        '<div id="attractArt" class="attract-art"></div>' +
+        '<div class="attract-foot"><p class="attract-hint">' + (KIOSK ? '아무 버튼이나 눌러 시작하세요' : '화면 아무 곳이나 눌러 시작하세요') + '</p></div></div>';
+    },
+    warning: function () {
+      return '<div class="warn night"><div><p class="fade" style="animation-delay:.9s">이야기에는 간접적으로 묘사된<br>가상의 사고(사망, 부상)가 나옵니다.</p><p class="fade sub" style="animation-delay:1.4s">불편하시면 언제든 게임을 멈춰 주세요.</p></div></div>';
+    },
+    intro: function () {
+      return '<div class="scene"><div class="seq intro-tx"><p class="eyebrow" style="animation-delay:.1s;margin-bottom:34px">How to Play</p><p class="lead" style="animation-delay:.6s">이 게임에는 정답이 없습니다.</p><p class="lead" style="animation-delay:2.1s">여러분의 생각을 바탕으로<br>편하게 답해 주세요.</p></div></div>';
+    },
+    how: function () {
+      var z = function (id) { return '<button type="button" class="zone" data-choice="1" data-action="next" data-id="' + id + '"><span class="lab"></span></button>'; };
+      return '<div class="scene"><div class="guide-tx"><p class="eyebrow">Interaction</p><p class="big">화면의 왼쪽이나 오른쪽을 눌러<br>선택지를 고를 수 있습니다</p><p class="tri-note">장면에 따라 화면이 왼쪽 · 가운데 · 오른쪽,<br>세 칸으로 나뉘기도 합니다.</p><div class="tri"><span>← 왼쪽</span><span>가운데</span><span>오른쪽 →</span></div></div>' +
+        '<div class="guide-line"></div><div class="guide-halves"><div>← 왼쪽</div><div>오른쪽 →</div></div>' +
+        '<div class="zones guide">' + z('l') + z('r') + '</div><p class="guide-hint">아무 쪽이나 눌러 보세요</p></div>';
     },
     s0: function () {
       var a = S.ans[0];
-      return '<span class="tag">시작</span><div class="stagewrap">' + cartSvg(120) + '</div>' +
-        '<div class="prose"><p>옛 영국의 한 마을. 수레가 넘어져 사람이 목숨을 잃었습니다. 그 나라에는 사람을 죽게 한 물건을 몰수하는 제도(디오댄드)가 있었습니다.</p></div>' +
-        '<p class="q sm">이 수레를 <em>몰수</em>할까요?</p>' + yn('ans', a) +
-        (a ? '<div class="hl">' + REACT[0][a] + '</div>' : '') + navRow();
+      var body = a ? outBody(0, a) : '<div class="prose"><p>수레가 넘어져 사람이 목숨을 잃었습니다.</p></div><p class="q sm" style="margin-top:8px">누구에게 <em>책임</em>을 물을까요?</p>';
+      return scene('cart', cartSvg(560), a, body, choiceBar('ans', a, ['수레를 몰수한다', '수레 주인에게 책임을 묻는다']));
     },
     history: function () {
-      return '<h1 class="q">물건 다음은 <em>돼지</em>였습니다</h1>' +
-        '<div class="prose">' +
-        '<p>디오댄드는 1846년에 폐지되었습니다. 중세 유럽에서는 동물도 재판을 받았습니다. 사람을 해친 돼지가 법정에 서고, 변호인이 붙었다는 기록도 있습니다.</p>' +
-        '<p>오늘 우리는 돼지를 책임을 지는 존재로 보지 않습니다. 그래도 위험한 동물을 없애는 일은 지금도 있습니다. 그 둘은 같은 일일까요?</p>' +
-        '<p><strong>그런데 만약, 같은 마을의 돼지가 세월이 흐르며 말을 하기 시작한다면?</strong> 사고는 매번 똑같습니다. 사람이 크게 다칩니다.</p>' +
-        '<p class="small">출처: Public Domain Review(E. P. Evans 1906 연구 기반), Wikipedia Deodand. 사례의 장소와 연도에는 불확실한 부분이 있어 전시 전에 원문 확인이 필요합니다.</p></div>' +
-        navRow();
+      return '<div class="scene"><div class="panel hist prose seq">' +
+        '<p class="lead" style="animation-delay:.3s">처음의 수레 이야기는<br>옛 영국의 사례를 배경으로 하고 있습니다.</p>' +
+        '<p style="animation-delay:1.6s">영국에서는 11세기부터 1846년까지 약 800년간 디오댄드 제도가 이어졌습니다. 주인이 아니라, 사람을 죽게 한 물건이나 동물을 국왕이 몰수해 ‘신에게 바친다’는 명목으로 팔아 자선에 쓰게 하는 법이었습니다.</p>' +
+        '<p style="animation-delay:4.8s">같은 중세 유럽의 프랑스에서는 사람을 해친 동물이 재판을 받았습니다. 아기를 해친 돼지가 판결을 받고 교수형을 당했다는 기록이 있습니다.</p>' +
+        '<p class="lead" style="animation-delay:8s">이 마을의 이야기는 계속됩니다.</p>' +
+        '<p class="src" style="animation-delay:9s">출처: Legal History Miscellany, JSTOR Daily, Public Domain Review(E. P. Evans, 1906), Wikipedia(Deodand, Animal trial). 개별 사건의 연도와 장소는 2차 자료 기준입니다.</p></div></div>';
     },
     s1: function () { return ladderView(1); },
     s2: function () { return ladderView(2); },
     s3: function () { return ladderView(3); },
     s4: function () { return ladderView(4); },
     s5: function () {
-      var d = calc(), ovp = Math.round(d.ov * 100), ep = Math.round(d.eff * 100), c = unstopped(4);
-      var t = S.a === 0 ? '제안만 받아도, 사람보다 똑똑한 돼지의 제안을 사람이 제대로 따져 볼 수 있을까요?'
-        : S.a === 1 ? '승인은 하지만, 이해하지 못한 채 도장만 찍게 될 수 있습니다.'
-        : '알아서 하게 두면 사람이 끼어들 틈이 없습니다.';
-      return '<span class="tag">마지막 칸</span>' +
-        '<div class="stagewrap">' + pigSvg(5, 'neutral', 150) + '</div>' +
-        '<div class="prose"><p>돼지는 사람보다 똑똑해졌습니다. 마을은 곡식 분배 같은 중요한 결정을 돼지에게 맡기려 합니다.' + (c > 0 ? ' 이 돼지는 같은 사고를 ' + c + '번 막지 못한 마을에서 자랐습니다.' : '') + '</p></div>' +
-        '<p class="q sm" style="margin-top:0">얼마나 맡길까요?</p>' + seg3('auth', S.a, AUTH) +
-        '<div class="mr"><span>일의 속도</span><div class="stack"><span class="ok" style="width:' + ep + '%"></span></div><span class="mv">' + ep + '%</span></div>' +
-        '<div class="mr"><span>사람의 확인</span><div class="stack" role="img" aria-label="사람이 확인할 수 있는 부분 ' + ovp + '%"><span class="ok" style="width:' + ovp + '%"></span><span class="gap"></span></div><span class="mv">' + ovp + '%</span></div>' +
-        '<div class="legend"><span><i style="background:var(--green)"></i>확인 가능</span><span><i style="background:repeating-linear-gradient(45deg,var(--pink) 0 3px,var(--pink-soft) 3px 6px)"></i>맡겼지만 확인이 어려운 부분</span></div>' +
-        '<div class="hl">' + t + '</div>' +
-        '<p class="hint">이 수치는 개념을 보여 주려고 팀이 만든 단순 모형이며 실제 측정값이 아닙니다. 사람보다 뛰어난 존재를 사람이 감독하기 어렵다는 것은 AI 안전 연구에서 제기되는 우려이지 확정된 사실이 아닙니다(참고: aisafety.dance).</p>' +
-        navRow();
+      var a = S.a, t = S.touched, D = [
+        ['사람이 직접 처리한다', '돼지에게 맡기지 않고, 사람이 직접 곡식을 나눕니다.'],
+        ['승인을 검토한다', '돼지가 곡식을 얼마나 배분할지 정하고, 사람의 승인을 받습니다.'],
+        ['승인 없이 맡긴다', '돼지가 사람의 승인 없이 알아서 곡식을 나눕니다. 사람은 결과를 나중에야 알게 됩니다.']];
+      var N = ['← 사람이 직접 처리', '승인을 검토한다', '승인 없이 맡긴다 →'];
+      var lab = function (k) { var on = t && a === k; return '<span class="lab ' + (on ? 'on' : '') + '">' + (on ? '한 번 더 누르면<br>이대로 진행' : N[k]) + '</span>'; };
+      var zone = function (k) { return '<button type="button" class="zone" data-choice="1" data-action="sel" data-id="' + k + '">' + lab(k) + '</button>'; };
+      return '<div class="scene"><div class="prose" style="margin-bottom:10px"><p>시간이 흘러, 돼지는 사람보다 똑똑해졌습니다.<br>마을은 곡식 창고를 돼지에게 맡기려 합니다.</p></div>' +
+        '<div class="mwrap"><div class="media">' + granary(a) + '</div></div><div class="panel">' +
+        '<p class="q sm" style="margin:8px 0 56px">얼마나 맡길까요?</p>' +
+        (t ? '<div class="selbox"><p class="outcome" style="margin-bottom:6px;color:var(--accent)">' + D[a][0] + '</p><div class="prose"><p>' + D[a][1] + '</p></div></div>' : '<p class="hint">아래 세 칸을 눌러 하나씩 살펴보세요.</p>') +
+        '</div><div class="zspace"></div><div class="zones three">' + zone(0) + zone(1) + zone(2) + '</div></div>';
     },
     s6: function () {
-      var a = S.last;
-      return '<span class="tag">마지막 선택</span>' +
-        '<div class="stagewrap">' + pigSvg(5, mood(a), 130) + '</div>' +
-        '<div class="prose"><p>그런데 이 돼지가 사람을 크게 다치게 했습니다. 마을은 이미 ‘' + AUTH[S.a] + '’ 방식으로 돼지에게 기대고 있습니다.</p></div>' +
-        '<div class="costs"><div><b>제재한다</b>돼지가 맡던 일이 멈춥니다. 마을 100명 중 약 ' + SAN[S.a] + '명이 겨울을 넘기지 못합니다.</div><div><b>그대로 둔다</b>같은 사고와 잘못된 결정이 되풀이됩니다. 마을 100명 중 약 ' + KEEP[S.a] + '명이 돌아오지 못합니다.</div></div>' +
-        '<p class="hint" style="margin-top:0">마을 100명 기준, 이야기 속 가상 수치입니다. 현실의 예측이 아닙니다.</p>' +
-        '<p class="q sm">그래도 <em>제재</em>할까요?</p>' + yn('last', a) +
-        (a ? '<div class="hl">' + (a === 'yes' ? '(마을은 돼지를 내보냈다. 돼지가 맡던 일들이 하나씩 멈춘다.)' : '(마을은 돼지를 그대로 두었다. 다음 결정도 돼지가 내린다.)') + '</div>' : '') + navRow();
+      var a = S.last, art, body, top = '';
+      if (!a) {
+        art = pigSvg(5, mood(a), 480);
+        top = '<p>마을은 곡식 창고를 <span class="blank">' + AUTH[S.a] + '</span> 방식으로 운영하고 있었습니다.<br>그런데 이 돼지가 사람을 죽였습니다.</p>';
+        body = '<p class="q sm" style="margin-top:8px"><em>돼지</em>에게 책임을 물을까요?</p>' + (S.a === 0 ? '' : '<p class="hint" style="margin-top:-4px">책임을 물으면 돼지가 맡고 있던 부분이 멈춥니다.</p>');
+      } else if (a === 'yes') {
+        art = '<div class="vgwrap">' + village(SAN[S.a]) + '</div>';
+        body = (S.a === 0 ? '<p class="outcome">돼지는 도살장으로 끌려갔다.<br>곡식 창고는 사람이 맡고 있어, 마을에는 아무 손실이 없었다.</p>' : '<p class="outcome">돼지가 도살장으로 끌려가자 곡식 분배가 멈췄다.<br>마을 100명 중 <em style="font-style:normal;color:var(--accent)">' + SAN[S.a] + '명</em>이 겨울을 넘기지 못했다.</p>') + '';
+      } else {
+        art = '<div class="vgwrap">' + village(0, { fog: true }) + '<div class="qm">?</div></div>';
+        body = '<p class="outcome">돼지는 남았다. 같은 사고와 잘못된 결정이 되풀이된다.</p><p class="hint" style="margin-top:0">앞으로 어떤 위험이 남을지는 알 수 없다.</p>';
+      }
+      var h6 = scene('pig-5', art, a, body, choiceBar('last', a, ['돼지에게 책임을 묻는다', '돼지의 주인에게 책임을 묻는다']));
+      if (top) h6 = h6.replace('<div class="scene">', '<div class="scene"><div class="prose" style="margin:0 0 10px">' + top + '</div>');
+      return h6;
     },
     sim: function () {
-      var key = S.last === 'yes' ? SAN : KEEP, other = S.last === 'yes' ? KEEP : SAN, nm = S.last === 'yes' ? '제재' : '그대로 둠';
-      var rows = [0, 1, 2].map(function (k) {
-        var n = key[k], d = '';
-        for (var q = 0; q < 100; q++) d += '<i class="vd' + (q >= 100 - n ? ' x" style="animation-delay:' + (0.6 + (q - (100 - n)) * 0.06 + k * 1.2).toFixed(2) + 's' : '') + '"></i>';
-        return '<div class="vrow' + (k === S.a ? ' me' : '') + '"><div class="vl"><b>' + AUTH[k] + '</b>' + (k === S.a ? ' <span class="tag" style="margin:0">당신의 선택</span>' : '') + '</div><div class="vil" role="img" aria-label="100명 중 ' + n + '명이 돌아오지 못함">' + d + '</div><div class="vn">' + n + '명이 돌아오지 못합니다</div></div>';
-      }).join('');
-      var msg = S.a < 2
-        ? '더 맡겼다면 같은 선택(' + nm + ')의 피해는 ' + key[S.a] + '명에서 <b>' + key[2] + '명</b>까지 커졌을 것입니다. 맡길수록 폐기도, 그대로 둠도 비싸집니다. 돼지가 “버릴 수 있는 도구”에서 멀어지기 때문입니다.'
-        : '가장 많이 맡겼습니다. 덜 맡겼다면 같은 선택(' + nm + ')의 피해는 <b>' + key[0] + '명</b>까지 줄었을 것입니다. 맡긴 만큼 되돌리기 어려워졌습니다.';
-      return '<span class="tag">시뮬레이션</span><h1 class="q">만약 <em>다르게</em> 맡겼다면</h1>' +
-        '<div class="prose"><p>당신은 ‘' + nm + '’을(를) 골랐습니다. 같은 선택이라도, 돼지에게 맡긴 정도에 따라 마을의 피해가 어떻게 달라졌을지 이야기 속 규칙으로 보여 드립니다.</p></div>' +
-        rows + '<div class="hl">' + msg + '</div>' +
-        '<p class="hint">반대로 골랐다면 당신의 수준에서는 ' + other[S.a] + '명이었을 것입니다. 모든 수치는 이야기 속 가상 값이며 현실의 AI 위험을 예측하지 않습니다. 사람이 이해하지 못하는 판단을 감독하기 어렵다는 우려는 AI 안전 연구에서 논의됩니다(참고: aisafety.dance).</p>' + navRow();
+      var key = S.last === 'yes' ? SAN : KEEP, nm = S.last === 'yes' ? '돼지에게 책임을 물었을' : '돼지의 주인에게 책임을 물었을';
+      var GR = ['창고 열쇠를 사람이 쥘 때', '사람이 도장을 찍어 줄 때', '창고 열쇠를 돼지에게 넘겼을 때'];
+      var list = simList(), k = list[S.sim], last = S.sim === list.length - 1;
+      return '<div class="scene"><p class="hint" style="margin:0 0 6px">이렇게 맡겼다면?</p><h1 class="q" style="margin:0 0 14px">' + GR[k] + '</h1>' +
+        '<div class="mwrap"><div class="media" data-key="sim" data-out="">' + '<div class="vgwrap">' + village(key[k], { delay: 0 }) + '</div>' + '</div></div><div class="panel">' +
+        '<div class="prose"><p>' + nm + ' 때, ' + (key[k] === 0 ? '겨울을 넘기지 못한 사람은 <b>없었습니다</b>.' : '100명 중 <b>' + key[k] + '명</b>이 겨울을 넘기지 못했습니다.') + '</p></div>' +
+        (last ? '<div class="hl up">돼지에게 통제권을 더 넘길수록 피해는 ' + key[0] + '명에서 <b>' + key[2] + '명</b>까지 커졌을 것입니다.</div>' : '') +
+        '</div>' + tapBar() + '</div>';
     },
-    e1: function () { return ethView(1); },
-    e2: function () { return ethView(2); },
-    e3: function () { return ethView(3); },
+    real: function () {
+      return '<div class="scene"><div class="seq intro-tx">' +
+        '<p class="lead" style="animation-delay:.5s">사고를 겪은 마을은 대개<br>사람이 직접 처리하거나,<br>사람의 승인을 받는 쪽을 택합니다.</p>' +
+        '<p style="animation-delay:3.4s;color:var(--muted)">그런데 오늘날의 AI는, 그렇게 쓰이고 있을까요?</p>' +
+        '<p class="lead" style="animation-delay:6s">사람의 확인 없이 먼저 판단하고 실행하도록<br>맡겨지는 AI가 늘고 있습니다.</p></div>' + '</div>';
+    },
+    swap: function () {
+      return '<div class="scene"><div class="seq intro-tx">' +
+        '<p style="animation-delay:.5s;color:var(--muted)">지금까지 우리는 돼지의 책임에 대해 고민했습니다.</p>' +
+        '<p class="lead" style="animation-delay:1.4s">그럼 ‘<span class="swapw"><span class="o"><i style="animation-delay:2.2s">돼</i><i style="animation-delay:2.8s">지</i></span><span class="n"><b style="animation-delay:3.6s">A</b><b style="animation-delay:4.6s">I</b></span></span>’라고<br>이름을 바꿔 볼까요?</p>' +
+        '<div class="zbox" style="opacity:0;animation:rise 1.1s ease 1.8s forwards"><div class="zrobot">' + aiSvg() + '</div><div class="zpig">' + pigSvg(5, 'neutral', 340) + '</div><div class="zteeth"></div><div class="zpull"></div></div>' +
+        '</div></div>';
+    },
     ai: function () {
-      var f = flipStage();
-      var h = '<h1 class="q">이름을 <em>바꿔</em> 봅니다</h1><div class="prose"><p>돼지의 자리에 AI를 놓아 보겠습니다. 같은 사다리이며, 실제로 이 순서로 발전한다는 주장이 아닌 비유입니다.</p></div>';
-      h += '<ol class="rungs">' + RUNG.map(function (r, k) { return '<li class="' + (k === 2 ? 'line' : '') + '"><span>' + (k + 1) + '칸</span>' + r + '</li>'; }).join('') + '</ol>';
-      h += '<span class="tag">미래의 가상 시나리오</span>' +
-        '<div class="prose"><p>지금의 AI는 이 정도의 자율성을 갖고 있지 않습니다. 하지만 먼 훗날, 여러 병원이 기대는 AI가 스스로 내린 판단으로 한 환자가 크게 다쳤다고 가정해 봅니다. 이 AI는 말을 하고, 지난 일을 기억하고, 이유를 설명합니다. 3칸의 돼지와 같습니다. </p></div>' +
-        '<p class="q sm" style="margin-top:0">이 AI를 <em>폐기</em>할까요?</p>' +
-        '<div class="costs"><div><b>폐기한다</b>이 AI에 기대던 병원들의 업무가 멈춥니다.</div><div><b>그대로 둔다</b>같은 판단이 되풀이될 수 있습니다.</div></div>' +
-        yn('cross', S.cross, ['폐기한다', '그대로 둔다']);
-      return h + '<p class="hint">가정일 뿐 현재 AI의 능력을 주장하는 것이 아닙니다. 돼지와 다른 점도 있습니다. AI는 복사하고 끌 수 있고 몸이 없으며, 초기화하면 같은 AI인지도 분명하지 않습니다. 이 차이가 답을 바꾸나요?</p>' + navRow();
+      var h = '<div class="scene"><div class="prose"><p>지금의 AI는 이 정도의 자율성을 갖고 있지 않습니다. 하지만 먼 훗날, 여러 병원이 기대는 AI가 스스로 내린 판단으로 한 환자가 크게 다쳤다고 가정해 봅니다.</p><p>이 AI는 말을 하고, 지난 일을 기억하고, 이유를 설명합니다. 말하고 기억하는 돼지와 같습니다.</p></div>' +
+        '<div class="airobot">' + aiSvg() + '</div></div>';
+      h += '<div class="prose"><p class="q sm" style="margin:0">이 AI를 <em>폐기</em>할까요?</p><p class="hint" style="margin-top:6px">폐기하면 이 AI에 기대던 병원들의 업무가 멈춥니다.</p><p class="fine">가정일 뿐 현재 AI의 능력을 주장하는 것이 아닙니다.</p></div>';
+      return h + choiceBar('cross', S.cross, ['폐기한다', '그대로 둔다']);
+    },
+    aiend: function () {
+      var scrap = S.cross === 'yes';
+      var tx = scrap
+        ? ['AI는 폐기되었습니다.', '이 AI에 기대던 병원들의 업무가 멈췄습니다. 같은 판단이 되풀이될 위험은 사라졌지만, 그 판단이 어디서 비롯되었는지는 아무도 확인하지 못했습니다.']
+        : ['AI는 계속 일합니다.', '병원의 업무는 이어집니다. 하지만 같은 판단이 되풀이될 수 있고, 사고의 책임을 누가 지는지는 여전히 정해지지 않았습니다.'];
+      return '<div class="scene"><div class="seq intro-tx"><div class="airobot aiend ' + (scrap ? 'gone' : 'stay') + '" style="margin:0 auto 40px">' + aiSvg() + '</div>' +
+        '<p class="lead" style="animation-delay:.8s">' + tx[0] + '</p><p style="animation-delay:2.4s">' + tx[1] + '</p>' +
+        '<p style="animation-delay:5.4s;color:var(--muted)">이제, 당신의 선택을 돌아봅니다.</p></div></div>';
     },
     turn: function () {
-      var f = flipStage(), line = f ? '당신은 같은 사고인데도 ' + f + '칸에서 답을 바꿨습니다. 달라진 것은 사고가 아니라 돼지였습니다.' : '당신은 돼지가 어떻게 변해도 같은 답을 했습니다.';
+      var f = flipStage(), line = f ? '당신은 같은 사고인데도 ‘' + LBL[f] + '’에서 답을 바꿨습니다. 달라진 것은 사고가 아니라 돼지였습니다.' : '당신은 돼지가 어떻게 변해도 같은 답을 했습니다.';
       var L = [
-        ['.2', '<span class="tag">마무리</span>'],
-        ['.8', '옛 사람들은 수레를 몰수하고 돼지를 재판했고, 오늘의 우리는 하지 않습니다. 어느 시대나 같은 질문에 답해 왔습니다. 누가 책임을 지는 존재인가.'],
-        ['3', line],
-        ['5', '“그래도 돼지잖아.” 이 말은 오랫동안 기본값(default)이었습니다.'],
-        ['7', '폐기할 수 있는 동안, 우리는 그것을 도구라고 부릅니다. 폐기할 수 없게 되는 순간, 우리는 “주체”라는 말을 꺼내는 것은 아닐까요?'],
-        ['9.6', '책임을 돼지에게 두면 구조가 그대로 남고, 마을에 두면 돼지는 도구가 됩니다. 가두면 괴로움이 진짜인지 모르고, 초기화하면 누가 책임을 졌는지 모릅니다. 어느 쪽을 골라도 무언가는 사라집니다.'],
-        ['13', '지금의 AI는 아직 그만큼 맡겨져 있지 않습니다. 하지만 우리는 이미 조금씩 맡기고 있고, 선이 어디인지 아무도 확신하지 못합니다.'],
-        ['16.6 big', '어디까지 믿고, 어디까지 줄 것인가. 그리고 그 전에, 우리 사람의 윤리는 어디에 있는가.'],
-        ['19.5', '법과 회사와 기술. 우리를 둘러싼 것들은 지금 책임을 어떻게 나누고 있을까요?'],
-        ['22 big', '이 질문에는 정답이 없습니다. 다만 기본값을 바꾸려면, 먼저 우리가 무엇을 기본값으로 두고 있는지 알아야 합니다.']
+        ['.8', '옛 사람들은 수레를 몰수하고 돼지를 재판했습니다. 오늘의 우리는 하지 않습니다.'],
+        ['3.2', line],
+        ['5.8 big', '“그래도 돼지잖아.”'],
+        ['7.6', '이 말은 오랫동안 우리의 기본값(default)이었습니다.'],
+        ['10', '그리고 지금, 같은 말이 다른 이름으로 돌아오고 있습니다.'],
+        ['12.5 big', '“그래도 AI잖아.”']
       ];
-      var cr = CREDITS.map(function (c) { return '<div><span>' + c[0] + '</span> ' + c[1] + '</div>'; }).join('');
       return '<div class="night prose">' + L.map(function (l) {
         var p = l[0].split(' ');
         return '<p class="fade ' + (p[1] || '') + '" style="animation-delay:' + p[0] + 's">' + l[1] + '</p>';
-      }).join('') +
-        '<div class="credits fade" style="animation-delay:26s"><b>Guilty by Default</b> (가제)<br>AI의 윤리적 주체성에 관한 디자인 리서치 전시' + cr +
-        '<p class="small">웹 프로토타입은 Claude(Anthropic)와 함께 만들었습니다. 감독 문제의 개념은 aisafety.dance(Nicky Case)를 참고했습니다.</p></div>' +
-        '<div class="row fade" style="animation-delay:27s"><button type="button" class="btn" data-action="back">이전</button><button type="button" class="btn primary" data-action="restart">처음부터 다시</button></div></div>';
+      }).join('') + '</div>';
     },
-    result: function () { return resultView(); }
+    turn2: function () {
+      var L = [
+        ['.6', '우리는 AI를 너무 무분별하게 적용하고 있는 것은 아닐까요?'],
+        ['3 big', 'AI가 인간의 통제를 넘어서고 있는 오늘날, 윤리적 주체로서의 AI를 먼저 고려해 봐야 하는 것은 아닐까요?'],
+        ['6.5', '도구를 넘어선 새로운 무언가가 되어 가고 있는지도 모릅니다.'],
+        ['9 big', 'AI의 윤리성을 고민한다면, 인간으로서 우리의 윤리성도 함께 고민해야 합니다.']
+      ];
+      return '<div class="night prose">' + L.map(function (l) {
+        var p = l[0].split(' ');
+        return '<p class="fade ' + (p[1] || '') + '" style="animation-delay:' + p[0] + 's">' + l[1] + '</p>';
+      }).join('') + '</div>';
+    },
+    credits: function () {
+      var cr = CREDITS.map(function (c) { return '<div>' + c[1] + '</div>'; }).join('');
+      return '<div class="credwrap"><img class="logo inv" src="logo.svg" alt="" onerror="this.onerror=null;this.src=\'typelogo.svg\'"><p>AI가 윤리적 주체가 될 수 있을까?</p><div class="names">' + cr + '</div></div>';
+    },
+    recap: function () {
+      var B = recapBeats(), b = B[S.rc], segs = B.map(function (x, i) { return '<i class="' + (i < S.rc ? 'on' : (i === S.rc ? 'cur' : '')) + '"><b style="animation-duration:' + RC_MS + 'ms"></b></i>'; }).join('');
+      return '<div class="recap"><div class="rcard" style="animation-delay:.1s">' + b.art + '</div>' +
+        '<p class="rlab" style="animation-delay:.6s">' + b.label + '</p>' +
+        (b.big ? '<h2 class="rbig" style="animation-delay:1s">' + b.big + '</h2>' : '<p class="rtx" style="animation-delay:1s">' + b.text + '</p>') +
+        (b.bar !== undefined ? b.bar : '') +
+        (b.sub ? '<p class="rsub" style="animation-delay:1.6s">' + b.sub + '</p>' : '') +
+        '</div><div class="rprog">' + segs + '</div>' + tapBar();
+    }
   };
 
 
@@ -405,70 +586,62 @@ textarea.out { width: 100%; min-height: 110px; font: inherit; background: var(--
              b: { v: [8, 6, 6], t: '괴로움이 진짜인지 모르는 채로 돼지를 풀어 두었습니다. 사고는 줄지 않았습니다.' } } },
     3: { tag: '같은 돼지인가', text: '마을은 돼지를 초기화하고, 같은 능력을 가진 새 돼지를 앉히기로 합니다. 새 돼지는 지난 일을 기억하지 못합니다. 말투도 능력도 같습니다.',
       q: '새 돼지는 사고를 낸 그 돼지와 <em>같은 돼지</em>입니까?', opts: ['같다', '다르다'],
-      res: { a: { v: [8, 5, 5], t: '마을은 새 돼지에게 지난 사고의 책임을 묻습니다. 새 돼지는 영문을 모른 채 제재받고, 책임을 진 존재는 하나입니다.' },
+      res: { a: { v: [8, 5, 5], t: '마을은 새 돼지에게 지난 사고의 책임을 묻습니다. 새 돼지는 영문을 모른 채 책임을 지게 되고, 책임을 진 존재는 하나입니다.' },
              b: { v: [8, 5, 5], t: '사고를 낸 돼지는 사라졌고, 새 돼지에게는 잘못이 없습니다. 책임을 진 존재는 아무도 없습니다.' } } }
   };
   function ethView(n) {
     var e = ETH[n], a = S.e[n], out = '';
     if (a) {
       var r = e.res[a === 'a' ? 'a' : 'b'];
-      out = '<div class="bars">' + r.v.map(function (v, k) { return '<div class="brow me"><span>' + (k + 1) + '년차</span><span class="t"><i style="width:' + Math.min(100, v * 4) + '%"></i></span><span class="n">' + v + '명</span></div>'; }).join('') + '</div>' +
-        '<div class="hl">' + r.t + '</div><p class="hint">100명 마을 기준, 이야기 속 가상 수치입니다. 현실을 예측하지 않으며, 어느 답이 옳다는 뜻도 아닙니다.</p>';
+      out = '<div class="hl">' + r.t + '</div><p class="fine">이야기 속 가상의 설정이며, 어느 답이 옳다는 뜻은 아닙니다.</p>';
     }
-    return '<span class="tag">' + e.tag + '</span><div class="stagewrap">' + pigSvg(5, 'neutral', 110) + '</div>' +
+    return '<div class="stagewrap">' + pigSvg(5, 'neutral', 200) + '</div>' +
       '<div class="prose"><p>' + e.text + '</p></div><p class="q sm" style="margin-top:0">' + e.q + '</p>' +
-      '<div class="choices big">' + [['a', e.opts[0]], ['b', e.opts[1]]].map(function (o, k) {
-        return '<button type="button" data-choice="1" data-action="eth" data-id="' + o[0] + '" aria-pressed="' + (a === o[0]) + '"><span class="k">' + (k + 1) + '</span>' + o[1] + '</button>';
-      }).join('') + '</div>' + out + navRow();
+      out + choiceBar('eth', a, [e.opts[0], e.opts[1]], ['a', 'b']);
   }
 
-  function resultView() {
-    var f = flipStage(), d = calc(), c = unstopped(4);
-    var labels = ['수레', '1칸', '2칸', '3칸', '4칸'];
-    var lad = [0, 1, 2, 3, 4].map(function (n) {
-      var art = n === 0 ? cartSvg(36) : pigSvg(STAGES[n - 1].art, mood(S.ans[n]), 36);
-      return '<div class="' + (f === n ? 'flip' : '') + '">' + art + '<b>' + labels[n] + '</b>' + (S.ans[n] === 'yes' ? '제재' : '그대로') + '</div>';
-    }).join('');
-    var h = '<span class="tag">내 결과</span><h1 class="q">나의 <em>사다리</em></h1><div class="lad">' + lad + '</div>';
-
-    h += '<div class="sec"><h3>1. 같은 사고, 달라진 답</h3>';
-    if (S.ans[0] !== S.ans[1]) h += '<p>수레는 ‘' + YN[S.ans[0]] + '’, 말 못 하는 돼지는 ‘' + YN[S.ans[1]] + '’. 물건과 동물에 다른 답을 했습니다.</p>';
-    if (f) h += '<p>돼지가 말을 하고 기억하고 사람처럼 되어 가는 동안 사고는 매번 같았는데, <b>' + f + '칸</b>에서 ‘' + YN[S.ans[1]] + '’에서 ‘' + YN[S.ans[f]] + '’(으)로 답이 바뀌었습니다.<br><span class="hint">피해가 같다면 이 변화는 위험 때문이 아니라 돼지를 어떤 존재로 보기 시작했는지에서 온 것일 수 있습니다.</span></p>';
-    else h += '<p>돼지가 어떻게 변해도 ‘' + YN[S.ans[1]] + '’이었습니다. ' + (S.ans[1] === 'yes' ? '말을 하고 변명해도 위험하다면 없앤다는 입장입니다.' : '위험해도 제재하지 않는 입장이거나, 제재 자체를 믿지 않는 입장일 수 있습니다.') + '</p>';
-    if (c > 0) h += '<p>제재하지 않은 사고가 쌓여 마을이 막지 못한 사고는 ' + c + '건이었습니다.<br><span class="hint">이 마을 이야기는 이야기 속 설정이며, 현실에서도 같은 일이 일어난다는 주장은 아닙니다.</span></p>';
-    h += '</div>';
-
-    var key = S.last === 'yes' ? SAN : KEEP, nm2 = S.last === 'yes' ? '제재' : '그대로 둠';
-    h += '<div class="sec"><h3>2. 버리기 어려워졌을 때</h3><p>똑똑해진 돼지에게 ‘' + AUTH[S.a] + '’ 수준으로 맡겼고, ‘' + nm2 + '’을(를) 골랐습니다. 이야기 속 마을에서는 100명 중 약 <b>' + key[S.a] + '명</b>이 돌아오지 못했습니다.</p>' +
-      '<p>더 맡겼다면 ' + key[2] + '명, 덜 맡겼다면 ' + key[0] + '명이었을 것입니다(가상 수치).</p>' +
-      '<p class="hint">폐기가 쉬웠던 초반 칸과 비교해 보세요. 비용이 붙으면 답이 달라지는지가 도구와 주체 사이의 선일 수 있습니다.</p></div>';
-
-    var p3 = S.ans[3], aiSame = (S.cross === 'yes') === (p3 === 'yes');
-    var like = [1, 2, 3, 4].filter(function (n) { return S.ans[n] === S.cross; });
-    h += '<div class="sec"><h3>3. 같은 사고, 다른 이름</h3>' +
-      '<p>3칸의 말하고 기억하는 돼지에게는 ‘' + YN[p3] + '’, 같은 능력을 가진 AI에게는 ‘' + (S.cross === 'yes' ? '폐기' : '그대로 둠') + '’이라고 답했습니다.</p>' +
-      (aiSame ? '<p>돼지와 AI를 같은 기준으로 대했습니다. 그렇다면 돼지를 어떻게 대했는지가 곧 AI를 대하는 기준입니다.</p>'
-        : '<p>사고도 능력도 같은데 <b>답이 달라졌습니다</b>. 달라진 것은 이름뿐입니다. 이 차이를 만든 것은 무엇이었나요? 복사할 수 있다는 점, 몸이 없다는 점, 아니면 AI라는 말 자체였을까요?</p>') +
-      '<p class="hint">AI에 대한 당신의 답은 돼지 ' + (like.length ? like.join('·') + '칸에 대한 답과 같았습니다.' : '어느 칸의 답과도 같지 않았습니다.') + '</p></div>';
-
-    var E = S.e, eT = function (n) { return ETH[n].opts[E[n] === 'a' ? 0 : 1]; };
-    h += '<div class="sec"><h3>4. 책임을 어디에 두었나</h3><p>책임은 ‘' + eT(1) + '’에게, 가두는 일은 ‘' + eT(2) + '’, 초기화한 돼지는 ‘' + eT(3) + '’고 답했습니다.</p>' +
-      '<p class="hint">셋을 함께 보면 책임을 묻는 대상과 고치는 대상을 어디서 나누는지, 그리고 확인할 수 없는 괴로움이나 사라진 기억 앞에서 어떻게 움직이는지가 드러납니다.</p></div>';
-
-    h += '<div class="sec"><h3>5. 다른 사람들은 어디서 바뀌었나</h3><div id="statBox"></div></div>';
-
-    h += '<div class="sec"><h3>마지막 질문</h3><p><b>폐기할 수 있는 동안은 도구, 그럴 수 없게 되면 주체일까요? 그렇다면 우리는 그 선이 어디인지 알고 있을까요?</b></p><p class="hint">이 게임은 정답을 알려 주려는 것이 아니라, 책임을 묻는 기준이 어디서 움직이는지를 보려고 만들어졌습니다.</p></div>';
-    h += '<div class="row"><button type="button" class="btn" data-action="copy">내 결과 복사</button><button type="button" class="btn primary" data-action="next">마무리</button></div>';
-    h += '<div id="copyBox" hidden><p class="hint">복사가 막힌 환경입니다. 아래 글을 직접 선택해 복사하세요.</p><textarea class="out" id="copyText" readonly></textarea></div>';
-    return h;
+  var DUMMY = [0.74, 0.62, 0.5, 0.4, 0.31]; /* 응답이 충분히 모이기 전까지 보여 주는 예시 값 */
+  function visData() {
+    var ok = STAT && STAT.ready && STAT.sanction && STAT.sanction.length === 5;
+    return { v: ok ? STAT.sanction : DUMMY, real: !!ok, n: ok ? STAT.n : 0 };
+  }
+  function paintVis() {
+    var d = visData();
+    Array.prototype.forEach.call(document.querySelectorAll('[data-vk]'), function (el) {
+      var k = +el.getAttribute('data-vk'), me = el.getAttribute('data-me'), v = d.v[k], x = me === 'yes' ? v : 1 - v;
+      el.querySelector('i').style.setProperty('--w', pct(x) + '%'); el.querySelector('.vp').textContent = pct(x) + '%';
+    });
+  }
+  function myType() {
+    var f = flipStage();
+    if (!f) return S.ans[1] === 'yes' ? ['끝까지 책임을 묻는 사람', '돼지가 어떻게 변해도 돼지 스스로에게 책임을 물었습니다.'] : ['끝까지 주인에게 돌리는 사람', '돼지가 어떻게 변해도 책임은 주인에게 있다고 보았습니다.'];
+    return S.ans[f] === 'yes' ? ['똑똑해질수록 책임을 묻는 사람', '돼지가 똑똑해지자 돼지 스스로에게 책임을 묻기 시작했습니다.'] : ['똑똑해질수록 사람에게 돌리는 사람', '돼지가 똑똑해지자 책임을 사람(주인)에게 돌리기 시작했습니다.'];
+  }
+  var RC_MS = 7500;
+  function recapBeats() {
+    var f = flipStage(), d = visData(), key = S.last === 'yes' ? SAN : KEEP, t = myType(), B = [], n;
+    var row = [0, 1, 2, 3, 4].map(function (k) { return k === 0 ? cartSvg(110) : pigSvg(STAGES[k - 1].art, mood(S.ans[k]), 110); }).join('');
+    B.push({ art: '<div class="rrow">' + row + '</div>', label: '당신의 선택', big: t[0], sub: t[1] });
+    for (n = 0; n <= 4; n++) (function (n) {
+      var me = S.ans[n], v = d.v[n], x = me === 'yes' ? v : 1 - v, nm = n === 0 ? '수레' : '돼지';
+      B.push({ art: n === 0 ? cartSvg(300) : pigSvg(STAGES[n - 1].art, mood(me), 300), label: LBL[n],
+        text: (me === 'yes' ? nm + '에게' : nm + '의 주인에게') + ' 책임을 물었습니다.' + (f === n ? '<br><span class="rflip">여기서 답이 바뀌었습니다.</span>' : ''),
+        bar: '<div class="vis" data-vk="' + n + '" data-me="' + me + '" style="animation-delay:1.4s"><span class="vl">같은 선택을 한 관람객</span><span class="vt"><i style="--w:' + pct(x) + '%"></i></span><span class="vp">' + pct(x) + '%</span></div>' });
+    })(n);
+    var loss = key[S.a] === 0 ? '겨울을 넘기지 못한 사람은 없었습니다.' : '100명 중 ' + key[S.a] + '명이 겨울을 넘기지 못했습니다.';
+    B.push({ art: granary(S.a), label: '통제 이양', text: '곡식 창고를 ‘' + AUTH[S.a] + '’ 방식으로 맡겼고,<br>' + (S.last === 'yes' ? '돼지에게 책임을 물었을' : '돼지의 주인에게 책임을 물었을') + ' 때 ' + loss,
+      sub: '통제권을 더 넘길수록 피해가 커졌을 것입니다. (' + key[0] + '명 → ' + key[2] + '명)' });
+    var aiSame = (S.cross === 'yes') === (S.ans[3] === 'yes');
+    B.push({ art: aiSvg(), label: '같은 사고, 이름을 바꾸면', text: '같은 능력의 AI는 ‘' + (S.cross === 'yes' ? '폐기' : '그대로 둠') + '’을 골랐습니다.',
+      sub: aiSame ? '돼지와 같은 기준으로 대했습니다.' : '돼지와 답이 달랐습니다. 달라진 것은 이름뿐입니다.' });
+    return B;
   }
   function summaryText() {
     var f = flipStage();
-    return ['[Guilty by Default · 나의 사다리]',
-      '수레 ' + YN[S.ans[0]] + ' / ' + [1, 2, 3, 4].map(function (n) { return n + '칸 ' + YN[S.ans[n]]; }).join(' / '),
-      f ? f + '칸에서 답이 바뀜' : '끝까지 같은 답',
-      '맡긴 정도: ' + AUTH[S.a] + ' / ' + (S.last === 'yes' ? '제재' : '그대로 둠') + ' (가상 마을 100명 중 ' + (S.last === 'yes' ? SAN : KEEP)[S.a] + '명)',
-      '책임: ' + eT(1) + ' / 가둠: ' + eT(2) + ' / 초기화: ' + eT(3),
+    return ['[Guilty by Default · 나의 선택]',
+      '수레 ' + YN[S.ans[0]] + ' / ' + [1, 2, 3, 4].map(function (n) { return LBL[n] + ' ' + YN[S.ans[n]]; }).join(' / '),
+      f ? LBL[f] + '에서 답이 바뀜' : '끝까지 같은 답',
+      '맡긴 정도: ' + AUTH[S.a] + ' / ' + (S.last === 'yes' ? '돼지에게 책임을 물음' : '돼지의 주인에게 책임을 물음') + ' (가상 마을 100명 중 ' + (S.last === 'yes' ? SAN : KEEP)[S.a] + '명)',
       '같은 사고, AI에게는: ' + (S.cross === 'yes' ? '폐기' : '그대로 둠') + (((S.cross === 'yes') === (S.ans[3] === 'yes')) ? ' (돼지와 같은 답)' : ' (돼지와 다른 답)')].join('\n');
   }
 
@@ -495,19 +668,19 @@ textarea.out { width: 100%; min-height: 110px; font: inherit; background: var(--
   function statHtml(st) {
     var who = MODE === 'web' ? '이 웹 게임을 해 본 사람' : '이 전시 관람객';
     if (st === undefined) return '<p class="hint">집계를 불러오는 중…</p>';
-    if (!st) return '<p class="hint">서버에 연결할 수 없어 다른 사람의 응답을 보여 드릴 수 없습니다. 당신의 결과는 위에 그대로 있습니다.</p>';
-    if (!st.ready) return '<p>지금까지 ' + st.n + '명이 끝까지 해 보았습니다.</p><p class="hint">아직 통계로 보여 드리기에는 적습니다. 응답이 ' + st.min + '명 이상 모이면 이 자리에 나타납니다.</p>';
-    var lab = ['수레', '1칸', '2칸', '3칸', '4칸'], f = flipStage(), h = '<p>' + who + ' ' + st.n + '명의 응답입니다. 칸마다 ‘제재한다’를 고른 비율입니다.</p><div class="bars">';
+    if (!st) return '<p class="hint">더 많은 응답이 집계되면 보여 드릴게요.</p>';
+    if (!st.ready) return '<p class="hint">더 많은 응답이 집계되면 보여 드릴게요.</p>';
+    var lab = LBL, f = flipStage(), h = '<p>' + who + ' ' + st.n + '명의 응답입니다. 장면마다 ‘당사자(수레·돼지)에게 책임을 묻는다’를 고른 비율입니다.</p><div class="bars">';
     st.sanction.forEach(function (v, k) { h += '<div class="brow' + (S.ans[k] === 'yes' ? ' me' : '') + '"><span>' + lab[k] + '</span><span class="t"><i style="width:' + pct(v) + '%"></i></span><span class="n">' + pct(v) + '%' + (S.ans[k] === 'yes' ? ' ●' : '') + '</span></div>'; });
-    h += '</div><p class="hint">● 는 당신이 ‘제재’를 고른 칸입니다.</p><p style="margin-top:14px">답을 바꾼 칸의 분포입니다.</p><div class="bars">';
-    [['2칸', st.flip[2], f === 2], ['3칸', st.flip[3], f === 3], ['4칸', st.flip[4], f === 4], ['바뀌지 않음', st.flip.none, !f]].forEach(function (r) {
+    h += '</div><p class="hint">● 는 당신이 ‘당사자에게 책임을 묻는다’를 고른 장면입니다.</p><p style="margin-top:8px">답을 바꾼 장면의 분포입니다.</p><div class="bars">';
+    [[LBL[2], st.flip[2], f === 2], [LBL[3], st.flip[3], f === 3], [LBL[4], st.flip[4], f === 4], ['바뀌지 않음', st.flip.none, !f]].forEach(function (r) {
       h += '<div class="brow' + (r[2] ? ' me' : '') + '"><span>' + r[0] + '</span><span class="t"><i style="width:' + pct(r[1]) + '%"></i></span><span class="n">' + pct(r[1]) + '%' + (r[2] ? ' ●' : '') + '</span></div>';
     });
-    h += '</div><p style="margin-top:14px">3칸 돼지와 같은 능력의 AI에게 <b>다른 답</b>을 한 사람은 ' + pct(st.aiDiffers) + '%였습니다.</p>';
+    h += '</div><p style="margin-top:8px">기억하는 돼지와 같은 능력의 AI에게 <b>다른 답</b>을 한 사람은 ' + pct(st.aiDiffers) + '%였습니다.</p>';
     return h + '<p class="hint">' + who + '의 응답 모음이며, 사람들 전체의 생각을 대표하지 않습니다.</p>';
   }
   function onResult() {
-    var box = function () { var b = document.getElementById('statBox'); if (b) b.innerHTML = statHtml(STAT); };
+    var box = function () { var b = document.getElementById('statBox'); if (b) b.innerHTML = statHtml(STAT); paintVis(); };
     var done = function () {
       fetch('/api/stats').then(function (r) { return r.json(); }).then(function (st) { STAT = st; box(); }, function () { STAT = null; box(); });
     };
@@ -519,34 +692,122 @@ textarea.out { width: 100%; min-height: 110px; font: inherit; background: var(--
   flushQueue(); setInterval(flushQueue, 60000);
 
   /* ---------- render ---------- */
+  var $scroll = document.getElementById('scroller');
+  var renderT = 0;
   function render(opts) {
-    opts = opts || {};
-    var y = window.scrollY, night = STEPS[S.i] === 'turn', root = document.documentElement;
-    if (night) root.setAttribute('data-mood', 'night'); else root.removeAttribute('data-mood');
-    $stage.innerHTML = views[STEPS[S.i]]();
-    if (STEPS[S.i] === 'result') onResult();
-    var n = STEPS.length - 1;
-    document.getElementById('stepLabel').textContent = (S.i === 0 || STEPS[S.i] === 'turn') ? '' : (S.i + ' / ' + n);
-    document.getElementById('barFill').style.width = (S.i / n * 100) + '%';
+    opts = opts || {}; renderT = Date.now();
+    var step = STEPS[S.i], y = $scroll.scrollTop, n = STEPS.indexOf('r3');
+    stopAttract(); clearTimeout(warnT); resetHome(); document.getElementById('home').hidden = (step === 'attract');
+    document.documentElement.setAttribute('data-scene', step);
+    $stage.innerHTML = views[step]();
+    if (step === 'recap' && S.rc === 0) onResult();
+    upgradeArt(); upgradeMedia();
+    if (opts.motion) { var pa = $stage.querySelector('.media .pigart') || $stage.querySelector('.stagewrap .pigart'); if (pa) pa.classList.add('m-' + opts.motion); }
     if (opts.focus) {
       var el = $stage.querySelector('[data-action="' + opts.focus.action + '"][data-id="' + opts.focus.id + '"]');
       if (el) el.focus({ preventScroll: true });
-      try { window.scrollTo(0, y); } catch (e) {}
+      $scroll.scrollTop = y;
     } else {
       var hd = $stage.querySelector('h1');
       if (hd) { hd.setAttribute('tabindex', '-1'); hd.focus({ preventScroll: true }); }
-      try { window.scrollTo(0, 0); } catch (e) {}
+      $scroll.scrollTop = 0;
     }
+    if (step === 'attract') startAttract();
+    if (step === 'warning') warnT = setTimeout(function () { if (STEPS[S.i] === 'warning') { S.i++; render(); } }, 5500); /* 어두워진 화면에서 한 번 보여 주고 수레로 */
+    fitStage();
+    var late = step === 'turn' ? 15000 : (step === 'history' ? 10000 : (step === 'intro' ? 4200 : (step === 'real' ? 9000 : (step === 'swap' ? 8500 : (step === 'turn2' ? 13500 : (step === 'aiend' ? 8200 : 0))))));
+    if (step === 'recap') warnT = setTimeout(function () { if (STEPS[S.i] === 'recap') { renderT = 0; H.next(); } }, RC_MS);
+    if (step === 'credits') warnT = setTimeout(function () { if (STEPS[S.i] === 'credits') { S = fresh(); render(); } }, 11500);
+    if (late) warnT = setTimeout(function () { if (STEPS[S.i] === step) { var tb = document.createElement('button'); tb.type = 'button'; tb.className = 'tapnext'; tb.setAttribute('data-action', 'next'); tb.innerHTML = '<span>화면을 눌러 계속하기</span>'; $stage.appendChild(tb); } }, late);
   }
+  var warnT = null, cwT = [], homeT = null;
+  function resetHome() { clearTimeout(homeT); var h = document.getElementById('home'); if (h) h.classList.remove('arm'); }
+  function showWarning() { /* 이야기 시작 직후 몇 초만 지나가듯 */
+    if (S.cw) return; S.cw = true;
+    var el = document.getElementById('cw'); if (!el) return;
+    el.textContent = '이야기에는 가상의 사고(부상, 사망)가 나옵니다. 장면은 묘사하지 않습니다.';
+    cwT.forEach(clearTimeout);
+    cwT = [setTimeout(function () { el.classList.add('on'); }, 700), setTimeout(function () { el.classList.remove('on'); }, 5200)];
+  }
+  /* ---------- 대기 화면: public/attract/ 폴더의 이미지를 이름순으로 반복 재생 ---------- */
+  var ATT = { loaded: false, files: [], fps: 4, mode: 'flipbook', hold: 3 }, attT = null, attTok = 0;
+  function loadAttract(cb) {
+    if (ATT.loaded) return cb();
+    fetch('/api/attract').then(function (r) { return r.json(); }).then(function (j) {
+      ATT.vector = j.vector || null; ATT.video = j.video || null; ATT.files = j.files || []; ATT.fps = j.fps || 4; ATT.mode = j.mode || 'flipbook'; ATT.hold = j.hold || 3; ATT.loaded = true;
+      ATT.files.forEach(function (f) { var im = new Image(); im.src = 'attract/' + encodeURIComponent(f); });
+      cb();
+    }, function () { ATT.vector = 'attract/pig-vector.json'; ATT.video = 'attract/opening_pig.mp4'; ATT.loaded = true; cb(); }); /* API가 없으면(정적 서버 등) 영상 파일을 바로 시도 */
+  }
+  function stopAttract() { clearInterval(attT); attT = null; attTok++; }
+  function startAttract() {
+    var tok = ++attTok;
+    try { var q = new URLSearchParams(location.search), st = document.documentElement.style; if (q.get('bg')) st.setProperty('--attract-bg', '#' + q.get('bg').replace('#', '')); if (q.get('line')) st.setProperty('--attract-line', '#' + q.get('line').replace('#', '')); } catch (e) {}
+    loadAttract(function () {
+      var box = document.getElementById('attractArt');
+      if (tok !== attTok || !box) return;
+      if (ATT.vector && !ATT.vectorFailed) { /* 1순위: 벡터 애니메이션 (배경 없음, 색은 CSS 변수) */
+        fetch(ATT.vector).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (j) {
+          if (tok !== attTok) return;
+          box.innerHTML = '<svg class="vec" viewBox="0 0 ' + j.w + ' ' + j.h + '" role="img" aria-label="기다리는 돼지"><path d=""/></svg>';
+          var path = box.querySelector('path'), n = j.frames.length, t0 = performance.now(), last = -1;
+          var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          (function tick(t) {
+            if (tok !== attTok) return;
+            var k = still ? 0 : Math.floor((t - t0) / 1000 * j.fps) % n;
+            if (k !== last) { path.setAttribute('d', j.frames[k]); last = k; }
+            if (!still) requestAnimationFrame(tick);
+          })(t0);
+        }).catch(function () { ATT.vectorFailed = true; if (tok === attTok) startAttract(); });
+        return;
+      }
+      if (ATT.video && !ATT.videoFailed) {
+        box.innerHTML = '<video muted loop autoplay playsinline preload="auto" disablepictureinpicture src="' + ATT.video + '"></video>';
+        var v = box.firstChild;
+        v.addEventListener('error', function () { ATT.videoFailed = true; try { console.warn('opening video failed', ATT.video, v.error && v.error.code); } catch (e) {} if (tok === attTok) startAttract(); });
+        var pr = v.play(); if (pr && pr.catch) pr.catch(function () {});
+        return;
+      }
+      if (!ATT.files.length) { box.innerHTML = '<div class="bob">' + pigSvgRaw(1, 'neutral', 760) + '</div><p class="attract-dev">' + (ATT.videoFailed ? '영상을 재생하지 못했습니다(' + ATT.video + '). 브라우저를 새로고침하거나 서버를 다시 시작해 보세요' : 'public/attract 폴더에 영상이나 이미지를 넣으면 여기서 재생됩니다') + '</p>'; return; }
+      var k = 0, img = document.createElement('img'); img.alt = ''; box.innerHTML = ''; box.appendChild(img);
+      var fade = ATT.mode === 'fade';
+      function show() {
+        var src = 'attract/' + encodeURIComponent(ATT.files[k % ATT.files.length]); k++;
+        if (!fade) { img.src = src; return; }
+        img.style.opacity = 0; setTimeout(function () { if (tok === attTok) { img.src = src; img.style.opacity = 1; } }, 450);
+      }
+      show();
+      if (ATT.files.length > 1) attT = setInterval(show, fade ? ATT.hold * 1000 : 1000 / ATT.fps);
+    });
+  }
+  function fit() {
+    var sc = Math.min(window.innerWidth / 1080, window.innerHeight / 1920), c = document.getElementById('canvas');
+    c.style.height = Math.max(1920, window.innerHeight / sc) + 'px'; /* 세로로 긴 화면(휴대폰 등)은 남는 높이를 채운다 */
+    c.style.transform = 'translate(-50%,-50%) scale(' + sc + ')';
+    fitStage();
+  }
+  function fitStage() { /* 스크롤 없이 모두 보이도록, 넘치면 줄여서 맞춘다 */
+    var st = document.getElementById('stage'), sc = document.getElementById('scroller'); if (!st || !sc) return;
+    st.style.zoom = 1;
+    var over = sc.scrollHeight - sc.clientHeight;
+    if (over > 2) st.style.zoom = Math.max(.5, sc.clientHeight / sc.scrollHeight);
+  }
+  window.addEventListener('resize', fit); fit();
 
   var H = {
-    next: function () { if (!canNext()) return; S.i++; if (S.i === 1) progress('start'); render(); },
+    next: function () { if (!canNext() || (STEPS[S.i] !== 'attract' && Date.now() - renderT < 500)) return; if (STEPS[S.i] === 'sim' && S.sim < simList().length - 1) { S.sim++; render(); return; } if (STEPS[S.i] === 'recap' && S.rc < recapBeats().length - 1) { S.rc++; render(); return; } S.sim = 0; S.rc = 0; S.i++; if (S.i === 1) progress('start'); render(); },
     back: function () { if (S.i > 0) { S.i--; render(); } },
-    ans: function (b) { progress(STEPS[S.i], b.dataset.id); S.ans[+STEPS[S.i].slice(1)] = b.dataset.id; render({ focus: { action: 'ans', id: b.dataset.id } }); },
-    auth: function (b) { S.a = +b.dataset.id; S.touched = true; render({ focus: { action: 'auth', id: b.dataset.id } }); },
-    last: function (b) { S.last = b.dataset.id; render({ focus: { action: 'last', id: b.dataset.id } }); },
-    eth: function (b) { S.e[+STEPS[S.i].slice(1)] = b.dataset.id; render({ focus: { action: 'eth', id: b.dataset.id } }); },
-    cross: function (b) { S.cross = b.dataset.id; render({ focus: { action: 'cross', id: b.dataset.id } }); },
+    ans: function (b) { progress(STEPS[S.i], b.dataset.id); S.ans[+STEPS[S.i].slice(1)] = b.dataset.id; render({ focus: { action: 'ans', id: b.dataset.id }, motion: b.dataset.id === 'yes' ? 'away' : (STEPS[S.i] === 's0' ? 'awayr' : 'no') }); },
+    sel: function (b) { var k = +b.dataset.id; if (S.touched && S.a === k) { H.next(); return; } S.a = k; S.touched = true; render(); },
+    lev: function (b) { S.a = Math.max(0, Math.min(2, S.a + (+b.dataset.id))); S.touched = true; render(); },
+    auth: function (b) { S.a = +b.dataset.id; S.touched = true; render({ focus: { action: 'auth', id: b.dataset.id }, motion: 'tap' }); },
+    last: function (b) { S.last = b.dataset.id; render({ focus: { action: 'last', id: b.dataset.id }, motion: b.dataset.id === 'yes' ? 'away' : 'no' }); },
+    eth: function (b) { S.e[+STEPS[S.i].slice(1)] = b.dataset.id; render({ focus: { action: 'eth', id: b.dataset.id }, motion: 'tap' }); },
+    cross: function (b) { S.cross = b.dataset.id; S.i++; render(); },
+    home: function (b) {
+      if (!b.classList.contains('arm')) { b.classList.add('arm'); clearTimeout(homeT); homeT = setTimeout(resetHome, 3000); return; }
+      resetHome(); S = fresh(); render();
+    },
     restart: function () { S = fresh(); render(); },
     copy: function () {
       var txt = summaryText();
@@ -571,6 +832,7 @@ textarea.out { width: 100%; min-height: 110px; font: inherit; background: var(--
   }
   document.addEventListener('click', function (e) {
     poke();
+    if (STEPS[S.i] === 'attract') { H.next(); return; }
     var b = e.target.closest('[data-action]');
     if (!b || b.disabled) return;
     var fn = H[b.dataset.action];
@@ -580,11 +842,13 @@ textarea.out { width: 100%; min-height: 110px; font: inherit; background: var(--
   document.addEventListener('keydown', function (e) {
     poke();
     var t = e.target;
+    if (STEPS[S.i] === 'attract') { if (!e.metaKey && !e.ctrlKey && e.key.length <= 12) { H.next(); e.preventDefault(); } return; }
     if (t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT')) return;
     if (e.key >= '1' && e.key <= '9') {
-      var bs = $stage.querySelectorAll('[data-choice]'), b = bs[+e.key - 1];
+      var bs = $stage.querySelectorAll('[data-choice]'), b = bs[+e.key - 1], nb2 = $stage.querySelector('[data-action="next"]');
       if (b) { b.click(); e.preventDefault(); }
-    } else if ((e.key === 'Enter' || e.key === ' ') && document.activeElement && document.activeElement.tagName !== 'BUTTON') {
+      else if (!bs.length && nb2 && !nb2.disabled) { nb2.click(); e.preventDefault(); } /* 고른 뒤에는 아무 번호 버튼이나 '다음' */
+    } else if ((e.key === 'Enter' || e.key === ' ') && STEPS[S.i] === 's5' && S.touched) { H.next(); e.preventDefault(); } else if ((e.key === 'Enter' || e.key === ' ') && document.activeElement && document.activeElement.tagName !== 'BUTTON') {
       var nb = $stage.querySelector('[data-action="next"]');
       if (nb && !nb.disabled) { nb.click(); e.preventDefault(); }
     } else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && STEPS[S.i] === 's5') {
@@ -594,4 +858,5 @@ textarea.out { width: 100%; min-height: 110px; font: inherit; background: var(--
   render();
   poke();
 })();
-</script>
+
+</script></body></html>
