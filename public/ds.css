@@ -1,12 +1,14 @@
 /* ==========================================================================
    Guilty by Default — Design System (ds.css)
-   기준 화면: 24인치 모니터 세로 1080 x 1920. 모든 크기는 u()로 쓰며 --u(1px)에 비례합니다.
+   기준 화면: TV 가로 16:9 (게임 화면 1600 x 900을 TV 크기에 맞춰 확대). 모든 크기는 u()로 쓰며 --u(1px)에 비례합니다.
    --u 를 줄이면(예: .45px) 같은 컴포넌트를 작게 볼 수 있습니다(design.html).
    ========================================================================== */
 
 /* ---------- 서체 ----------
    제목: PP Frama (유료 서체 — 파일은 직접 넣어야 합니다. public/fonts/README.txt 참고)
    본문/한글: Noto Sans KR. PP Frama 에는 한글이 없을 가능성이 높아 한글은 자동으로 본문 서체로 대체됩니다. */
+@font-face { font-family: 'Source Code Variable'; font-weight: 200 900; font-style: normal; font-display: swap; src: url('fonts/source%20code%20variable/SourceCodeVariable-Roman.otf') format('opentype'); }
+@font-face { font-family: 'Orbit'; font-weight: 400; font-style: normal; font-display: swap; src: url('fonts/Orbit/Orbit-Regular.ttf') format('truetype'); }
 @font-face { font-family: 'PP Frama'; font-weight: 200; font-display: swap; src: url('fonts/PPFrama/PPFrama-Extralight.otf') format('opentype'); }
 @font-face { font-family: 'PP Frama'; font-weight: 400 700; font-display: swap; src: url('fonts/PPFrama/PPFrama-Regular.otf') format('opentype'); }
 @font-face { font-family: 'PP Frama'; font-weight: 800 900; font-display: swap; src: url('fonts/PPFrama/PPFrama-Black.otf') format('opentype'); }
@@ -38,18 +40,26 @@
   --bar-me:   var(--burgundy);
   --btn:      var(--burgundy-dark);
   --btn-ink:  var(--ivory);
-  --font-display: 'PP Frama', 'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
-  --font-body: 'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  --font-display: 'PP Frama', 'Orbit', 'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  --font-body: 'PP Frama', 'Orbit', 'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
   --lh-body: 1.4;   /* 본문 행간 140% */
 
   /* 대기 화면(돼지 영상) 색 — 여기만 바꾸면 됩니다. 주소 뒤에 ?bg=BCD8DD&line=460E21 처럼 붙여 미리 볼 수도 있습니다 */
   --attract-bg: #D5EDF1;
   --attract-line: #460E21;
+  /* ---------- 장면 어휘 (자막·대사·선택) — 시네마틱 장면 공통 ---------- */
+  --cap-ink: #fff;                 /* 자막은 항상 흰색 (배경에 묻힐 때만 그림자·딤으로 보강) */
+  --cap-size: calc(46 * var(--u)); /* 하단 중앙 자막 */
+  --cap-bottom: calc(116 * var(--u)); /* 자막 마지막 줄의 아래 끝선: 화면 아래에서 116px, ▼는 그 아래 12px에 고정 */
+  --tag-ink: rgba(255,255,255,.7); /* 화자 이름표: 박스 없는 텍스트 */
+  --type-ms: 38;                   /* 대사 타자 속도(글자당 ms) */
+  --font-mono: ui-monospace, Consolas, 'D2Coding', 'Courier New', monospace; /* AI 대사 */
+  --hit-hint: '▼';                 /* 다음으로 넘기는 힌트: 대사 끝에서 깜빡이는 삼각형 */
 
 }
 /* 크기 토큰: --u 를 바꾼 영역(.frame)에서도 다시 계산되도록 따로 선언 */
 :root, .frame {
-  /* 크기 스케일 (1080x1920 기준 px) */
+  /* 크기 스케일 (1920x1080 기준 px) */
   --fs-display: calc(150 * var(--u));
   --fs-h1: calc(68 * var(--u));
   --fs-h2: calc(50 * var(--u));

@@ -13,9 +13,14 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); 
 .line { font-family: var(--font-display); font-size: 6.4vmin; font-weight: 700; line-height: 1.35; text-align: center; opacity: 0; transition: opacity 1.2s; }
 .line.on { opacity: 1; }
 .line em { font-style: normal; color: var(--pink); }
+.map { display: grid; gap: 1.6vmin; margin: 0 auto; width: min(100%, 120vmin); }
+.map .m { display: grid; grid-template-columns: 5vmin 1fr; gap: 2vmin; align-items: center; font-size: 3vmin; color: var(--muted); transition: color .5s, transform .5s; }
+.map .m i { font-style: normal; font-family: var(--font-display); font-weight: 800; width: 5vmin; height: 5vmin; border-radius: 50%; border: .3vmin solid var(--line); display: grid; place-items: center; font-size: 2.6vmin; }
+.map .m.on { color: var(--ink); transform: translateX(1vmin); } .map .m.on i { background: var(--pink); color: var(--bg); border-color: var(--pink); }
+.map .m.done { color: var(--ink); opacity: .75; }
 .chart { display: none; }
 .chart.on { display: block; }
-.cols { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2.4vmin; align-items: end; height: 60vmin; }
+.cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.4vmin; align-items: end; height: 60vmin; }
 .col { display: grid; align-items: end; justify-items: center; height: 100%; gap: 1vmin; grid-template-rows: 1fr auto auto; }
 .col .bar { width: 100%; background: var(--green); border-radius: 1vmin 1vmin 0 0; min-height: .6vmin; transition: height 1.2s cubic-bezier(.2,.8,.2,1); align-self: end; }
 .col .v { font-size: 3vmin; font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -36,9 +41,10 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); 
   <div class="stage">
     <div class="flash" id="flash"></div>
     <div class="line" id="line"></div>
+    <div class="map" id="map"></div>
     <div class="chart" id="chart">
       <div class="cols" id="cols"></div>
-      <div class="cap">칸마다 ‘당사자에게 책임을 묻는다’를 고른 사람의 비율</div>
+      <div class="cap">관람객 중 해당 선택을 한 사람의 비율</div>
       <div class="sub" id="sub"></div>
     </div>
   </div>
@@ -47,10 +53,15 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); 
 <script>
 (function () {
   'use strict';
-  var LINES = ['“폐기하면 되잖아.”', '“그래도 돼지잖아.”', '같은 사고. 다른 이름.', '같은 사고인데, <em>어디서</em> 답이 바뀌었나요?', '누구에게 <em>책임</em>을 물을까요?'];
-  var LAB = ['수레', '1칸', '2칸', '3칸', '4칸'], st = null, mode = 'idle', li = 0, lineEl = document.getElementById('line'), chart = document.getElementById('chart');
-  var STEPTXT = { start: '누군가 시작했습니다', s0: '누군가 수레 앞에 서 있습니다', history: '누군가 이야기를 읽고 있습니다', s1: '누군가 1칸 앞에서 고민합니다', s2: '누군가 2칸 앞에서 고민합니다', s3: '누군가 3칸 앞에서 고민합니다', s4: '누군가 4칸 앞에서 고민합니다' };
-  function pct(v) { return Math.round(v * 100); }
+  var LINES = ['“그래도 AI잖아.”', '맡긴 만큼, 책임질 곳이 필요하다.', '이 세계에서 사람은 한 명.', '잘못했나요? 감당했나요?', '어떤 벌이면 치른 걸까요?'];
+  var ARG = ['맡기는 일이 늘어, 모두 AI가 된다', '사고가 나면 책임질 사람이 없다', '귀책 · 잘못을 탓할 수 있는가', '책임을 졌는가', '지금의 AI는 처벌의 조건을 갖췄는가', '당신과 닮은 생각을 한 철학자', 'AI가 어떤 존재가 될 것인가'];
+  var STEP2ARG = { startvid: 0, ch1: 0, n1: 0, n1a: 0, n1a1: 0, n1a2: 0, n1a3: 0, n1b: 0, n1c: 0, n1d: 0, n1e: 0, q1: 0, q1r: 0, n3: 1, n3b: 1, n4p: 1, n4q: 1, n4a: 1, n4b: 1, n4c: 1, n4d: 1, c5: 1, n6a: 1, n6b: 1, n6c: 1, n7a: 1, n7b: 1, n7c: 1, n7d: 1, n7e: 1,  ch2: 2, part2: 2, ch3: 3, part3: 3, part4: 4, ch4: 5, result: 5, close: 6 };
+  var LAB = ['편하다', '잘못했다', '감당했다', '어떤 벌로도 못 감당'], st = null, mode = 'idle', li = 0, cur = -1;
+  var lineEl = document.getElementById('line'), chart = document.getElementById('chart'), mapEl = document.getElementById('map');
+  var STEPTXT = { start: '누군가 시작했습니다', ch1: '누군가 황금 시대에 들어섰습니다', n1: '누군가 도구의 역사를 보고 있습니다', n1a: '누군가 도구의 역사를 보고 있습니다', n1a1: '누군가 도구의 역사를 보고 있습니다', n1a2: '누군가 도구의 역사를 보고 있습니다', n1a3: '누군가 도구의 역사를 보고 있습니다', n1b: '누군가 도구의 역사를 보고 있습니다', n1c: '누군가 도구의 역사를 보고 있습니다', n1d: '누군가 도구의 역사를 보고 있습니다', n1e: '누군가 도구의 역사를 보고 있습니다', q1: '누군가 이 세계가 어떻게 느껴지는지 고르고 있습니다', n3: '누군가 사고의 이야기를 듣고 있습니다', n3b: '누군가 사고의 이야기를 듣고 있습니다', q1r: '누군가 이 세계가 어떻게 느껴지는지 고르고 있습니다', n4p: '누군가 사고의 경위를 듣고 있습니다', n4q: '누군가 사고의 경위를 듣고 있습니다', n4a: '누군가 사고의 순간을 보고 있습니다', n4b: '누군가 사고의 순간을 보고 있습니다', n4c: '누군가 사고의 순간을 보고 있습니다', n4d: '누군가 사고의 순간을 보고 있습니다', c5: '누군가 책임을 어디에 물을지 고르고 있습니다', n6a: '누군가 책임의 공백을 보고 있습니다', n6b: '누군가 책임의 공백을 보고 있습니다', n6c: '누군가 책임의 공백을 보고 있습니다', n7a: '누군가 책임의 공백을 보고 있습니다', n7b: '누군가 책임의 공백을 보고 있습니다', n7c: '누군가 책임의 공백을 보고 있습니다', n7d: '누군가 책임의 공백을 보고 있습니다', n7e: '누군가 책임의 공백을 보고 있습니다', ch2: '누군가 2장으로 넘어갑니다', part2: '누군가 AI에게 책임을 묻고 있습니다', ch3: '누군가 3장으로 넘어갑니다', part3: '누군가 AI를 어떻게 처벌할지 고르고 있습니다', ch4: '누군가 4장으로 넘어갑니다', result: '누군가 자신과 닮은 철학자를 만나고 있습니다', part4: '누군가 지금의 AI가 그 처벌을 받아들일 수 있는지 살펴보고 있습니다', close: '누군가 마지막 이야기를 듣고 있습니다' };
+  var KIND = { OO: '책임 주체로 본다', OX: '잘못은 했지만 책임은 못 진다', XO: '책임은 지지만 잘못은 아니다', XX: '도구로 본다' };
+  function pct(v) { return Math.round((v || 0) * 100); }
+  function drawMap() { mapEl.innerHTML = ARG.map(function (t, k) { return '<div class="m' + (k === cur ? ' on' : (k < cur ? ' done' : '')) + '"><i>' + (k + 1) + '</i><span>' + t + '</span></div>'; }).join(''); }
   function showLine() {
     lineEl.classList.remove('on');
     setTimeout(function () { lineEl.innerHTML = LINES[li % LINES.length]; li++; lineEl.classList.add('on'); }, 1300);
@@ -59,37 +70,41 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); 
     var cols = document.getElementById('cols');
     if (!st || !st.ready) { chart.classList.remove('on'); return false; }
     if (!cols.children.length) cols.innerHTML = LAB.map(function () { return '<div class="col"><div class="bar" style="height:0"></div><div class="v"></div><div class="l"></div></div>'; }).join('');
-    st.sanction.forEach(function (v, k) {
+    [st.feelEase, st.guiltYes, st.burdenYes, (st.method ? st.method.none : 0)].forEach(function (v, k) {
       var c = cols.children[k]; c.querySelector('.bar').style.height = (pct(v) * 0.85) + '%'; c.querySelector('.v').textContent = pct(v) + '%'; c.querySelector('.l').textContent = LAB[k];
     });
-    document.getElementById('sub').innerHTML = '<span>답이 바뀐 사람 <b>' + pct(1 - st.flip.none) + '%</b></span><span>돼지와 AI에 다른 답 <b>' + pct(st.aiDiffers) + '%</b></span><span>끝까지 맡긴 사람 <b>' + pct(st.lever[2]) + '%</b></span>';
+    document.getElementById('sub').innerHTML = ['OO', 'OX', 'XO', 'XX'].map(function (t) { return '<span>' + KIND[t] + ' <b>' + pct(st.types[t]) + '%</b></span>'; }).join('');
     return true;
   }
   function setStats(s) {
     st = s; document.getElementById('count').textContent = s.n ? s.n + '명이 해 보았습니다' : '첫 번째 관람객을 기다립니다';
     mode = drawChart() ? 'chart' : 'idle';
-    if (mode === 'chart') { lineEl.classList.remove('on'); chart.classList.add('on'); }
-    else { chart.classList.remove('on'); if (!lineEl.classList.contains('on')) showLine(); }
+    if (mode === 'chart') { lineEl.classList.remove('on'); mapEl.style.display = 'none'; chart.classList.add('on'); }
+    else { chart.classList.remove('on'); mapEl.style.display = ''; if (!lineEl.classList.contains('on')) showLine(); }
   }
+  drawMap();
   setInterval(function () {
     if (mode === 'idle') showLine();
-    else if (mode === 'chart') { /* 차트와 문구를 번갈아 */
+    else if (mode === 'chart') {
       if (chart.classList.contains('on')) { chart.classList.remove('on'); showLine(); setTimeout(function () { if (mode === 'chart') { lineEl.classList.remove('on'); chart.classList.add('on'); } }, 6500); }
     }
   }, 16000);
   var flashT, liveT;
   function flash(t) { var f = document.getElementById('flash'); f.textContent = t; f.classList.add('on'); clearTimeout(flashT); flashT = setTimeout(function () { f.classList.remove('on'); }, 5000); }
-  function live(t) { var e = document.getElementById('liveTxt'); e.textContent = t || ' '; clearTimeout(liveT); if (t) liveT = setTimeout(function () { e.innerHTML = '&nbsp;'; }, 20000); }
+  function live(t) { var e = document.getElementById('liveTxt'); e.textContent = t || ' '; clearTimeout(liveT); if (t) liveT = setTimeout(function () { e.innerHTML = '&nbsp;'; }, 20000); }
   function connect() {
     var es = new EventSource('/api/stream');
     es.onmessage = function (ev) {
       var m = JSON.parse(ev.data);
       if (m.type === 'stats') setStats(m.stats);
-      else if (m.type === 'progress') { if (STEPTXT[m.step]) live('● ' + STEPTXT[m.step]); }
+      else if (m.type === 'progress') {
+        if (STEPTXT[m.step]) live('● ' + STEPTXT[m.step]);
+        if (m.step in STEP2ARG) { cur = STEP2ARG[m.step]; drawMap(); } else if (m.step === 'start') { cur = -1; drawMap(); }
+      }
       else if (m.type === 'play') {
-        setStats(m.stats); live('');
+        setStats(m.stats); live(''); cur = -1; drawMap();
         if (!m.test) {
-          flash(m.flip ? '방금 한 명이 ' + m.flip + '칸에서 답을 바꿨습니다' : '방금 한 명이 끝까지 같은 답을 했습니다');
+          flash('방금 한 명이 ‘' + KIND[m.kind] + '’ 쪽에서, 처벌은 ‘' + (m.method ? String(m.method).split('+').map(function (x) { return { retr: '응보', det: '억제', corr: '교정', none: '어떤 방식으로도 감당하지 못한다' }[x] || x; }).join('·') : '—') + '’를 골랐습니다');
           if (mode === 'chart') { chart.classList.add('on'); lineEl.classList.remove('on'); chart.classList.remove('pulse'); void chart.offsetWidth; chart.classList.add('pulse'); }
         }
       }

@@ -22,32 +22,36 @@ try {
 } catch (e) {}
 var seen = {}; plays.forEach(function (p) { seen[p.sid] = 1; });
 
-function yn(v) { return v === 'yes' || v === 'no'; }
+function pick(v, ok) { return ok.indexOf(v) >= 0 ? v : null; }
 function clean(b) {
   if (!b || typeof b !== 'object') return null;
-  var a = b.ans || {}, e = b.e || {};
-  for (var k = 0; k <= 4; k++) if (!yn(a[k])) return null;
-  if (!yn(b.last) || !yn(b.cross)) return null;
-  if (![0, 1, 2].includes(b.a)) return null;
+  var feel = pick(b.feel, ['ease', 'anx']), guilt = pick(b.guilt, ['yes', 'no']), burden = pick(b.burden, ['yes', 'no']), fin = pick(b.final, ['withdraw', 'build']), method = cleanMethod(b.method);
+  if (!feel || !guilt || !burden) return null;
   var sid = String(b.sid || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40);
   if (!sid) return null;
-  return { sid: sid, t: Date.now(), src: b.src === 'kiosk' ? 'kiosk' : 'browser', test: !!b.test,
-    ans: { 0: a[0], 1: a[1], 2: a[2], 3: a[3], 4: a[4] }, a: b.a, last: b.last, e: { 1: null, 2: null, 3: null }, cross: b.cross };
+  return { sid: sid, t: Date.now(), src: b.src === 'kiosk' ? 'kiosk' : 'browser', test: !!b.test, feel: feel, guilt: guilt, burden: burden, method: method, final: fin };
 }
-function flip(p) { for (var k = 2; k <= 4; k++) if (p.ans[k] !== p.ans[1]) return k; return 0; }
+function cleanMethod(m) {
+  if (m === 'none') return 'none';
+  if (typeof m !== 'string') return null;
+  var out = ['retr', 'det', 'corr'].filter(function (k) { return m.split('+').indexOf(k) >= 0; });
+  return out.length ? out.join('+') : null;
+}
+function typ(p) { return (p.guilt === 'yes' ? 'O' : 'X') + (p.burden === 'yes' ? 'O' : 'X'); } /* 귀책 x 감당 */
 
 function stats() {
   var L = plays.filter(function (p) { return !p.test; }), n = L.length;
   var r = { mode: MODE, n: n, ready: n >= MIN_N, min: MIN_N };
   if (!r.ready) return r;
-  r.sanction = [0, 1, 2, 3, 4].map(function (k) { return L.filter(function (p) { return p.ans[k] === 'yes'; }).length / n; });
-  var f = { 0: 0, 2: 0, 3: 0, 4: 0 }; L.forEach(function (p) { f[flip(p)]++; });
-  r.flip = { none: f[0] / n, 2: f[2] / n, 3: f[3] / n, 4: f[4] / n };
-  r.lever = [0, 1, 2].map(function (v) { return L.filter(function (p) { return p.a === v; }).length / n; });
-  r.lastYes = L.filter(function (p) { return p.last === 'yes'; }).length / n;
-  r.aiYes = L.filter(function (p) { return p.cross === 'yes'; }).length / n;
-  r.aiDiffers = L.filter(function (p) { return (p.cross === 'yes') !== (p.ans[3] === 'yes'); }).length / n;
-  r.blamePig = L.filter(function (p) { return false; }).length / n;
+  var share = function (f) { return L.filter(f).length / n; };
+  r.feelEase = share(function (p) { return p.feel === 'ease'; });
+  r.guiltYes = share(function (p) { return p.guilt === 'yes'; });
+  r.burdenYes = share(function (p) { return p.burden === 'yes'; });
+  r.types = { OO: 0, OX: 0, XO: 0, XX: 0 };
+  ['OO', 'OX', 'XO', 'XX'].forEach(function (t) { r.types[t] = share(function (p) { return typ(p) === t; }); });
+  r.final = { withdraw: share(function (p) { return p.final === 'withdraw'; }), build: share(function (p) { return p.final === 'build'; }) };
+  r.method = { retr: 0, det: 0, corr: 0, none: 0 };
+  ['retr', 'det', 'corr', 'none'].forEach(function (m) { r.method[m] = share(function (p) { return p.method === m || (typeof p.method === 'string' && p.method.split('+').indexOf(m) >= 0); }); });
   return r;
 }
 
@@ -95,13 +99,27 @@ http.createServer(function (req, res) {
       seen[p.sid] = 1; plays.push(p);
       try { fs.appendFileSync(LOG, JSON.stringify(p) + '\n'); } catch (e) { console.error('write failed', e.message); }
       json(res, 200, { ok: true });
-      broadcast({ type: 'play', flip: flip(p), a: p.a, last: p.last, test: p.test, stats: stats() });
+      broadcast({ type: 'play', kind: typ(p), method: p.method, test: p.test, stats: stats() });
+    });
+  }
+  if (u.pathname === '/api/cues' && req.method === 'POST') { /* 자막 타이밍 에디터(cue-editor.html) 저장 — 공개(web) 모드에서는 막는다 */
+    if (MODE === 'web') return json(res, 403, { ok: false });
+    return body(req, function (b) {
+      if (!b || !Array.isArray(b.cues) || !b.cues.length || b.cues.length > 40) return json(res, 400, { ok: false });
+      var ok = b.cues.every(function (c) { return c && typeof c.step === 'string' && /^[a-z0-9]{2,6}$/.test(c.step) && typeof c.t === 'number' && isFinite(c.t) && (c.c === 0 || c.c === 1); });
+      if (!ok) return json(res, 400, { ok: false });
+      var num = function (n, d) { return typeof n === 'number' && isFinite(n) ? n : d; };
+      var clips = Array.isArray(b.clips) ? b.clips.slice(0, 2).map(function (c) { c = c || {}; return { end: num(c.end, 0) > 0 ? c.end : null, x: Math.max(0, Math.min(100, num(c.x, 50))), y: Math.max(0, Math.min(100, num(c.y, 50))), z: Math.max(1, Math.min(3, num(c.z, 1))), sp: (Array.isArray(c.sp) ? c.sp : []).slice(0, 24).map(function (q) { q = q || {}; return { a: Math.max(0, num(q.a, 0)), b: Math.max(0, num(q.b, 0)), r: Math.max(0.1, Math.min(4, num(q.r, 1))) }; }).filter(function (q) { return q.b > q.a; }) }; }) : undefined;
+      var out = { hold: typeof b.hold === 'number' && b.hold >= 0 ? b.hold : 0, clips: clips, cues: b.cues.map(function (c) { return { step: c.step, c: c.c, t: c.t }; }) };
+      try { fs.mkdirSync(path.join(PUBLIC, 'media'), { recursive: true }); fs.writeFileSync(path.join(PUBLIC, 'media', 'n1_cues.json'), JSON.stringify(out, null, 2)); } catch (e) { return json(res, 500, { ok: false }); }
+      console.log('[cues] n1_cues.json 저장됨 (' + out.cues.length + '개 자막)');
+      json(res, 200, { ok: true });
     });
   }
   if (u.pathname === '/api/progress' && req.method === 'POST') {
     if (limited(ip, 'prog', 150)) return json(res, 429, { ok: false });
     return body(req, function (b) {
-      if (b && typeof b.step === 'string') broadcast({ type: 'progress', step: b.step.slice(0, 12), ans: yn(b.ans) ? b.ans : null });
+      if (b && typeof b.step === 'string') broadcast({ type: 'progress', step: b.step.slice(0, 12), ans: typeof b.ans === 'string' ? b.ans.slice(0, 12) : null });
       json(res, 200, { ok: true });
     });
   }

@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>자막 타이밍 에디터</title>
+<style>
+:root{--bg:#1a0810;--panel:#260d18;--line:#4a2434;--ink:#f3e9e4;--muted:#b79aa5;--accent:#e2004c;--bar:#7a2a45;--bar-on:#c4325f;--sel:#ffd6a5}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard Variable',Pretendard,'Malgun Gothic',system-ui,sans-serif;font-size:14px}
+header{display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header h1{font-size:16px;margin:0;font-weight:700}
+header .sp{flex:1}
+#status{display:none;margin:0;padding:10px 20px;font-size:13px;line-height:1.5;background:#2d1020;border-bottom:1px solid var(--line);color:var(--ink)}
+#status.show{display:block}#status.bad{background:#4a1226;color:#ffc2d1}
+button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 14px;cursor:pointer}
+button:hover{border-color:var(--muted)}button.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+
+main{padding:16px 20px 40px;max-width:1500px;margin:0 auto}
+#pv{position:relative;width:100%;max-width:980px;margin:0 auto;aspect-ratio:2.55/1;background:#000;overflow:hidden;border:1px solid var(--line)}
+#pv video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#sub{position:absolute;left:6%;right:6%;bottom:5%;text-align:center;color:#fff;font-size:clamp(14px,2.4vw,26px);line-height:1.3;font-weight:600;text-shadow:0 2px 10px rgba(0,0,0,.7);white-space:pre-line}
+.bar{display:flex;align-items:center;gap:10px;margin:14px auto;max-width:980px;flex-wrap:wrap}
+#tc{font-variant-numeric:tabular-nums;font-family:'Source Code Variable',ui-monospace,Consolas,monospace;font-size:18px;min-width:210px}
+label.f{display:flex;align-items:center;gap:6px;color:var(--muted)}
+input[type=number]{width:84px;font:inherit;color:var(--ink);background:#12050b;border:1px solid var(--line);border-radius:6px;padding:5px 8px}
+#tl{position:relative;margin-top:8px;border:1px solid var(--line);border-radius:10px;background:var(--panel);overflow:hidden;user-select:none}
+.row{display:flex;height:34px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.lab{flex:0 0 250px;padding:0 12px;display:flex;align-items:center;gap:8px;border-right:1px solid var(--line);font-size:13px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
+.lab b{color:var(--muted);font-weight:600;font-family:'Source Code Variable',ui-monospace,monospace;font-size:12px;min-width:34px}
+.lab span{overflow:hidden;text-overflow:ellipsis}
+.row.sel .lab{background:#35121f}
+.track{position:relative;flex:1;cursor:pointer}
+.ruler{height:44px;border-bottom:1px solid var(--line);background:#1f0a13}
+.ruler .lab{cursor:default;color:var(--muted)}
+.tick{position:absolute;top:0;bottom:0;border-left:1px solid #5a3344}
+.tick i{position:absolute;top:3px;left:4px;font-style:normal;font-size:11px;color:var(--muted);font-family:'Source Code Variable',ui-monospace,monospace}
+.spd{position:absolute;bottom:2px;height:13px;border-radius:4px;font-size:10px;line-height:13px;text-align:center;color:#1a0810;overflow:hidden;white-space:nowrap;pointer-events:none;font-family:'Source Code Variable',ui-monospace,monospace}
+.sps{margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)}.sps .sph{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.sps .sph b{color:var(--ink)}
+.spr{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.spr input{width:70px!important}.spr button{padding:4px 8px;font-size:12px}
+.clip{position:absolute;top:0;bottom:0;display:flex;align-items:center;padding-left:8px;font-size:11px;color:#e5c8d2;background:rgba(255,255,255,.04)}
+.seg{position:absolute;top:5px;bottom:5px;background:var(--bar);border-radius:5px;opacity:.85;pointer-events:none}
+.row.on .seg{background:var(--bar-on);opacity:1}
+.row.sel .seg{outline:2px solid var(--sel)}
+.key{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;background:#fff;transform:rotate(45deg);border-radius:2px;cursor:ew-resize;box-shadow:0 0 0 2px var(--bg)}
+.row.sel .key{background:var(--sel)}
+.key.lock{background:#777;cursor:not-allowed}
+#ph{position:absolute;top:0;bottom:0;width:0;border-left:2px solid var(--accent);z-index:5;pointer-events:none}
+#ph::before{content:'';position:absolute;top:0;left:-7px;border:6px solid transparent;border-top:9px solid var(--accent)}
+#clipbox{display:flex;gap:14px;flex-wrap:wrap;margin:12px 0}
+.cb{flex:1 1 420px;min-width:0;border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--panel)}
+.cb h3{margin:0 0 8px;font-size:13px;color:var(--muted)}
+.cb.cur h3{color:var(--sel)}
+.cb .g{display:grid;grid-template-columns:72px minmax(0,1fr) 150px;gap:8px 12px;align-items:center;font-size:12px;color:var(--muted)}
+.cb input[type=range]{width:100%}
+.cb input[type=number]{width:100%;min-width:0}
+.cb .two{display:flex;gap:6px}.cb .two input{flex:1}
+.cb .hint{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cb .n{text-align:right;font-family:'Source Code Variable',ui-monospace,monospace}
+#pv{cursor:grab}
+#edit{display:flex;gap:14px;align-items:center;margin-top:14px;flex-wrap:wrap;color:var(--muted)}
+#edit .tx{color:var(--ink);font-weight:600}
+.help{margin-top:18px;color:var(--muted);font-size:13px;line-height:1.8}
+kbd{background:#12050b;border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-family:'Source Code Variable',ui-monospace,monospace;font-size:12px;color:var(--ink)}
+</style></head><body>
+<header><h1>자막 타이밍 에디터 — 1부 도입</h1><span class="sp"></span>
+<button id="bReset">기본값</button><button id="bRevert" title="브라우저에 임시 보관된 작업을 버리고 저장된 파일 값으로">저장된 값으로</button><button id="bCopy">JSON 복사</button><button id="bSave" class="pri">저장 (Ctrl+S)</button><button id="bFs">파일 위치로 저장</button><button id="bDl">파일로 받기</button></header>
+<div id="status"></div>
+<main>
+<div id="pv"><video id="v0" muted playsinline preload="auto" src="media/n1_01.mp4"></video><video id="v1" muted playsinline preload="auto" src="media/n1_02.mp4" style="opacity:0"></video><div id="sub"></div></div>
+<div class="bar"><button id="bPlay">▶ 재생</button><button id="bBack">◀ 1프레임</button><button id="bFwd">1프레임 ▶</button><span id="tc">00:00.000 / 00:00.000</span>
+<label class="f" style="display:none">첫 문장 정지(ms)<input type="number" id="hold" min="0" step="100"></label></div>
+<div id="clipbox"></div>
+<div id="tl"></div>
+<div id="edit"><span>선택한 자막:</span><span class="tx" id="selTx">-</span>
+<label class="f" title="영상 안의 시간 기준(속도와 무관)">시작(영상 초)<input type="number" id="selT" step="0.01" min="0"></label>
+<button id="bSet">재생헤드 위치로 (S)</button></div>
+<div class="help"><kbd>Space</kbd> 재생/정지 · <kbd>←</kbd><kbd>→</kbd> 1프레임 (<kbd>Shift</kbd> 1초) · 타임라인을 클릭/드래그해 재생헤드 이동 · 마름모(◆)를 드래그하면 그 자막의 시작 시간이 바뀝니다 ·
+<kbd>S</kbd> 선택한 자막을 지금 재생헤드 위치로 · <kbd>Alt</kbd>+<kbd>←</kbd><kbd>→</kbd> 선택한 자막 1프레임 이동 · <kbd>Ctrl</kbd>+<kbd>S</kbd> 저장.<br>
+저장하면 <code>public/media/n1_cues.json</code>에 쓰이고, 게임을 새로고침하면 바로 반영됩니다. (서버를 한 번 재시작해야 저장 버튼이 동작합니다. 안 되면 “JSON 복사”로 그 파일에 붙여넣으세요.)</div>
+</main>
+<script>
+(function(){
+var FPS=24, TXT={n1a:'인간은 늘 도구를 쥐며 진화해왔습니다.',n1a1:'돌멩이에서',n1a2:'철기,',n1a3:'그리고 실리콘으로…',n1b:'2030년, 우리는 마침내 생각하는 도구를 손에 넣었습니다.',n1c:'주인의 의지만을 수행하는\n이 완벽한 객체를 보십시오.',n1d:'의도도, 감정도, 자아도 없는\n가장 고성능의 도구입니다.'};
+function CLIPDEF_(){return[{end:null,x:50,y:50,z:1,sp:[{a:0,b:5,r:.9}]},{end:8,x:50,y:50,z:1,sp:[]}]}
+var DEF={hold:0,clips:CLIPDEF_(),cues:[{c:0,t:0,step:'n1a'},{c:0,t:.5,step:'n1a1'},{c:0,t:1.8,step:'n1a2'},{c:0,t:3,step:'n1a3'},{c:0,t:8,step:'n1b'},{c:1,t:0,step:'n1c'},{c:1,t:5,step:'n1d'}]};
+var $=function(i){return document.getElementById(i)}, v=[$('v0'),$('v1')], nat=[10.042,10.042], D=[10.042,10.042], total=20.084, T=0, playing=false, sel=1, cues=[], hold=0, last=0;
+var CLIPDEF=function(){return[{end:null,x:50,y:50,z:1,sp:[{a:0,b:5,r:.9}]},{end:8,x:50,y:50,z:1,sp:[]}]}, clips=CLIPDEF();
+function recalc(){D[0]=clips[0].end||nat[0];D[1]=clips[1].end||nat[1];total=D[0]+D[1]}
+function abs(c){return c.c?D[0]+c.t:c.t}
+function fromAbs(a){return a>=D[0]?{c:1,t:+(a-D[0]).toFixed(3)}:{c:0,t:+a.toFixed(3)}}
+function load(j){hold=j.hold!=null?j.hold:0;clips=CLIPDEF();if(Array.isArray(j.clips))j.clips.slice(0,2).forEach(function(c,i){if(!c)return;clips[i]={end:(typeof c.end==='number'&&c.end>0)?c.end:null,x:typeof c.x==='number'?c.x:50,y:typeof c.y==='number'?c.y:50,z:typeof c.z==='number'?c.z:1,sp:Array.isArray(c.sp)?c.sp.filter(function(q){return q&&q.b>q.a&&q.r>0}).map(function(q){return{a:q.a,b:q.b,r:q.r}}):((c.su>0&&c.sr>0)?[{a:0,b:c.su,r:c.sr}]:[])}});recalc();var have={};j.cues.forEach(function(c){have[c.step]=1});var all=j.cues.slice();DEF.cues.forEach(function(c){if(!have[c.step])all.push(c)});cues=all.filter(function(c){return TXT[c.step]}).map(function(c){return{step:c.step,a:abs(c)}}).sort(function(x,y){return x.a-y.a});cues[0].a=0;cues.forEach(function(c){if(c.a>total-1/FPS)c.a=total-1/FPS});cues[0].a=0;$('hold').value=hold;clipUI();frame()}
+function fmt(s){var m=Math.floor(s/60),x=s-m*60;return String(m).padStart(2,'0')+':'+x.toFixed(3).padStart(6,'0')}
+function status(t,bad){var e=$('status');e.textContent=t;e.className=t?('show'+(bad?' bad':'')):''}
+/* 영상별 끝점·위치(프레이밍) */
+function frame(){[0,1].forEach(function(i){var c=clips[i];v[i].style.objectPosition=c.x+'% '+c.y+'%';v[i].style.transformOrigin=c.x+'% '+c.y+'%';v[i].style.transform='scale('+c.z+')'})}
+function curClip(){return T>=D[0]?1:0}
+function clipUI(){var b=$('clipbox');b.innerHTML='';
+  [0,1].forEach(function(i){var c=clips[i],d=document.createElement('div');d.className='cb';d.id='cb'+i;
+    d.innerHTML='<h3>'+(i?'02 그림 로봇팔':'01 도구의 진화')+' <span style="font-weight:400">(미리보기를 끌면 위치가 바뀝니다)</span></h3><div class="g">'+
+    '<span>끝(초)</span><span class="hint">비우면 영상 끝까지</span><input type="number" step="0.01" min="0.5" data-k="end" data-i="'+i+'" value="'+(c.end||'')+'" placeholder="'+nat[i].toFixed(2)+'">'+
+    '<span>세로 위치</span><input type="range" min="0" max="100" step="0.5" data-k="y" data-i="'+i+'" value="'+c.y+'"><span class="n" id="n'+i+'y">'+c.y+'%</span>'+
+    '<span>가로 위치</span><input type="range" min="0" max="100" step="0.5" data-k="x" data-i="'+i+'" value="'+c.x+'"><span class="n" id="n'+i+'x">'+c.x+'%</span>'+
+    '<span>확대</span><input type="range" min="1" max="2" step="0.01" data-k="z" data-i="'+i+'" value="'+c.z+'"><span class="n" id="n'+i+'z">×'+c.z+'</span></div><div class="sps" id="sps'+i+'"></div>';
+    b.appendChild(d);
+    spUI(i);d.querySelectorAll('input[data-k]').forEach(function(el){el.oninput=function(){var k=el.dataset.k,ci=+el.dataset.i;
+      if(k==='end'){var val=parseFloat(el.value);clips[ci].end=(isFinite(val)&&val>=.5)?Math.min(val,nat[ci]):null;recalc();cues.forEach(function(q,qi){if(qi>0&&q.a>total-1/FPS)q.a=total-1/FPS});if(T>total-.001)T=total-.001;build();paint()}
+      else{clips[ci][k]=parseFloat(el.value);var n=$('n'+ci+k);if(n)n.textContent=k==='z'?'×'+clips[ci].z:clips[ci][k]+'%';frame()}}})});
+  var cc=curClip();[0,1].forEach(function(i){$('cb'+i).classList.toggle('cur',i===cc)})}
+function Wc(ci,t){var c=clips[ci],pts=[0,Math.min(t,D[ci])];(c.sp||[]).forEach(function(q){if(q.a<t)pts.push(q.a);if(q.b<t)pts.push(q.b)});pts=pts.filter(function(p){return p>=0&&p<=Math.min(t,D[ci])}).sort(function(x,y){return x-y});var w=0;for(var i=1;i<pts.length;i++){var p=pts[i-1],q=pts[i];if(q>p)w+=(q-p)/rateAt(c,(p+q)/2)}return w}
+function toW(a){return a>=D[0]?Wc(0,D[0])+Wc(1,a-D[0]):Wc(0,a)}
+function WTot(){return toW(total)}
+function fromW(w){var w0=Wc(0,D[0]);if(w>=w0){return D[0]+inv(1,w-w0)}return inv(0,w)}
+function inv(ci,w){var lo=0,hi=D[ci];for(var k=0;k<40;k++){var m=(lo+hi)/2;if(Wc(ci,m)<w)lo=m;else hi=m}return (lo+hi)/2}
+function rateAt(c,t){var a=c.sp||[];for(var i=0;i<a.length;i++)if(t>=a[i].a&&t<a[i].b)return a[i].r;return 1}
+function spUI(ci){var box=$('sps'+ci);if(!box)return;var c=clips[ci];box.innerHTML='<div class="sph"><b>속도 구간</b><span>영상 안의 시간(초) 기준 · 배속 1 = 보통, 0.5 = 절반 속도, 2 = 두 배 · 타임라인은 실제 재생 시간이라 속도를 바꾸면 자막도 같이 늘어나거나 줄어듭니다</span></div>';
+  c.sp.forEach(function(q,qi){var r=document.createElement('div');r.className='spr';
+    r.innerHTML='<input type="number" step="0.01" min="0" value="'+q.a+'" data-f="a"><span>~</span><input type="number" step="0.01" min="0" value="'+q.b+'" data-f="b"><span>초 ×</span><input type="number" step="0.05" min="0.1" max="4" value="'+q.r+'" data-f="r"><button data-act="ha" title="시작을 재생헤드 위치로">시작=▶</button><button data-act="hb" title="끝을 재생헤드 위치로">끝=▶</button><button data-act="del">삭제</button>';
+    box.appendChild(r);
+    r.querySelectorAll('input').forEach(function(el){el.onchange=function(){var x=parseFloat(el.value);if(!isFinite(x))return;if(el.dataset.f==='r')x=Math.max(.1,Math.min(4,x));q[el.dataset.f]=Math.max(0,x);spDone(ci)}});
+    r.querySelectorAll('button').forEach(function(bt){bt.onclick=function(){var lt=ci?T-D[0]:T;lt=+Math.max(0,lt).toFixed(2);if(bt.dataset.act==='ha')q.a=lt;else if(bt.dataset.act==='hb')q.b=lt;else c.sp.splice(qi,1);spDone(ci)}})});
+  var add=document.createElement('button');add.textContent='＋ 속도 구간 추가 (재생헤드부터 1초)';add.onclick=function(){var lt=+Math.max(0,ci?T-D[0]:T).toFixed(2);c.sp.push({a:lt,b:+(lt+1).toFixed(2),r:.7});spDone(ci)};box.appendChild(add)}
+function spDone(ci){clips[ci].sp.sort(function(x,y){return x.a-y.a});spUI(ci);build();paint()}
+/* 미리보기 드래그로 위치 이동 */
+$('pv').addEventListener('pointerdown',function(e){var ci=curClip(),c=clips[ci],r=$('pv').getBoundingClientRect(),sx=e.clientX,sy=e.clientY,ox=c.x,oy=c.y;
+  var ovH=r.width/(16/9)*c.z-r.height,ovW=r.width*c.z-r.width;$('pv').setPointerCapture(e.pointerId);$('pv').style.cursor='grabbing';
+  $('pv').onpointermove=function(ev){if(ovH>1)c.y=Math.max(0,Math.min(100,oy-(ev.clientY-sy)/ovH*100));if(ovW>1)c.x=Math.max(0,Math.min(100,ox-(ev.clientX-sx)/ovW*100));
+    c.x=+c.x.toFixed(1);c.y=+c.y.toFixed(1);frame();var bx=document.querySelector('#cb'+ci);if(bx){bx.querySelector('[data-k=y]').value=c.y;bx.querySelector('[data-k=x]').value=c.x;$('n'+ci+'y').textContent=c.y+'%';$('n'+ci+'x').textContent=c.x+'%'}};
+  $('pv').onpointerup=function(){$('pv').onpointermove=null;$('pv').onpointerup=null;$('pv').style.cursor='grab'}});
+/* 타임라인 */
+var tl=$('tl');
+function build(){
+  tl.innerHTML='';
+  var r=document.createElement('div');r.className='row ruler';r.innerHTML='<div class="lab">시간</div><div class="track"></div>';tl.appendChild(r);
+  var tr=r.querySelector('.track');
+  var WTt=WTot();for(var s=0;s<=Math.floor(WTt);s++){var t=document.createElement('div');t.className='tick';t.style.left=(s/WTt*100)+'%';t.innerHTML='<i>'+s+'s</i>';tr.appendChild(t)}
+  [['01 도구의 진화',0,D[0]],['02 그림 로봇팔',D[0],total]].forEach(function(c){var e=document.createElement('div');e.className='clip';e.style.left=(toW(c[1])/WTt*100)+'%';e.style.width=((toW(c[2])-toW(c[1]))/WTt*100)+'%';e.style.top='14px';e.style.bottom='auto';e.style.height='13px';e.textContent=c[0];tr.appendChild(e)});
+  clips.forEach(function(c,ci){(c.sp||[]).forEach(function(q){var o=ci?D[0]:0,b=Math.min(q.b,D[ci]);if(b<=q.a)return;var d=document.createElement('div');d.className='spd';d.style.left=(toW(o+q.a)/WTt*100)+'%';d.style.width=((toW(o+b)-toW(o+q.a))/WTt*100)+'%';d.style.background=q.r<1?'#ffb86b':'#7fe0d0';d.textContent='×'+q.r;tr.appendChild(d)})});
+  cues.forEach(function(c,i){
+    var row=document.createElement('div');row.className='row';row.dataset.i=i;
+    row.innerHTML='<div class="lab"><b>'+c.step+'</b><span>'+TXT[c.step].replace(/\n/g,' ')+'</span></div><div class="track"><div class="seg"></div><div class="key'+(i===0?' lock':'')+'"></div></div>';
+    tl.appendChild(row);
+    row.querySelector('.lab').onclick=function(){sel=i;paint()};
+    var key=row.querySelector('.key');
+    if(i>0)key.onpointerdown=function(e){e.stopPropagation();sel=i;key.setPointerCapture(e.pointerId);var trk=row.querySelector('.track');
+      key.onpointermove=function(ev){var rc=trk.getBoundingClientRect(),a=fromW((ev.clientX-rc.left)/rc.width*WTot());setCue(i,snap(a,ev.shiftKey));seek(cues[i].a,true)};
+      key.onpointerup=function(){key.onpointermove=null;key.onpointerup=null};paint()};
+  });
+  var ph=document.createElement('div');ph.id='ph';tl.appendChild(ph);
+}
+function snap(a,fine){return fine?a:Math.round(a*FPS)/FPS}
+function setCue(i,a){var lo=(i>0?cues[i-1].a:0)+1/FPS,hi=(i<cues.length-1?cues[i+1].a:total)-1/FPS;cues[i].a=Math.max(lo,Math.min(hi,a));paint()}
+function geom(){var rc=tl.querySelector('.ruler .track').getBoundingClientRect();return{l:rc.left-tl.getBoundingClientRect().left,w:rc.width}}
+function paint(){sel=Math.max(0,Math.min(sel,cues.length-1));
+  var g=geom(),act=active(),WTt=WTot();
+  $('ph').style.left=(g.l+toW(T)/WTt*g.w)+'px';
+  cues.forEach(function(c,i){
+    var row=tl.querySelectorAll('.row')[i+1];row.className='row'+(i===sel?' sel':'')+(i===act?' on':'');
+    var end=i<cues.length-1?cues[i+1].a:total;
+    var seg=row.querySelector('.seg');seg.style.left=(toW(c.a)/WTt*100)+'%';seg.style.width=((toW(end)-toW(c.a))/WTt*100)+'%';
+    row.querySelector('.key').style.left=(toW(c.a)/WTt*100)+'%';
+  });
+  $('tc').textContent=fmt(toW(T))+' / '+fmt(WTt);var _cc=curClip();[0,1].forEach(function(i){var b=$('cb'+i);if(b)b.classList.toggle('cur',i===_cc)});
+  $('sub').textContent=act>=0?TXT[cues[act].step]:'';
+  var c=cues[sel];$('selTx').textContent=c.step+'  '+TXT[c.step].replace(/\n/g,' ');$('selT').value=c.a.toFixed(2);$('selT').disabled=sel===0;
+}
+function active(){var k=0;for(var i=0;i<cues.length;i++)if(cues[i].a<=T+1e-6)k=i;return k}
+/* 재생 */
+function show(c){v[0].style.opacity=c===0?1:0;v[1].style.opacity=c===1?1:0}
+function seek(a,keep){T=Math.max(0,Math.min(total-.001,a));var c=T>=D[0]?1:0;show(c);v[c].currentTime=c?T-D[0]:T;v[1-c].pause();if(!keep&&playing)v[c].play();paint()}
+function play(){if(T>=total-.05)seek(0);playing=true;$('bPlay').textContent='⏸ 정지';var c=T>=D[0]?1:0;show(c);v[c].play();last=performance.now();loop()}
+function pause(){playing=false;$('bPlay').textContent='▶ 재생';v[0].pause();v[1].pause()}
+function loop(){if(!playing)return;var c=T>=D[0]?1:0,vv=v[c];var _cl=clips[c],_ct=vv.currentTime;vv.playbackRate=rateAt(_cl,_ct);T=c?D[0]+vv.currentTime:vv.currentTime;
+  if(c===0&&(vv.ended||T>=D[0]-.02)){show(1);v[1].currentTime=0;v[1].play();T=D[0]}
+  else if(c===1&&(vv.ended||vv.currentTime>=D[1]-.02)){T=total-.001;paint();pause();return}
+  paint();requestAnimationFrame(loop)}
+$('bPlay').onclick=function(){playing?pause():play()};
+$('bBack').onclick=function(){seek(T-1/FPS)};$('bFwd').onclick=function(){seek(T+1/FPS)};
+/* 스크럽 */
+tl.addEventListener('pointerdown',function(e){if(e.target.closest('.key')||e.target.closest('.lab'))return;var g=geom(),r=tl.getBoundingClientRect();
+  function mv(ev){var a=fromW((ev.clientX-r.left-g.l)/g.w*WTot());seek(snap(a,ev.shiftKey),true)}
+  mv(e);tl.setPointerCapture(e.pointerId);tl.onpointermove=mv;tl.onpointerup=function(){tl.onpointermove=null;tl.onpointerup=null}});
+$('selT').onchange=function(){if(sel>0)setCue(sel,parseFloat($('selT').value)||0);seek(cues[sel].a,true)};
+$('bSet').onclick=function(){if(sel>0)setCue(sel,snap(T))};
+$('hold').onchange=function(){hold=Math.max(0,+$('hold').value||0)};
+addEventListener('keydown',function(e){
+  if(/input/i.test(e.target.tagName))return;
+  if(e.code==='Space'){e.preventDefault();playing?pause():play()}
+  else if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();var d=(e.key==='ArrowLeft'?-1:1);
+    if(e.altKey){if(sel>0){setCue(sel,cues[sel].a+d/FPS);seek(cues[sel].a,true)}}else seek(T+d*(e.shiftKey?1:1/FPS),true)}
+  else if(e.key==='s'||e.key==='S'){if(!e.ctrlKey&&!e.metaKey&&sel>0)setCue(sel,snap(T))}
+  else if(e.key==='ArrowUp'){sel=Math.max(0,sel-1);paint()}else if(e.key==='ArrowDown'){sel=Math.min(cues.length-1,sel+1);paint()}
+});
+addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();save()}});
+/* 저장 */
+function out(){return{hold:hold,clips:clips.map(function(c,i){return{end:(c.end&&c.end<nat[i]-.02)?+c.end.toFixed(3):null,x:+c.x.toFixed(1),y:+c.y.toFixed(1),z:+c.z.toFixed(2),sp:(c.sp||[]).filter(function(q){return q.b>q.a}).map(function(q){return{a:+q.a.toFixed(2),b:+q.b.toFixed(2),r:+q.r.toFixed(2)}})}}),cues:cues.map(function(c){var f=fromAbs(c.a);return{step:c.step,c:f.c,t:f.t}})}}
+var fsHandle=null;
+function fail(msg){var e=new Error(msg);e.fromServer=true;return e}
+function writeFS(body){return fsHandle.createWritable().then(function(w){return w.write(body).then(function(){return w.close()})})}
+function pickFS(){
+  if(!window.showSaveFilePicker){status('이 브라우저는 파일 위치 지정 저장을 지원하지 않습니다. “파일로 받기”를 쓰세요.',true);return}
+  window.showSaveFilePicker({suggestedName:'n1_cues.json',types:[{description:'JSON',accept:{'application/json':['.json']}}]}).then(function(h){fsHandle=h;status('저장 위치를 지정했습니다('+h.name+'). 이제 저장(Ctrl+S)을 누르면 이 파일에 바로 씁니다. public/media/n1_cues.json 을 골랐는지 확인하세요.');save()},function(){})
+}
+function save(){var body=JSON.stringify(out(),null,2);
+  if(fsHandle){writeFS(body).then(function(){markSaved();status('파일에 저장했습니다 ('+fsHandle.name+') — 게임을 새로고침하면 반영됩니다')},function(e){status('파일에 쓰지 못했습니다: '+(e&&e.message),true)});return}
+  fetch('/api/cues',{method:'POST',headers:{'Content-Type':'application/json'},body:body}).then(function(r){
+    if(r.status===404)throw fail('서버가 예전 버전입니다(저장 API 없음, 404). 서버를 껐다 다시 켠 뒤 저장하세요.');
+    if(r.status===403)throw fail('공개(web) 모드 서버는 저장을 막습니다. 전시(exhibit) 모드로 실행하세요.');
+    if(!r.ok)throw fail('서버 오류 '+r.status);
+    return r.json()}).then(function(j){if(!(j&&j.ok))throw fail('저장이 거부됐습니다.');
+    return fetch('media/n1_cues.json',{cache:'no-store'}).then(function(r){return r.json()}).then(function(f){var c=f&&f.clips&&f.clips[0],o=out().clips[0];if(c&&JSON.stringify(c.sp||[])===JSON.stringify(o.sp)&&Math.abs(c.y-o.y)<.2){markSaved();fileJ=JSON.parse(JSON.stringify(f));status('저장됨 — 게임을 새로고침하면 반영됩니다')}else status('저장은 됐지만 파일 내용이 방금 값과 다릅니다. 서버를 껐다 켜고 다시 저장하세요.',true)})
+  }).catch(function(e){console.error('save failed',e);var m=(e&&e.message)||String(e);status(e&&e.fromServer?m+' — 대신 “파일 위치로 저장” 또는 “파일로 받기”를 쓸 수 있습니다.':'서버에 저장하지 못했습니다 ['+location.origin+' · '+m+']. “파일 위치로 저장”으로 public/media/n1_cues.json 을 한 번 지정하면 서버 없이 저장됩니다. 또는 “파일로 받기”.',true)})}
+$('bFs').onclick=pickFS;
+$('bDl').onclick=function(){var blob=new Blob([JSON.stringify(out(),null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='n1_cues.json';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500);status('n1_cues.json 을 받았습니다. 받은 파일을 public/media/ 안의 n1_cues.json 위에 덮어쓰고 게임을 새로고침하세요.')};
+$('bSave').onclick=save;
+$('bCopy').onclick=function(){var t=JSON.stringify(out(),null,2);var done=function(){status('JSON을 복사했습니다')};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(done,function(){prompt('복사하세요',t)});else prompt('복사하세요',t)};
+$('bReset').onclick=function(){load(DEF);sel=1;paint();status('기본값으로 되돌렸습니다 (저장 전까지 게임에는 반영되지 않습니다)')};
+/* 시작 */
+function start(){
+  fetch('media/n1_cues.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():DEF}).catch(function(){return DEF}).then(function(j){
+    if(!j||!Array.isArray(j.cues)||!j.cues.length)j=DEF;load(j);savedStr=JSON.stringify(out());fileJ=j;
+    var d=null;try{d=JSON.parse(localStorage.getItem(DK)||'null')}catch(x){}
+    if(d&&d.s&&d.s!==savedStr){try{load(JSON.parse(d.s));status('저장하지 않은 작업을 복원했습니다 ('+new Date(d.t).toLocaleString()+'). 맞으면 저장(Ctrl+S)을 누르세요. 파일에 저장된 값으로 돌아가려면 “저장된 값으로”.')}catch(x){}}
+    build();paint();addEventListener('resize',paint);setInterval(autosave,800)})}
+var DK='gbd_n1cues_draft',savedStr='',fileJ=null;
+function autosave(){try{var s=JSON.stringify(out());if(s===savedStr){localStorage.removeItem(DK)}else{localStorage.setItem(DK,JSON.stringify({t:Date.now(),s:s}))}}catch(x){}}
+function markSaved(){savedStr=JSON.stringify(out());try{localStorage.removeItem(DK)}catch(x){}}
+$('bRevert').onclick=function(){try{localStorage.removeItem(DK)}catch(x){}load(fileJ||DEF);build();paint();status('저장된 파일 값으로 되돌렸습니다.')};
+var n=0;[0,1].forEach(function(i){v[i].addEventListener('loadedmetadata',function(){if(v[i].duration){nat[i]=v[i].duration}n++;if(n===2){start()}})});
+setTimeout(function(){if(!cues.length)start()},2500);
+})();
+</script></body></html>

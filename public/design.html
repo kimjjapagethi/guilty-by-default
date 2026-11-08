@@ -93,7 +93,35 @@ code { background: #FAF4EF; padding: 1px 6px; border-radius: 6px; }
 <div class="hl">강조 패널</div><div class="row" style="margin-top:12px"><button class="btn primary" type="button">처음부터 다시</button></div></div>
 </div>
 
-<h2>6. 모션</h2>
+<h2>7. 장면 어휘 — 자막 · 대사 · 선택 (확정)</h2>
+<p class="meta">게임 본편(1부)부터 3부까지 같은 규칙으로 씁니다. 값은 <code>ds.css</code>의 <code>--cap-*</code>, <code>--tag-*</code>, <code>--type-ms</code>, <code>--font-mono</code>.</p>
+<table>
+<tr><th>자막</th><td>하단 중앙, 흰색, 46px(AI 대사도 46px). <b>마지막 줄의 아래 끝선을 화면 아래 116px(1600×900 기준 y=784)에 고정</b>해 한 줄이든 세 줄이든 끝선이 같고, 그 아래 ▼ 자리를 비워 둠. 1·2·3부와 책임 질문 화면 모두 같은 위치. 한 장면에 한 마디씩(문장 단위로 쪼갬). 아래에서 올라오는 모션 없이 페이드 인만.</td></tr>
+<tr><th>화자 이름표</th><td>박스 없이 <b>텍스트만</b>: 24px 굵게, 흰색 70%, 자간 넓게, 대사 바로 위. 1·2·3부 동일, 모두 가운데 정렬.</td></tr>
+<tr><th>우측 대화 패널(2부)</th><td>메신저 박스 없이 대본처럼 흐르는 텍스트. 캐릭터 대사는 이름(작은 글씨) 아래에 타자로 출력. 내가 고른 질문은 이름 없이 앞에 ▶ 표시를 붙이고 연한 하늘색으로. 시스템 알림은 ✓ + 버건디 글씨 한 줄. 선택지도 박스 없는 목록(번호 + 문장, 마우스를 올리면 ▶와 강조색).</td></tr>
+<tr><th>인물 첫 대사</th><td>인물을 누르면 패널이 열린 뒤 첫 대사가 딤 없이 타자로 나오고, 끝나면 선택지가 아래에서 올라옴.</td></tr>
+<tr><th>대사 타자</th><td>캐릭터가 말하는 대사는 글자 단위 타자 효과(38ms/글자). 나레이션(화자 없는 자막)은 타자 없이 페이드 인.</td></tr>
+<tr><th>AI 대사</th><td>모노스페이스(<code>--font-mono</code>) 42px, 흰색. 이름표는 다른 화자와 같은 버건디 배지.</td></tr>
+<tr><th>따옴표</th><td>선택지 버튼에는 쓰지 않음. 고른 문장을 자막으로 다시 읽어줄 때만 “ ”를 붙임. 캐릭터 대사 자막에는 쓰지 않음.</td></tr>
+<tr><th>다음으로 넘기기</th><td>화면 하단 중앙(아래 12px)에 고정된 깜빡이는 ▼(<code>--hit-hint</code>). 문장 길이와 상관없이 항상 같은 자리. 화면 어디를 눌러도 넘어감(히트 영역 = 전체 화면). “화면을 눌러 계속하기” 막대는 자막형 장면에서는 쓰지 않음. 타자가 끝나고 약 2.4~2.8초 뒤에 활성화.</td></tr>
+<tr><th>선택지</th><td>유리판 카드(반투명 남색 + 흰 테두리). 두 선택지는 같은 위계. 처음엔 어느 것도 선택된 것처럼 보이지 않음. 마우스를 올리면 흰색으로 밝아짐(딤 해제). 선택 뒤 선택한 것만 남기고 나머지는 흐려짐.</td></tr>
+<tr><th>책임 질문(재판장)</th><td>질문은 하단 중앙 자막. 위에는 세 사람이 법정 스포트라이트 아래 서 있고, 머리 위에 종이 딱지(이름 + 아래에 작은 글씨 판정 문구, 왼쪽 정렬)가 붙어 있음. 이미 고른 인물은 딱지·인물이 회색으로 죽어 배제된 느낌을 줌(버건디 강조 없음). 누르면 딱지가 아래로 내려와 가슴께에 붙고 버건디 딱지로 바뀌며 “○○의 잘못이다.” 문구가 됨. 인물 이미지: <code>media/char_*.png</code>.</td></tr>
+<tr><th>홈 버튼</th><td>왼쪽 위 모서리. 흰색 + <code>mix-blend-mode: difference</code> 라서 어두운 장면에선 흰색, 밝은 장면에선 어두운색으로 자동 반전.</td></tr>
+<tr><th>큰 단어 장면</th><td>핵심 개념은 화면 위쪽에 PP Frama 170px 흰색으로 크게 박고(예: Responsibility), 그 아래 하단 자막이 한 마디씩 이어짐.</td></tr>
+<tr><th>배경</th><td>시작 표지는 전체 폭에 맞추고 위아래는 검정(시네마 바). 서사 장면은 새벽 도시(푸른 톤) 또는 거의 검정의 어두운 배경 위에 흰 자막.</td></tr>
+<tr><th>수사 노트</th><td>2부의 노트는 손글씨체로 적힌 메모처럼 보이게 하고 제목은 “수사 노트”만 둠. 체포·결론 문구는 노트 하단에 끄적인 느낌으로.</td></tr>
+</table>
+<div class="frames" style="margin-top:20px">
+<div class="frame" style="background:#0b0f1f;color:#fff"><small style="color:#9fb0c8">대사 이름표 + 자막 + 힌트</small>
+<div style="text-align:center;padding:20px 0"><span style="display:inline-block;color:rgba(255,255,255,.7);font-size:calc(24*var(--u));font-weight:700;letter-spacing:.1em">AI</span>
+<p style="font-family:var(--font-mono);font-size:calc(42*var(--u));margin:calc(14*var(--u)) 0 0;color:#fff">설정된 목적에 따른<br>최적화된 결과입니다. <span style="font-size:.5em;opacity:.8">▼</span></p></div></div>
+<div class="frame" style="background:#0b0f1f;color:#fff"><small style="color:#9fb0c8">이름 딱지 → 판정 딱지</small>
+<div style="display:flex;gap:calc(30*var(--u));align-items:center;justify-content:center;padding:20px 0">
+<span style="background:#FAF4EF;color:#460E21;font-weight:800;padding:8px 22px;border-radius:3px;transform:rotate(-2deg)">설계사</span>
+<span style="background:#AB073D;color:#fff;font-weight:800;padding:8px 22px;border-radius:3px;transform:rotate(-3deg)">설계사의 잘못이다.</span></div></div>
+</div>
+
+<h2>8. 모션</h2>
 <table>
 <tr><td><code>.m-yes</code></td><td>‘예(제재)’를 눌렀을 때 돼지가 내려앉으며 흐려짐 (0.9초)</td></tr>
 <tr><td><code>.m-no</code></td><td>‘아니오’를 눌렀을 때 한 번 튀어 오르고 제자리 (0.8초)</td></tr>
