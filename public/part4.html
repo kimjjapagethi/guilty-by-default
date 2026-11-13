@@ -176,7 +176,7 @@ const meter=l=>`<div style="display:flex;gap:4px;margin-top:6px">${[1,2,3,4].map
 /* 노드 배치 */
 const N=[]; /* {id,type,x,y,w,h,html,kind} */
 ACT.forEach((a,i)=>N.push({id:'a'+i,t:'a',x:56,y:130+i*84,w:190,h:60,i,html:`<b>${a[0]}</b>`}));
-N.push({id:'b',t:'b',x:290,y:290,w:200,h:190,html:`<b>행위 주체<br>= 책임 주체<br><span style="color:var(--hot)">귀책 사유</span></b>`});
+N.push({id:'b',t:'b',x:290,y:290,w:200,h:190,html:`<b>행위 주체<br>= <span style="color:var(--hot)">귀책 사유</span></b>`});
 E.forEach((e,i)=>N.push({id:'e'+i,t:'e',x:535,y:190+i*150,w:130,h:90,i,html:`<b>${e.k}</b>`}));
 DORD.forEach((ci,r)=>N.push({id:'c'+ci,t:'c',x:745,y:125+r*62,w:330,h:52,i:ci,html:`<b style="font-size:22px">${C[ci].k} <span style="font-size:15px;font-weight:500;color:var(--dim)">${C[ci].s}</span></b>${meter(C[ci].lv)}`}));
 const EDGES=[];
@@ -256,7 +256,7 @@ window.__go(async function(){
   await caption('먼저 행위 주체입니다. 2부에서 살핀 여섯 가지가, AI가 행위 주체가 되기 위한 조건이었습니다.');
   ACT.forEach((_,i)=>show('a'+i));
   await sleep(300);
-  await caption('다만 행위 주체라는 것만으로는 부족합니다. 행위 주체가 곧 책임 주체여야, 비로소 귀책 사유가 성립하죠.');
+  await caption('행위 주체가 된다는 건 도구를 넘어섰다는 뜻이고, 곧 귀책 사유가 성립한다는 뜻입니다.');
   show('b');$('#cb').classList.add('on');showEdges(x=>x.dataset.t==='b');
   await sleep(300);
   await caption('그렇다면 책임은 어떻게 지게 할까요. 사회가 요구하는 처벌의 효과는 크게 응보, 억제, 교정입니다.');
@@ -275,7 +275,7 @@ window.__go(async function(){
     await sleep(500);
   }
   litEdges(null);
-  await caption('2026년 현재, 어떤 조건은 징후가 보이고 어떤 조건은 아직 연구 단계입니다. 점을 눌러 확인해 보세요. 연결은 우리 팀의 해석입니다.');
+  await caption('2026년 현재, AI가 책임 효과를 위한 선행 조건의 징후를 보이기 시작했습니다. 각 노드를 눌러 확인해 보세요.');
   $('#cap').classList.remove('on');
   ready=true;$('#pn').classList.add('on');$('#go').classList.add('show');updGo();
 });

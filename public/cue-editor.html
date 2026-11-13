@@ -79,9 +79,9 @@ kbd{background:#12050b;border:1px solid var(--line);border-radius:4px;padding:1p
 </main>
 <script>
 (function(){
-var FPS=24, TXT={n1a:'인간은 늘 도구를 쥐며 진화해왔습니다.',n1a1:'돌멩이에서',n1a2:'철기,',n1a3:'그리고 실리콘으로…',n1b:'2030년, 우리는 마침내 생각하는 도구를 손에 넣었습니다.',n1c:'주인의 의지만을 수행하는\n이 완벽한 객체를 보십시오.',n1d:'의도도, 감정도, 자아도 없는\n가장 고성능의 도구입니다.'};
+var FPS=24, TXT={n1a:'인간은 늘 도구를 쥐며 진화해왔습니다.',n1a1:'돌멩이에서 철기, 그리고 실리콘으로…',n1b:'2030년, 우리는 마침내 생각하는 도구를 손에 넣었습니다.',n1c:'주인의 의지만을 수행하는\n이 완벽한 객체를 보십시오.',n1d:'의도도, 감정도, 자아도 없는\n가장 고성능의 도구입니다.'};
 function CLIPDEF_(){return[{end:null,x:50,y:50,z:1,sp:[{a:0,b:5,r:.9}]},{end:8,x:50,y:50,z:1,sp:[]}]}
-var DEF={hold:0,clips:CLIPDEF_(),cues:[{c:0,t:0,step:'n1a'},{c:0,t:.5,step:'n1a1'},{c:0,t:1.8,step:'n1a2'},{c:0,t:3,step:'n1a3'},{c:0,t:8,step:'n1b'},{c:1,t:0,step:'n1c'},{c:1,t:5,step:'n1d'}]};
+var DEF={hold:0,clips:CLIPDEF_(),cues:[{c:0,t:0,step:'n1a'},{c:0,t:.5,step:'n1a1'},{c:0,t:8,step:'n1b'},{c:1,t:0,step:'n1c'},{c:1,t:5,step:'n1d'}]};
 var $=function(i){return document.getElementById(i)}, v=[$('v0'),$('v1')], nat=[10.042,10.042], D=[10.042,10.042], total=20.084, T=0, playing=false, sel=1, cues=[], hold=0, last=0;
 var CLIPDEF=function(){return[{end:null,x:50,y:50,z:1,sp:[{a:0,b:5,r:.9}]},{end:8,x:50,y:50,z:1,sp:[]}]}, clips=CLIPDEF();
 function recalc(){D[0]=clips[0].end||nat[0];D[1]=clips[1].end||nat[1];total=D[0]+D[1]}
