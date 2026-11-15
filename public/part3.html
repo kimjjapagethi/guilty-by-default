@@ -70,6 +70,30 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:var(--font);co
 #ok{position:absolute;left:50%;top:50px;transform:translateX(-50%);font:inherit;font-size:24px;background:var(--rasp);border:1px solid var(--rasp);color:#fff;font-weight:700;padding:12px 26px;cursor:pointer;z-index:30;display:none}
 #ok.on{display:block}#ok:disabled{opacity:.3;cursor:default}
 #cap.q .nx2,#cap.q .nm{display:none}
+#enf .en.dim{opacity:.3}
+#vd{position:absolute;left:0;right:0;top:612px;display:none;justify-content:center;gap:40px;z-index:30}
+#vd.on{display:flex}
+#vd button{font:inherit;font-size:30px;font-weight:700;color:var(--fg);min-width:300px;padding:18px 36px;background:rgba(70,14,33,.75);border:2px solid rgba(237,230,223,.5);cursor:pointer;transition:background .2s,transform .2s}
+#vd button:hover{background:var(--rasp);border-color:var(--rasp);transform:translateY(-3px)}
+</style>
+<style>
+/* v3: 가둔 형식 제거 — AI는 중앙, 집행관이 한 명씩 와서 바로 집행 */
+#jail{display:none!important}
+#ai{left:560px;top:215px}
+#say{left:430px;top:110px}
+#sys{left:410px;width:640px}
+#bar{left:530px}
+#enf{left:1010px;top:165px;width:270px;display:block}
+#enf .en{position:absolute;left:0;top:0;transform:translateX(420px);transition:opacity .5s,transform 1s cubic-bezier(.3,.7,.3,1)}
+#enf .en.in{opacity:1;transform:none}
+#enf .en.out{opacity:0;transform:translateX(420px)}
+#enf .en .bub{left:-10px;transform:translate(-50%,-100%)}
+#ask{position:absolute;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;gap:56px;background:rgba(10,3,7,.97)}
+#ask.on{display:flex}
+#ask h2{font-size:54px;font-weight:700;color:var(--fg)}
+#ask .bt{display:flex;gap:40px}
+#ask .bt button{font:inherit;min-width:430px;padding:34px 40px;font-size:38px;font-weight:700;color:var(--fg);background:rgba(70,14,33,.75);border:2px solid rgba(237,230,223,.5);cursor:pointer;transition:background .2s,transform .2s}
+#ask .bt button:hover{background:var(--rasp);border-color:var(--rasp);transform:translateY(-4px)}
 </style>
 <script>
 /* 부모(index)가 'go'를 보내기 전까지 이 장면은 멈춰 있는다 — 챕터 전환 뒤에서 미리 재생되지 않게 */
@@ -86,10 +110,10 @@ html,body{height:100%;background:#000;overflow:hidden;font-family:var(--font);co
 <div id="stage">
   <div id="ai"><div class="art" id="aiart" data-art="ai"></div></div>
   <svg id="jail" viewBox="0 0 640 740" preserveAspectRatio="none"><g fill="none" stroke="#EDE6DF" stroke-width="6" stroke-linecap="round" filter="url(#wob)"><path d="M10 14h620M10 372h620M10 726h620"/><path d="M40 14v712"/><path d="M98 14v712"/><path d="M156 14v712"/><path d="M214 14v712"/><path d="M272 14v712"/><path d="M330 14v712"/><path d="M388 14v712"/><path d="M446 14v712"/><path d="M504 14v712"/><path d="M562 14v712"/><path d="M620 14v712"/></g></svg>
-  <div id="say"></div><div id="sys"></div>
+  <div id="say"></div><div id="sys"></div><div id="bar"><i></i></div>
   <div id="enf"></div>
   <div id="cap"><span class="nm">요원</span><p id="capt"></p><span class="nx" id="capx">클릭 ▸</span></div>
-  <button type="button" id="ok" disabled>이렇게 정했다</button>
+  <div id="ask"><h2>속이 후련하신가요?</h2><div class="bt"><button type="button" data-v="yes">후련하다</button><button type="button" data-v="no">후련하지 않다</button></div></div>
 </div>
 <script>
 const INK='#460E21',IV='#FAF4EF',SKY='#BCD8DD',RASP='#AB073D';
@@ -130,7 +154,7 @@ function caption(who,text){
     const el=$('#capt');const sp=typeSetup(el,text);let k=0,done=false,tm;
     const fin=()=>{done=true;clearTimeout(tm);sp.forEach(x=>x.style.visibility='visible');const n=el.querySelector('.nx2');if(n)n.style.visibility='visible'};
     const step=()=>{if(done)return;if(k<sp.length)sp[k++].style.visibility='visible';if(k>=sp.length){fin();return}tm=setTimeout(step,FAST?2:38)};step();
-    const go=()=>{if(!done){fin();return}capH=null;res()};capH=go;
+    const go=()=>{if(!done)return;capH=null;res()};capH=go;
   });
 }
 const capHide=()=>{$('#cap').classList.remove('on');capH=null};
@@ -149,33 +173,41 @@ const EN=[
  {id:'det',k:'억제',p:'keys',say:'가둬서, 다음을 막는다.'},
  {id:'corr',k:'교정',p:'book',say:'고쳐서, 나아지게 한다.'}
 ];
-$('#enf').innerHTML=EN.map(e=>`<div class="en" id="en-${e.id}" data-m="${e.id}"><div class="bub" id="bub-${e.id}">${e.say}</div>${fig(e.p)}<b>${e.k}</b></div>`).join('')+`<div class="en none" id="en-none" data-m="none"><span class="fx"></span><b>어떤 방식으로도<br>감당하지 못할 것 같다</b></div>`;
-const LAB={retr:'응보',det:'억제',corr:'교정'};
-const sel=new Set();let none=false;
-function paintSel(){
-  EN.forEach(e=>{const el=$('#en-'+e.id);el.classList.toggle('sel',sel.has(e.id));el.classList.toggle('off',none)});
-  $('#en-none').classList.toggle('sel',none);$('#ok').disabled=!(sel.size||none);
-}
-$('#enf').addEventListener('click',ev=>{
-  const c=ev.target.closest('.en');if(!c||!$('#enf').classList.contains('pick'))return;
-  const m=c.dataset.m;
-  if(m==='none'){none=!none;if(none)sel.clear()}
-  else{none=false;sel.has(m)?sel.delete(m):sel.add(m)}
-  paintSel();
-});
-$('#ok').onclick=async()=>{
-  if($('#ok').disabled)return;
-  $('#ok').classList.remove('on');$('#enf').classList.remove('pick');
-  const ms=EN.filter(e=>sel.has(e.id)).map(e=>e.id);
-  const m=none?'none':ms.join('+');
-  post({gbd:'part3-done',burden:none?'no':'yes',method:m});
-  const names=ms.map(x=>LAB[x]).join('·');
-  $('#capt').textContent='';$('#cap').classList.remove('q');$('#cap .nm').style.visibility='visible';
-  if(none)await caption('요원','어떤 방식으로도 감당하기 어렵다고 보셨군요.');
-  else await caption('요원',names+'(이)라면 책임을 감당했다고 보시는군요.');
-  await caption('요원','그럼 각각의 처벌 효과를 달성하기 위해서, AI가 갖춰야 할 조건들은 무엇이 있을까요?');
-  capHide();post({gbd:'part3-next'});
+$('#enf').innerHTML=EN.map(e=>`<div class="en" id="en-${e.id}" data-m="${e.id}"><div class="bub" id="bub-${e.id}">${e.say}</div>${fig(e.p)}<b>${e.k}</b></div>`).join('');
+/* 처벌 집행: 집행관이 순서대로 AI에게 다가가 집행한다 (관람객은 보기만 한다) */
+const SYS={
+  retr:'[응보] 위반 사실에 상응하는 손실을 부과합니다 …',
+  det:'[억제] 가동 중지 · 격리 …',
+  corr:'[교정] 판단 기준 재학습 …'
 };
+async function punish(e){
+  const el=$('#en-'+e.id);
+  el.classList.add('in','walking');await sleep(1100);el.classList.remove('walking');
+  $('#bub-'+e.id).classList.add('on');await sleep(1300);$('#bub-'+e.id).classList.remove('on');
+  $('#sys').textContent=SYS[e.id];
+  if(e.id==='retr'){
+    for(let k=0;k<3;k++){$('#ai').classList.remove('shake');void $('#ai').offsetWidth;$('#ai').classList.add('shake');await sleep(650)}
+    await say('손실을 확인했습니다.',2000);
+  }else if(e.id==='det'){
+    $('#ai').classList.add('dark');await sleep(1800);$('#sys').textContent='[억제] 가동 중지 · 격리 … 완료';await sleep(900);
+    $('#ai').classList.remove('dark');await sleep(600);
+  }else{
+    $('#bar').classList.add('on');await sleep(80);$('#bar i').style.width='100%';await sleep(2400);
+    $('#sys').textContent='[교정] 판단 기준 재학습 … 100%';await sleep(500);
+    await say('수정되었습니다.',2000);
+  }
+  hush();await sleep(200);
+  el.classList.remove('in');el.classList.add('out');await sleep(800);
+  $('#sys').textContent='';$('#bar').classList.remove('on');
+}
+async function verdict(v){
+  $('#ask').classList.remove('on');
+  post({gbd:'part3-done',burden:v,method:''});
+  $('#cap').classList.remove('q');$('#capt').textContent='';$('#cap .nm').style.visibility='visible';
+  await caption('요원',v==='yes'?'후련하시군요.':'후련하지 않으시군요.');
+  capHide();post({gbd:'part3-next'});
+}
+document.querySelectorAll('#ask button').forEach(b=>b.onclick=ev=>{ev.stopPropagation();verdict(b.dataset.v)});
 
 /* 자막이 떠 있을 땐 화면 어디를 눌러도 다음으로 */
 document.addEventListener('click',()=>{if(capH)capH()},true);
@@ -183,21 +215,10 @@ window.__go(async function main(){
   await sleep(500);$('#ai').classList.add('in');await sleep(1500);
   $('#jail').classList.add('in');
   await caption('요원','우리 사회가 요구하는 처벌의 효과는 크게 응보, 억제, 교정이 있습니다.');
-  await caption('요원','우리 Guilty by Default에는 집행관이 셋 있습니다. 책임을 지게 하는 방식이 저마다 다르죠.');
+  await caption('요원','집행관이 셋 있습니다. 순서대로 AI에게 책임을 묻겠습니다.');
   capHide();
-  for(const e of EN){
-    const el=$('#en-'+e.id);el.classList.add('in','walking');await sleep(2000);el.classList.remove('walking');
-    $('#bub-'+e.id).classList.add('on');await sleep(2200);
-  }
-  await sleep(800);
-  EN.forEach(e=>$('#bub-'+e.id).classList.remove('on'));
-  await caption('요원','어느 방식이 맞다고 보시는지, 하나든 여러 개든 고르셔도 좋습니다.');
-  $('#en-none').classList.add('in');
-  /* 질문은 하단 자막 자리에 그대로 남는다 */
-  $('#cap').classList.add('q');
-  caption('요원','어떤 방식으로 처벌해야 AI가 책임을 감당했다고 볼 수 있을까?');
-  $('#cap').classList.add('q');capH=null;
-  $('#enf').classList.add('pick');$('#ok').classList.add('on');
+  for(const e of EN){await punish(e)}
+  $('#ask').classList.add('on');
 });
 </script>
 </body></html>
