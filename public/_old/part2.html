@@ -258,9 +258,18 @@ function tchars(h){return h.replace(/<em>(.*?)<\/em>/g,'\u0001$1\u0002').split('
 function tchars2(h){ // <br> 보존
   return h.split('<br>').map(seg=>tchars(seg)).join('<br>');
 }
+function holes(){ // 단서 사각형 안쪽은 블러/딤에서 제외
+  const d=$('#dimv'),vr=$('#vw').getBoundingClientRect(),sc=vr.width/1600;
+  let path='M0 0H1600V900H0Z';
+  document.querySelectorAll('.mk.show').forEach(m=>{const r=m.getBoundingClientRect();if(!r.width)return;
+    const x=(r.left-vr.left)/sc,y=(r.top-vr.top)/sc,w=r.width/sc,h=r.height/sc;
+    path+=' M'+x.toFixed(1)+' '+y.toFixed(1)+'h'+w.toFixed(1)+'v'+h.toFixed(1)+'h-'+w.toFixed(1)+'Z'});
+  const u='url(\"data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 1600 900\'><path fill-rule=\'evenodd\' d=\''+path+'\'/></svg>\")';
+  d.style.webkitMaskImage=u;d.style.maskImage=u;d.style.webkitMaskSize=d.style.maskSize='100% 100%';
+}
 async function say(who,txt,wait=true,ai=false,el='#tx'){
   const tok=++typeTok;typing=true;fastType=false;nextH=null;
-  if(el==='#tx'&&txt){$('#dlg').classList.add('on');if(!playing)$('#dimv').classList.add('on')}
+  if(el==='#tx'&&txt){$('#dlg').classList.add('on');if(!playing){$('#dimv').classList.add('on');holes()}}
   if(el==='#tx'){$('#dlg').classList.toggle('ai',ai);$('#who').textContent=who;$('#nx').style.visibility='hidden';}
   $(el).innerHTML=tchars2(txt);
   const cs=[...document.querySelectorAll(el+' .tc')];
@@ -398,7 +407,7 @@ window.__go(async function main(){
   await sleep(500);
   await say('요원','경찰은 관련된 ‘사람들’을<br>용의자로 지목했군요…');
   await say('요원','하지만 우리 길바디는<br>해당 사건의 범인을 AI로 보고 있습니다.');
-  await say('요원','그럼 사건 현장 CCTV로<br>증거를 수집합시다.');
+  await say('요원','CCTV와 당시 AI의 추론 과정을 대조해가며<br>단서를 수집합시다.');
   started=true;$('#dlg').classList.remove('on');$('#dimv').classList.remove('on');play();
 });
 

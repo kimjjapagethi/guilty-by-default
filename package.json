@@ -1,1 +1,1 @@
-{ "name": "guilty-by-default", "version": "0.1.0", "private": true, "scripts": { "exhibit": "MODE=exhibit node server.js", "web": "MODE=web node server.js" } }
+{ "name": "guilty-by-default", "version": "0.2.0", "private": true, "scripts": { "dev": "node server.js", "start": "node server.js", "exhibit": "node server.js", "web": "MODE=web node server.js" } }

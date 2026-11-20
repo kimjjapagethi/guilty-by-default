@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>스크립트 편집기 · Guilty by Default</title>
+<link rel="stylesheet" href="ds.css"><link rel="stylesheet" href="game.css">
+<style>
+html, body { overflow: auto; height: auto; background: var(--ivory); font-family: var(--font-body); color: var(--burgundy-dark); }
+* { box-sizing: border-box; }
+body { margin: 0; display: grid; grid-template-rows: auto 1fr; height: 100vh; overflow: hidden; }
+header { display: flex; gap: 10px; align-items: center; padding: 10px 16px; background: var(--burgundy-dark); color: var(--ivory); flex-wrap: wrap; }
+header b { font-size: 18px; margin-right: 8px; } header .st { margin-left: auto; font-size: 14px; opacity: .85; }
+button, select, input, textarea { font: inherit; color: inherit; }
+header button { background: var(--ivory); color: var(--burgundy-dark); border: 0; border-radius: 999px; padding: 6px 16px; font-weight: 700; cursor: pointer; }
+header button.pri { background: var(--burgundy); color: var(--ivory); }
+.main { display: grid; grid-template-columns: 300px 1fr; min-height: 0; }
+nav { overflow: auto; border-right: 2px solid var(--ivory-dark); padding: 10px; font-size: 14px; background: color-mix(in srgb, var(--ivory-dark) 30%, var(--ivory)); }
+nav details { margin-bottom: 6px; } nav summary { font-weight: 800; cursor: pointer; padding: 4px 6px; }
+nav .g2 { margin-left: 10px; } nav .g2 > summary { font-weight: 700; font-size: 13px; color: var(--muted); }
+nav a { display: block; padding: 3px 8px; margin: 1px 0 1px 8px; border-radius: 8px; cursor: pointer; text-decoration: none; color: inherit; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+nav a:hover { background: var(--paleblue-light); } nav a.on { background: var(--burgundy); color: var(--ivory); }
+section.ed { overflow: auto; padding: 16px 22px 60px; }
+.row { display: grid; grid-template-columns: 110px 1fr; gap: 10px; align-items: start; margin: 8px 0; } .row > label { font-size: 13px; font-weight: 700; padding-top: 7px; color: var(--muted); }
+.row input[type=text], .row input[type=number], .row textarea, .row select { width: 100%; padding: 7px 10px; border: 2px solid var(--ivory-dark); border-radius: 10px; background: #fff; }
+.row textarea { resize: vertical; line-height: 1.45; }
+h2 { margin: 0 0 4px; font-size: 22px; } h3 { margin: 22px 0 6px; font-size: 16px; }
+.hint { color: var(--muted); font-size: 13px; margin: 2px 0 8px; }
+.bar { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 12px; }
+.bar button, .ln button, .add { border: 2px solid var(--ivory-dark); background: var(--ivory); border-radius: 999px; padding: 3px 12px; cursor: pointer; font-size: 13px; font-weight: 700; }
+.bar button.del, .ln button.del { color: var(--burgundy); }
+.ln { display: grid; grid-template-columns: 26px 150px 100px 1fr 90px auto; gap: 8px; align-items: start; background: #fff; border: 2px solid var(--ivory-dark); border-radius: 14px; padding: 8px; margin: 8px 0; }
+.ln.cursel { border-color: var(--burgundy); }
+.ln .no { font-weight: 800; padding-top: 7px; text-align: center; cursor: pointer; }
+.ln input, .ln textarea, .ln select { width: 100%; padding: 6px 8px; border: 2px solid var(--ivory-dark); border-radius: 8px; background: #fff; }
+.ln .btns { display: flex; flex-direction: column; gap: 4px; }
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) 520px; gap: 22px; } @media (max-width: 1300px) { .cols { grid-template-columns: 1fr; } }
+.pvbox { position: sticky; top: 0; align-self: start; }
+.pv { position: relative; width: 520px; height: 292.5px; overflow: hidden; border-radius: 12px; background: var(--burgundy-dark); border: 2px solid var(--ivory-dark); }
+.pvc { position: absolute; left: 0; top: 0; width: 1600px; height: 900px; transform: scale(.325); transform-origin: 0 0; font-family: var(--font-body); color: var(--ivory); }
+.pvc .bgi { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.pvc .phb { position: absolute; inset: 0; background: linear-gradient(135deg, var(--paleblue), var(--paleblue-light)); }
+.pvc .cap, .pvc .hit { position: absolute; }
+.pvc .cap .tx { min-height: 0; }
+.pvn { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.up { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.msg { font-size: 13px; color: var(--burgundy); }
+</style></head>
+<body>
+<header><b>스크립트 편집기</b>
+  <button class="pri" id="save">저장 (게임에 바로 반영)</button>
+  <button id="dl">백업 파일 받기</button>
+  <button id="reload">저장된 것 다시 불러오기</button>
+  <button id="reset">처음 스크립트로 되돌리기</button>
+  <a href="/" target="_blank" style="color:var(--paleblue)">게임 열기 ↗</a>
+  <span class="st" id="st">불러오는 중…</span></header>
+<div class="main"><nav id="nav"></nav><section class="ed" id="ed"></section></div>
+<script>
+(function () {
+'use strict';
+var S = null, cur = null, dirty = false, pvLine = 0;
+var $ = function (s) { return document.querySelector(s); };
+function el(t, c, h) { var e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; }
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
+function mark(d) { dirty = d; $('#st').textContent = d ? '● 저장 안 됨' : '저장됨'; }
+function msg(t) { $('#st').textContent = t; }
+function load(url) { return fetch(url + '?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.json(); }); }
+function init(fromDefault) {
+  load(fromDefault ? 'script.default.json' : 'script.json').catch(function () { return load('script.default.json'); }).then(function (j) { S = j; mark(!!fromDefault); build(); if (cur) pick(cur.key); else pick('open-0'); });
+}
+/* ---------- 왼쪽 목록 ---------- */
+var nodes = {};
+function build() {
+  nodes = {}; var nav = $('#nav'); nav.innerHTML = '';
+  function grp(parent, title, cls) { var d = el('details', cls || ''); d.open = true; d.appendChild(el('summary', '', title)); parent.appendChild(d); return d; }
+  function link(parent, key, label, node) { node.key = key; nodes[key] = node; var a = el('a', '', esc(label)); a.dataset.key = key; a.onclick = function () { pick(key); }; parent.appendChild(a); }
+  var g = grp(nav, '공통 · 오프닝'); S.opening.forEach(function (c, k) { link(g, 'open-' + k, c.id + ' · ' + sum(c), { type: 'cut', arr: S.opening, idx: k }); });
+  S.chars.forEach(function (c, i) {
+    var gc = grp(nav, (i + 1) + '. ' + c.name);
+    link(gc, 'char-' + i, '인물 카드 (선택 화면)', { type: 'char', ch: c });
+    link(gc, 'mir-' + i, '거울 (이게 나다)', { type: 'mirror', ch: c });
+    [['intro', '도입'], ['meet', '만남'], ['twist', '반전']].forEach(function (p) { var gg = grp(gc, p[1], 'g2'); c[p[0]].forEach(function (cu, k) { link(gg, p[0] + '-' + i + '-' + k, cu.id + ' · ' + sum(cu), { type: 'cut', arr: c[p[0]], idx: k }); }); });
+    var g1 = grp(gc, '선택 1', 'g2'); link(g1, 'c1-' + i, '질문 · 선택지', { type: 'choice', c: c.c1 });
+    c.after1.forEach(function (list, j) { var gg = grp(g1, '→ ' + c.c1.options[j].label, 'g2'); list.forEach(function (cu, k) { link(gg, 'a1-' + i + '-' + j + '-' + k, cu.id + ' · ' + sum(cu), { type: 'cut', arr: list, idx: k }); }); });
+    var g2 = grp(gc, '선택 2', 'g2'); link(g2, 'c2-' + i, '질문 · 선택지', { type: 'choice', c: c.c2 });
+    c.after2.forEach(function (list, j) { var gg = grp(g2, '→ ' + c.c2.options[j].label, 'g2'); list.forEach(function (cu, k) { link(gg, 'a2-' + i + '-' + j + '-' + k, cu.id + ' · ' + sum(cu), { type: 'cut', arr: list, idx: k }); }); });
+    link(gc, 'vd-' + i, '판결 뒤 한 줄 · 근거 약함 문구', { type: 'verdict', ch: c });
+  });
+  var ge = grp(nav, '엔딩'); S.endings.forEach(function (e, i) { link(ge, 'end-' + i, e.id + ' · ' + e.name, { type: 'ending', e: e }); });
+}
+function sum(c) { var l = (c.lines || [])[0]; return c.profile ? '[프로필] ' + c.profile.name : l ? (l.text || '').replace(/\n/g, ' ').slice(0, 14) : '(대사 없음)'; }
+function pick(key) {
+  var n = nodes[key]; if (!n) return; cur = n; pvLine = 0;
+  Array.prototype.forEach.call(document.querySelectorAll('nav a'), function (a) { a.classList.toggle('on', a.dataset.key === key); });
+  var ed = $('#ed'); ed.innerHTML = ''; ({ cut: formCut, char: formChar, mirror: formMirror, choice: formChoice, verdict: formVerdict, ending: formEnding })[n.type](ed, n);
+}
+/* ---------- 입력 도우미 ---------- */
+function field(parent, label, obj, key, o) {
+  o = o || {}; var r = el('div', 'row'); r.appendChild(el('label', '', label));
+  var i = o.area ? el('textarea') : el('input'); if (o.area) i.rows = o.rows || 3; else i.type = o.num ? 'number' : 'text';
+  i.value = obj[key] == null ? '' : obj[key];
+  i.oninput = function () { obj[key] = o.num ? (+i.value || 0) : i.value; mark(true); if (o.pv) pv(); if (o.relabel) relabel(); };
+  r.appendChild(i); if (o.hint) r.lastChild.after && 0; parent.appendChild(r);
+  if (o.hint) parent.appendChild(el('div', 'hint', o.hint)); return i;
+}
+function relabel() { var k = cur.key; var scroll = $('#nav').scrollTop; build(); $('#nav').scrollTop = scroll; Array.prototype.forEach.call(document.querySelectorAll('nav a'), function (a) { a.classList.toggle('on', a.dataset.key === k); }); }
+/* ---------- 컷 ---------- */
+function formCut(ed, n) {
+  var c = n.arr[n.idx]; ed.appendChild(el('h2', '', '컷 ' + esc(c.id)));
+  var bar = el('div', 'bar');
+  [['↑ 위로', function () { if (n.idx > 0) { swap(n, n.idx - 1); } }], ['↓ 아래로', function () { if (n.idx < n.arr.length - 1) swap(n, n.idx + 1); }],
+   ['컷 복제', function () { n.arr.splice(n.idx + 1, 0, JSON.parse(JSON.stringify(c))); mark(true); build(); pick(n.key); }],
+   ['컷 삭제', function () { if (n.arr.length > 1 && confirm('이 컷을 삭제할까요?')) { n.arr.splice(n.idx, 1); mark(true); build(); pick('open-0'); } }]].forEach(function (b) { var x = el('button', b[0] === '컷 삭제' ? 'del' : '', b[0]); x.onclick = b[1]; bar.appendChild(x); });
+  ed.appendChild(bar);
+  var cols = el('div', 'cols'), left = el('div'), right = el('div', 'pvbox'); cols.appendChild(left); cols.appendChild(right); ed.appendChild(cols);
+  field(left, '컷 번호', c, 'id', { pv: 1, relabel: 1, hint: '이미지를 안 고르면 public/scenes/<컷 번호>.png|jpg|webp 가 자동으로 쓰입니다.' });
+  field(left, '스토리보드 설명', c, 'desc', { area: 1, rows: 2, pv: 1, hint: '이미지가 없을 때 자리표시에 보이는 설명(그림 지시)입니다.' });
+  var r = el('div', 'row'); r.appendChild(el('label', '', '이미지 파일')); var up = el('div', 'up');
+  var srcI = el('input'); srcI.type = 'text'; srcI.value = c.src || ''; srcI.placeholder = '(비움 = scenes/컷번호 자동)'; srcI.style.flex = '1'; srcI.oninput = function () { c.src = srcI.value; mark(true); pv(); };
+  var fi = el('input'); fi.type = 'file'; fi.accept = 'image/png,image/jpeg,image/webp';
+  var um = el('span', 'msg'); fi.onchange = function () { var f = fi.files[0]; if (!f) return; um.textContent = '올리는 중…';
+    fetch('/api/scene-image?id=' + encodeURIComponent(c.id), { method: 'POST', headers: { 'Content-Type': f.type }, body: f }).then(function (r) { return r.json(); }).then(function (j) { if (j.ok) { c.src = j.url; srcI.value = j.url; mark(true); um.textContent = '올렸어요: ' + j.url; pv(); } else um.textContent = '실패: ' + (j.msg || ''); }).catch(function () { um.textContent = '실패 (이 서버에서는 올릴 수 없어요)'; }); };
+  up.appendChild(srcI); up.appendChild(fi); up.appendChild(um); r.appendChild(up); left.appendChild(r);
+  var rr = el('div', 'row'); rr.appendChild(el('label', '', '자막 위치')); var sel = el('select', '', '<option value="0">가운데 아래</option><option value="1">오른쪽 아래</option>'); sel.value = c.right ? '1' : '0'; sel.onchange = function () { c.right = sel.value === '1'; mark(true); pv(); }; rr.appendChild(sel); left.appendChild(rr);
+  field(left, '처음 이미지만 (ms)', c, 'lead', { num: 1, hint: '컷이 시작되고 자막 없이 이미지를 먼저 보여주는 시간. 누르면 바로 넘어갑니다. 0 = 바로 자막.' });
+  var pr = el('div', 'row'); pr.appendChild(el('label', '', '프로필 카드')); var pb = el('div'); pr.appendChild(pb); left.appendChild(pr);
+  function drawProfile() { pb.innerHTML = ''; if (c.profile) { field(pb, '이름', c.profile, 'name', { pv: 1 }); field(pb, '역할', c.profile, 'role', { pv: 1 }); field(pb, '사진 경로', c.profile, 'img'); var d = el('button', 'add', '프로필 카드 없애기'); d.onclick = function () { c.profile = null; mark(true); drawProfile(); pv(); }; pb.appendChild(d); }
+    else { var a = el('button', 'add', '+ 프로필 카드 넣기 (인물을 처음 보여줄 때)'); a.onclick = function () { c.profile = { name: '', role: '', img: '' }; mark(true); drawProfile(); pv(); }; pb.appendChild(a); } }
+  drawProfile();
+  left.appendChild(el('h3', '', '대사 (위에서부터 한 줄씩, 누를 때마다 다음 줄)'));
+  left.appendChild(el('div', 'hint', '줄바꿈: 대사 칸에서 Enter. · 종류: 대사 / 내레이션(옅게) / 기계음(AI) / 강조(▶) · 자동 넘김: 0이면 누를 때 넘어가고, 숫자(ms)를 넣으면 그 시간 뒤 자동으로 넘어갑니다.'));
+  var box = el('div'); left.appendChild(box); drawLines(box, c);
+  var a = el('button', 'add', '+ 대사 추가'); a.onclick = function () { c.lines.push({ who: '', text: '', kind: '', ms: 0 }); mark(true); pvLine = c.lines.length - 1; drawLines(box, c); pv(); }; left.appendChild(a);
+  var pvh = el('div', 'pv'); pvh.innerHTML = '<div class="pvc" id="pvc"></div>'; right.appendChild(pvh); right.appendChild(el('div', 'pvn', '미리보기 — 왼쪽에서 대사의 번호를 누르면 그 줄이 보입니다. 이미지가 없으면 하늘색 자리표시가 보입니다.')); pv();
+}
+function swap(n, j) { var t = n.arr[n.idx]; n.arr[n.idx] = n.arr[j]; n.arr[j] = t; mark(true); build(); pick(n.key.replace(/-\d+$/, '-' + j)); }
+function drawLines(box, c) {
+  box.innerHTML = '';
+  c.lines.forEach(function (ln, i) {
+    var row = el('div', 'ln' + (i === pvLine ? ' cursel' : ''));
+    var no = el('div', 'no', i + 1); no.onclick = function () { pvLine = i; drawLines(box, c); pv(); }; row.appendChild(no);
+    var w = el('input'); w.type = 'text'; w.placeholder = '말한 사람'; w.value = ln.who || ''; w.oninput = function () { ln.who = w.value; mark(true); pvLine = i; pv(); }; row.appendChild(w);
+    var k = el('select', '', '<option value="">대사</option><option value="nar">내레이션</option><option value="ai">기계음(AI)</option><option value="hook">강조(▶)</option>'); k.value = ln.kind || ''; k.onchange = function () { ln.kind = k.value; mark(true); pvLine = i; pv(); }; row.appendChild(k);
+    var t = el('textarea'); t.rows = 2; t.value = ln.text || ''; t.placeholder = '대사 (Enter = 줄바꿈)'; t.oninput = function () { ln.text = t.value; mark(true); pvLine = i; pv(); }; row.appendChild(t);
+    var m = el('input'); m.type = 'number'; m.min = 0; m.step = 100; m.title = '자동 넘김 ms (0 = 누르면 넘김)'; m.value = ln.ms || 0; m.oninput = function () { ln.ms = +m.value || 0; mark(true); }; row.appendChild(m);
+    var b = el('div', 'btns'); [['↑', -1], ['↓', 1]].forEach(function (p) { var x = el('button', '', p[0]); x.onclick = function () { var j = i + p[1]; if (j < 0 || j >= c.lines.length) return; var tmp = c.lines[i]; c.lines[i] = c.lines[j]; c.lines[j] = tmp; pvLine = j; mark(true); drawLines(box, c); pv(); }; b.appendChild(x); });
+    var d = el('button', 'del', '✕'); d.onclick = function () { c.lines.splice(i, 1); pvLine = Math.max(0, i - 1); mark(true); drawLines(box, c); pv(); }; b.appendChild(d); row.appendChild(b);
+    box.appendChild(row);
+  });
+}
+/* ---------- 미리보기 ---------- */
+function pv() {
+  var c = cur && cur.type === 'cut' ? cur.arr[cur.idx] : null, h = $('#pvc'); if (!c || !h) return;
+  h.innerHTML = '<div class="phb"></div>'; var id = c.id;
+  var chain = c.src ? [c.src] : ['webp', 'png', 'jpg'].map(function (e) { return 'scenes/' + id + '.' + e; }), i = 0, im = new Image(); im.className = 'bgi';
+  im.onload = function () { var p = h.querySelector('.phb'); if (p) p.replaceWith(im); }; im.onerror = function () { if (++i < chain.length) im.src = chain[i]; }; im.src = chain[0];
+  var shade = el('div', 'layer shade'); h.appendChild(shade);
+  var ph = el('div', '', '<div style="position:absolute;left:90px;top:96px;font-size:26px;background:#FAF4EF;color:#460E21;padding:4px 16px;border-radius:99px">' + esc(id) + '</div><div style="position:absolute;left:90px;top:160px;max-width:980px;font-size:22px;background:rgba(250,244,239,.88);color:#460E21;padding:12px 20px;border-radius:16px">' + esc(c.desc) + '</div>'); h.appendChild(ph);
+  var ln = c.lines[pvLine];
+  if (c.profile && !ln) h.appendChild(el('div', '', '<div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-56%);text-align:center"><div style="width:300px;height:380px;border-radius:150px 150px 24px 24px;border:8px solid #ECD5B3;background:#D5EDF1;margin:0 auto"></div><div style="font-size:40px;font-weight:800;margin-top:12px">' + esc(c.profile.name) + '</div><div style="font-size:22px;color:#460E21;background:#D5EDF1;display:inline-block;padding:2px 18px;border-radius:99px;font-weight:700">' + esc(c.profile.role) + '</div></div>'));
+  if (ln) { var cap = el('div', 'cap ' + (ln.kind || '') + (c.right ? ' right' : '')); cap.innerHTML = '<span class="nm">' + (ln.kind === 'hook' ? '' : esc(ln.who)) + '</span><span class="tx" style="white-space:pre-line">' + esc(ln.text) + '</span>'; h.appendChild(cap); }
+}
+/* ---------- 그 밖의 폼 ---------- */
+function formChar(ed, n) { ed.appendChild(el('h2', '', '인물 카드 (선택 화면)')); var c = n.ch; field(ed, '이름', c, 'name', { relabel: 1 }); field(ed, '영문 키워드', c, 'kw'); field(ed, '소개 문구', c, 'prem', { area: 1, rows: 2 }); field(ed, '프로필 사진', c, 'portrait', { hint: '예: chars/prof_b.png (public 기준 경로). 비우면 PROFILE 자리표시.' }); }
+function formMirror(ed, n) { ed.appendChild(el('h2', '', '거울 — “이게 나다” 화면')); var c = n.ch; field(ed, '거울 속 사진', c.mirror, 'img', { hint: '비우면 인물 카드의 프로필 사진을 씁니다.' });
+  ed.appendChild(el('h3', '', '문장 (한 줄이 한 문단)')); c.mirror.lines.forEach(function (t, i) { var o = { v: t }; var r = el('div', 'row'); r.appendChild(el('label', '', (i + 1) + '번째')); var x = el('textarea'); x.rows = 2; x.value = t; x.oninput = function () { c.mirror.lines[i] = x.value; mark(true); }; r.appendChild(x); ed.appendChild(r); });
+  var a = el('button', 'add', '+ 문장 추가'); a.onclick = function () { c.mirror.lines.push(''); mark(true); pick(n.key); }; ed.appendChild(a); var d = el('button', 'add', '− 마지막 문장 삭제'); d.onclick = function () { c.mirror.lines.pop(); mark(true); pick(n.key); }; ed.appendChild(d); }
+function formChoice(ed, n) { ed.appendChild(el('h2', '', '선택지')); var c = n.c; field(ed, '표시 제목', c, 'kicker'); field(ed, '질문', c, 'q', { area: 1, rows: 2 });
+  c.options.forEach(function (o, i) { ed.appendChild(el('h3', '', (i + 1) + '번 선택지')); field(ed, '이름', o, 'label', { relabel: 1 }); field(ed, '대사', o, 'say', { area: 1, rows: 2 }); }); ed.appendChild(el('div', 'hint', '선택지에는 얻는 것·잃는 것을 보여주지 않습니다. 결과는 선택 뒤 컷에서 보여주세요.')); }
+function formVerdict(ed, n) { ed.appendChild(el('h2', '', '판결 뒤 한 줄 · 근거 약함')); field(ed, '판결 뒤 한 줄', n.ch, 'verdict', { area: 1, rows: 2, hint: '판결 컷에서 이 인물의 영향력이 어디까지 닿았는지 보여주는 문장.' }); field(ed, '근거 약함 문구', n.ch, 'weakLine', { area: 1, rows: 2, hint: '근거가 약한 선택을 했을 때 선택 2의 첫 대사 다음에 끼어드는 내레이션.' }); }
+function formEnding(ed, n) { var e = n.e; ed.appendChild(el('h2', '', '엔딩 ' + e.id)); field(ed, '이름', e, 'name', { relabel: 1 }); field(ed, '조건(메모)', e, 'rule'); field(ed, '판결 헤드라인 설명', e, 'why', { area: 1, rows: 2 }); field(ed, '컷 번호', e, 'img'); field(ed, '장면 설명', e, 'desc', { area: 1, rows: 2 });
+  var s = { who: e.say[0], text: e.say[1] }; var r1 = field(ed, '위쪽 첫 대사 — 사람', s, 'who'), r2 = field(ed, '위쪽 첫 대사', s, 'text', { area: 1, rows: 2 }); [r1, r2].forEach(function (i) { i.addEventListener('input', function () { e.say = [s.who, s.text]; }); });
+  ed.appendChild(el('h3', '', '인물별 엔딩 컷')); S.chars.forEach(function (c, i) { var r = el('div', 'row'); r.appendChild(el('label', '', c.name)); var x = el('textarea'); x.rows = 3; x.value = e.mine[i]; x.oninput = function () { e.mine[i] = x.value; mark(true); }; r.appendChild(x); ed.appendChild(r); });
+  ed.appendChild(el('h3', '', '다른 인물이 본 장면 (그 인물을 고르지 않은 사람에게 보임)')); S.chars.forEach(function (c, i) { var r = el('div', 'row'); r.appendChild(el('label', '', c.name)); var x = el('textarea'); x.rows = 2; x.value = e.cross[i]; x.oninput = function () { e.cross[i] = x.value; mark(true); }; r.appendChild(x); ed.appendChild(r); });
+  field(ed, '딜레마 문장', e, 'dil', { area: 1, rows: 2 }); if (e.extra != null) field(ed, '덧붙임', e, 'extra', { area: 1, rows: 2 });
+  if (e.subs) { ed.appendChild(el('h3', '', '세부 변형 (' + e.id + ')')); e.subs.forEach(function (sb) { var r = el('div', 'row'); r.appendChild(el('label', '', sb[0])); var x = el('textarea'); x.rows = 2; x.value = sb[1]; x.oninput = function () { sb[1] = x.value; mark(true); }; r.appendChild(x); ed.appendChild(r); }); } }
+/* ---------- 상단 버튼 ---------- */
+$('#save').onclick = function () { msg('저장 중…'); fetch('/api/script', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(S) }).then(function (r) { return r.json(); }).then(function (j) { if (j.ok) { mark(false); msg('저장됨 · ' + new Date().toLocaleTimeString()); } else msg('저장 실패: ' + (j.msg || '')); }).catch(function () { msg('저장 실패 — npm run dev 로 연 주소(localhost)에서 열었는지 확인하세요'); }); };
+$('#dl').onclick = function () { var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' })); a.download = 'script-backup.json'; a.click(); };
+$('#reload').onclick = function () { if (!dirty || confirm('저장하지 않은 수정이 사라집니다. 계속할까요?')) init(false); };
+$('#reset').onclick = function () { if (confirm('처음 스크립트로 되돌립니다(저장 버튼을 누르기 전까지는 게임에 반영되지 않아요). 계속할까요?')) init(true); };
+addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+if (location.protocol === 'file:') {
+  $('#ed').innerHTML = '<h2>이 주소로는 열 수 없어요</h2><p style="font-size:18px;line-height:1.7">파일을 직접 연 상태(<code>C:/…/editor.html</code>)에서는 저장과 불러오기가 막혀 있어요.<br>VS Code 터미널에서 <b>npm run dev</b> 를 실행하고, 브라우저 주소창에 <b>http://localhost:3000/editor</b> 를 입력하세요.</p>';
+  $('#st').textContent = '서버 필요';
+} else init(false);
+})();
+</script></body></html>
