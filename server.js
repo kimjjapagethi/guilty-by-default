@@ -11,39 +11,46 @@ var PORT = +process.env.PORT || 3000;
 var DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 var ADMIN_TOKEN = process.env.ADMIN_TOKEN || crypto.randomBytes(6).toString('hex');
 var PUBLIC = path.join(__dirname, 'public');
-var LOG = path.join(DATA_DIR, 'plays2-' + MODE + '.jsonl');
-var MIN_N = 20; /* 이 수 미만이면 퍼센트를 보여 주지 않는다 */
+var LOG = path.join(DATA_DIR, 'plays3-' + MODE + '.jsonl');
+var MIN_N = 20, MIN_C = 5; /* 전체 N 미만이면 퍼센트를 보여 주지 않는다. 인물별 퍼센트는 그 인물 플레이가 MIN_C 이상일 때만 */
 fs.mkdirSync(DATA_DIR, { recursive: true });
+
+/* 엔딩 15개: 인물 A(유족) · B(피자 가게 사장) · C(대통령) 각 5개. ENDS[ch*5 + k] */
+var ENDS = ['A-1', 'A-2', 'A-3', 'A-4', 'A-5', 'B-1', 'B-2', 'B-3', 'B-4', 'B-5', 'C-1', 'C-2', 'C-3', 'C-4', 'C-5'];
 
 /* ---------- storage: append-only JSON lines, kept in memory for stats ---------- */
 var plays = [];
 try {
   fs.readFileSync(LOG, 'utf8').split('\n').forEach(function (l) { if (l.trim()) { try { plays.push(JSON.parse(l)); } catch (e) {} } });
 } catch (e) {}
+plays = plays.filter(function (p) { return ENDS.indexOf(p.ending) >= 0; }); /* 옛 구조의 기록은 무시 */
 var seen = {}; plays.forEach(function (p) { seen[p.sid] = 1; });
 
-var ENDS = ['E1', 'E2', 'E3', 'E4', 'E5'], VAL = ['M', 'T', 'P'], LIAB = ['AI', '인간', '공동'];
 function int(v, max) { v = +v; return v === Math.floor(v) && v >= 0 && v < max ? v : null; }
-function clean(b) { /* v3 게임 한 판: 인물(ch) / 작은 선택(mc) / 선택1(c1) / 선택2(c2) / 근거 약함(weak) / 엔딩 */
+function clean(b) { /* 한 판: 인물(ch 0~2) / 선택1(c1 0~2) / 선택2(c2 0~2) / 엔딩(그 인물의 5개 중 하나) */
   if (!b || typeof b !== 'object') return null;
-  var ch = int(b.ch, 3), mc = int(b.mc, 2), c1 = int(b.c1, 3), c2 = int(b.c2, 3), end = ENDS.indexOf(b.ending) >= 0 ? b.ending : null;
-  if (ch === null || mc === null || c1 === null || c2 === null || !end) return null;
+  var ch = int(b.ch, 3), c1 = int(b.c1, 3), c2 = int(b.c2, 3), ei = ENDS.indexOf(b.ending);
+  if (ch === null || c1 === null || c2 === null || ei < 0 || Math.floor(ei / 5) !== ch) return null;
   var sid = String(b.sid || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40);
   if (!sid) return null;
-  return { sid: sid, t: Date.now(), src: b.src === 'kiosk' ? 'kiosk' : 'browser', test: !!b.test, ch: ch, mc: mc, c1: c1, c2: c2, weak: !!b.weak, ending: end };
+  return { sid: sid, t: Date.now(), src: b.src === 'kiosk' ? 'kiosk' : 'browser', test: !!b.test, ch: ch, c1: c1, c2: c2, ending: ENDS[ei] };
 }
 
 function stats() {
   var L = plays.filter(function (p) { return !p.test; }), n = L.length;
-  var r = { mode: MODE, n: n, ready: n >= MIN_N, min: MIN_N };
-  var cnt = function (f) { return L.filter(f).length; };
-  r.byChar = [0, 1, 2].map(function (i) { return cnt(function (p) { return p.ch === i; }); }); /* 인원수는 퍼센트가 아니므로 항상 공개 */
+  var r = { mode: MODE, n: n, ready: n >= MIN_N, min: MIN_N, minChar: MIN_C };
+  var cnt = function (arr, f) { return arr.filter(f).length; };
+  r.byChar = [0, 1, 2].map(function (i) { return cnt(L, function (p) { return p.ch === i; }); }); /* 인원수는 퍼센트가 아니므로 항상 공개 */
   if (!r.ready) return r;
-  var share = function (f) { return cnt(f) / n; };
-  r.ending = {}; ENDS.forEach(function (e) { r.ending[e] = share(function (p) { return p.ending === e; }); });
-  r.value = {}; VAL.forEach(function (v, i) { r.value[v] = share(function (p) { return p.c1 === i; }); });
-  r.liab = {}; LIAB.forEach(function (v, i) { r.liab[v] = share(function (p) { return p.c2 === i; }); });
-  r.weak = share(function (p) { return p.weak; });
+  /* 인물별 분포: 그 인물을 플레이한 사람 안에서의 비율 (MIN_C 미만이면 null) */
+  r.chEnding = []; r.c1 = []; r.c2 = [];
+  [0, 1, 2].forEach(function (i) {
+    var M = L.filter(function (p) { return p.ch === i; }), m = M.length;
+    if (m < MIN_C) { r.chEnding.push(null); r.c1.push(null); r.c2.push(null); return; }
+    r.chEnding.push(ENDS.slice(i * 5, i * 5 + 5).map(function (e) { return cnt(M, function (p) { return p.ending === e; }) / m; }));
+    r.c1.push([0, 1, 2].map(function (k) { return cnt(M, function (p) { return p.c1 === k; }) / m; }));
+    r.c2.push([0, 1, 2].map(function (k) { return cnt(M, function (p) { return p.c2 === k; }) / m; }));
+  });
   return r;
 }
 
@@ -94,24 +101,11 @@ http.createServer(function (req, res) {
       broadcast({ type: 'play', ending: p.ending, ch: p.ch, test: p.test, stats: stats() });
     });
   }
-  if (u.pathname === '/api/cues' && req.method === 'POST') { /* 자막 타이밍 에디터(cue-editor.html) 저장 — 공개(web) 모드에서는 막는다 */
-    if (MODE === 'web') return json(res, 403, { ok: false });
-    return body(req, function (b) {
-      if (!b || !Array.isArray(b.cues) || !b.cues.length || b.cues.length > 40) return json(res, 400, { ok: false });
-      var ok = b.cues.every(function (c) { return c && typeof c.step === 'string' && /^[a-z0-9]{2,6}$/.test(c.step) && typeof c.t === 'number' && isFinite(c.t) && (c.c === 0 || c.c === 1); });
-      if (!ok) return json(res, 400, { ok: false });
-      var num = function (n, d) { return typeof n === 'number' && isFinite(n) ? n : d; };
-      var clips = Array.isArray(b.clips) ? b.clips.slice(0, 2).map(function (c) { c = c || {}; return { end: num(c.end, 0) > 0 ? c.end : null, x: Math.max(0, Math.min(100, num(c.x, 50))), y: Math.max(0, Math.min(100, num(c.y, 50))), z: Math.max(1, Math.min(3, num(c.z, 1))), sp: (Array.isArray(c.sp) ? c.sp : []).slice(0, 24).map(function (q) { q = q || {}; return { a: Math.max(0, num(q.a, 0)), b: Math.max(0, num(q.b, 0)), r: Math.max(0.1, Math.min(4, num(q.r, 1))) }; }).filter(function (q) { return q.b > q.a; }) }; }) : undefined;
-      var out = { hold: typeof b.hold === 'number' && b.hold >= 0 ? b.hold : 0, clips: clips, cues: b.cues.map(function (c) { return { step: c.step, c: c.c, t: c.t }; }) };
-      try { fs.mkdirSync(path.join(PUBLIC, 'media'), { recursive: true }); fs.writeFileSync(path.join(PUBLIC, 'media', 'n1_cues.json'), JSON.stringify(out, null, 2)); } catch (e) { return json(res, 500, { ok: false }); }
-      console.log('[cues] n1_cues.json 저장됨 (' + out.cues.length + '개 자막)');
-      json(res, 200, { ok: true });
-    });
-  }
   if (u.pathname === '/api/script' && req.method === 'POST') { /* 스크립트 편집기(editor.html) 저장 — 공개(web) 모드에서는 막는다 */
     if (MODE === 'web') return json(res, 403, { ok: false });
     return body(req, function (b) {
-      if (!b || !Array.isArray(b.chars) || b.chars.length !== 3 || !Array.isArray(b.endings) || b.endings.length !== 5 || !Array.isArray(b.opening)) return json(res, 400, { ok: false, msg: '구조가 맞지 않습니다' });
+      var okS = b && Array.isArray(b.chars) && b.chars.length === 3 && Array.isArray(b.opening) && b.chars.every(function (c) { return c && Array.isArray(c.endings) && c.endings.length === 5 && Array.isArray(c.map) && c.map.length === 3 && Array.isArray(c.intro) && Array.isArray(c.after1) && c.after1.length === 3 && Array.isArray(c.mid) && c.c1 && c.c2; });
+      if (!okS) return json(res, 400, { ok: false, msg: '구조가 맞지 않습니다' });
       var f = path.join(PUBLIC, 'script.json');
       try { if (fs.existsSync(f)) fs.copyFileSync(f, path.join(PUBLIC, 'script.prev.json')); fs.writeFileSync(f + '.tmp', JSON.stringify(b, null, 1)); fs.renameSync(f + '.tmp', f); } catch (e) { return json(res, 500, { ok: false }); }
       console.log('[script] script.json 저장됨'); json(res, 200, { ok: true });

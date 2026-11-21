@@ -71,25 +71,25 @@ function build() {
   nodes = {}; var nav = $('#nav'); nav.innerHTML = '';
   function grp(parent, title, cls) { var d = el('details', cls || ''); d.open = true; d.appendChild(el('summary', '', title)); parent.appendChild(d); return d; }
   function link(parent, key, label, node) { node.key = key; nodes[key] = node; var a = el('a', '', esc(label)); a.dataset.key = key; a.onclick = function () { pick(key); }; parent.appendChild(a); }
-  var g = grp(nav, '공통 · 오프닝'); S.opening.forEach(function (c, k) { link(g, 'open-' + k, c.id + ' · ' + sum(c), { type: 'cut', arr: S.opening, idx: k }); });
+  var g = grp(nav, '공통 · 오프닝 · 브리핑'); S.opening.forEach(function (c, k) { link(g, 'open-' + k, c.id + ' · ' + sum(c), { type: 'cut', arr: S.opening, idx: k }); });
+  link(g, 'org', '소개 카드 (팝업 글)', { type: 'org' });
   S.chars.forEach(function (c, i) {
-    var gc = grp(nav, (i + 1) + '. ' + c.name);
+    var gc = grp(nav, (i + 1) + '. ' + c.name + (c.role ? ' (' + c.role + ')' : ''));
     link(gc, 'char-' + i, '인물 카드 (선택 화면)', { type: 'char', ch: c });
-    link(gc, 'mir-' + i, '거울 (이게 나다)', { type: 'mirror', ch: c });
-    [['intro', '도입'], ['meet', '만남'], ['twist', '반전']].forEach(function (p) { var gg = grp(gc, p[1], 'g2'); c[p[0]].forEach(function (cu, k) { link(gg, p[0] + '-' + i + '-' + k, cu.id + ' · ' + sum(cu), { type: 'cut', arr: c[p[0]], idx: k }); }); });
+    var gg = grp(gc, '도입 · 선택 전 장면', 'g2'); c.intro.forEach(function (cu, k) { link(gg, 'intro-' + i + '-' + k, cu.id + ' · ' + sum(cu), { type: 'cut', arr: c.intro, idx: k }); });
     var g1 = grp(gc, '선택 1', 'g2'); link(g1, 'c1-' + i, '질문 · 선택지', { type: 'choice', c: c.c1 });
-    c.after1.forEach(function (list, j) { var gg = grp(g1, '→ ' + c.c1.options[j].label, 'g2'); list.forEach(function (cu, k) { link(gg, 'a1-' + i + '-' + j + '-' + k, cu.id + ' · ' + sum(cu), { type: 'cut', arr: list, idx: k }); }); });
+    c.after1.forEach(function (list, j) { var g3 = grp(g1, '→ ' + c.c1.options[j].label, 'g2'); list.forEach(function (cu, k) { link(g3, 'a1-' + i + '-' + j + '-' + k, cu.id + ' · ' + sum(cu), { type: 'cut', arr: list, idx: k }); }); });
+    var gm = grp(gc, '중간 장면 (선택 1 뒤 · 모두 같음)', 'g2'); c.mid.forEach(function (cu, k) { link(gm, 'mid-' + i + '-' + k, cu.id + ' · ' + sum(cu), { type: 'cut', arr: c.mid, idx: k }); });
     var g2 = grp(gc, '선택 2', 'g2'); link(g2, 'c2-' + i, '질문 · 선택지', { type: 'choice', c: c.c2 });
-    c.after2.forEach(function (list, j) { var gg = grp(g2, '→ ' + c.c2.options[j].label, 'g2'); list.forEach(function (cu, k) { link(gg, 'a2-' + i + '-' + j + '-' + k, cu.id + ' · ' + sum(cu), { type: 'cut', arr: list, idx: k }); }); });
-    link(gc, 'vd-' + i, '판결 뒤 한 줄 · 근거 약함 문구', { type: 'verdict', ch: c });
+    link(gc, 'map-' + i, '엔딩 매핑표 (선택 1 × 선택 2)', { type: 'map', ch: c });
+    var ge = grp(gc, '엔딩', 'g2'); c.endings.forEach(function (e, k) { link(ge, 'end-' + i + '-' + k, e.id + ' · ' + e.name, { type: 'cut', arr: c.endings, idx: k }); });
   });
-  var ge = grp(nav, '엔딩'); S.endings.forEach(function (e, i) { link(ge, 'end-' + i, e.id + ' · ' + e.name, { type: 'ending', e: e }); });
 }
 function sum(c) { var l = (c.lines || [])[0]; return c.profile ? '[프로필] ' + c.profile.name : l ? (l.text || '').replace(/\n/g, ' ').slice(0, 14) : '(대사 없음)'; }
 function pick(key) {
   var n = nodes[key]; if (!n) return; cur = n; pvLine = 0;
   Array.prototype.forEach.call(document.querySelectorAll('nav a'), function (a) { a.classList.toggle('on', a.dataset.key === key); });
-  var ed = $('#ed'); ed.innerHTML = ''; ({ cut: formCut, char: formChar, mirror: formMirror, choice: formChoice, verdict: formVerdict, ending: formEnding })[n.type](ed, n);
+  var ed = $('#ed'); ed.innerHTML = ''; ({ cut: formCut, char: formChar, choice: formChoice, map: formMap, org: formOrg })[n.type](ed, n);
 }
 /* ---------- 입력 도우미 ---------- */
 function field(parent, label, obj, key, o) {
@@ -108,9 +108,11 @@ function formCut(ed, n) {
   [['↑ 위로', function () { if (n.idx > 0) { swap(n, n.idx - 1); } }], ['↓ 아래로', function () { if (n.idx < n.arr.length - 1) swap(n, n.idx + 1); }],
    ['컷 복제', function () { n.arr.splice(n.idx + 1, 0, JSON.parse(JSON.stringify(c))); mark(true); build(); pick(n.key); }],
    ['컷 삭제', function () { if (n.arr.length > 1 && confirm('이 컷을 삭제할까요?')) { n.arr.splice(n.idx, 1); mark(true); build(); pick('open-0'); } }]].forEach(function (b) { var x = el('button', b[0] === '컷 삭제' ? 'del' : '', b[0]); x.onclick = b[1]; bar.appendChild(x); });
-  ed.appendChild(bar);
+  ed.appendChild(bar); if ('rule' in c) bar.style.display = 'none';
   var cols = el('div', 'cols'), left = el('div'), right = el('div', 'pvbox'); cols.appendChild(left); cols.appendChild(right); ed.appendChild(cols);
   field(left, '컷 번호', c, 'id', { pv: 1, relabel: 1, hint: '이미지를 안 고르면 public/scenes/<컷 번호>.png|jpg|webp 가 자동으로 쓰입니다.' });
+  if ('name' in c) { field(left, '엔딩 이름', c, 'name', { relabel: 1 }); field(left, '조건 (메모)', c, 'rule', { hint: '어떤 선택 조합이 이 엔딩으로 오는지는 ‘엔딩 매핑표’에서 바꿉니다. 이 칸은 메모예요.' }); }
+  var cr = el('div', 'row'); cr.appendChild(el('label', '', '소개 카드 팝업')); var cs = el('select', '', '<option value="">없음</option><option value="org">길티 바이 디폴트 정보 카드 띄우기</option>'); cs.value = c.card || ''; cs.onchange = function () { if (cs.value) c.card = cs.value; else delete c.card; mark(true); }; cr.appendChild(cs); left.appendChild(cr);
   field(left, '스토리보드 설명', c, 'desc', { area: 1, rows: 2, pv: 1, hint: '이미지가 없을 때 자리표시에 보이는 설명(그림 지시)입니다.' });
   var r = el('div', 'row'); r.appendChild(el('label', '', '이미지 파일')); var up = el('div', 'up');
   var srcI = el('input'); srcI.type = 'text'; srcI.value = c.src || ''; srcI.placeholder = '(비움 = scenes/컷번호 자동)'; srcI.style.flex = '1'; srcI.oninput = function () { c.src = srcI.value; mark(true); pv(); };
@@ -158,19 +160,15 @@ function pv() {
   if (ln) { var cap = el('div', 'cap ' + (ln.kind || '') + (c.right ? ' right' : '')); cap.innerHTML = '<span class="nm">' + (ln.kind === 'hook' ? '' : esc(ln.who)) + '</span><span class="tx" style="white-space:pre-line">' + esc(ln.text) + '</span>'; h.appendChild(cap); }
 }
 /* ---------- 그 밖의 폼 ---------- */
-function formChar(ed, n) { ed.appendChild(el('h2', '', '인물 카드 (선택 화면)')); var c = n.ch; field(ed, '이름', c, 'name', { relabel: 1 }); field(ed, '영문 키워드', c, 'kw'); field(ed, '소개 문구', c, 'prem', { area: 1, rows: 2 }); field(ed, '프로필 사진', c, 'portrait', { hint: '예: chars/prof_b.png (public 기준 경로). 비우면 PROFILE 자리표시.' }); }
-function formMirror(ed, n) { ed.appendChild(el('h2', '', '거울 — “이게 나다” 화면')); var c = n.ch; field(ed, '거울 속 사진', c.mirror, 'img', { hint: '비우면 인물 카드의 프로필 사진을 씁니다.' });
-  ed.appendChild(el('h3', '', '문장 (한 줄이 한 문단)')); c.mirror.lines.forEach(function (t, i) { var o = { v: t }; var r = el('div', 'row'); r.appendChild(el('label', '', (i + 1) + '번째')); var x = el('textarea'); x.rows = 2; x.value = t; x.oninput = function () { c.mirror.lines[i] = x.value; mark(true); }; r.appendChild(x); ed.appendChild(r); });
-  var a = el('button', 'add', '+ 문장 추가'); a.onclick = function () { c.mirror.lines.push(''); mark(true); pick(n.key); }; ed.appendChild(a); var d = el('button', 'add', '− 마지막 문장 삭제'); d.onclick = function () { c.mirror.lines.pop(); mark(true); pick(n.key); }; ed.appendChild(d); }
-function formChoice(ed, n) { ed.appendChild(el('h2', '', '선택지')); var c = n.c; field(ed, '표시 제목', c, 'kicker'); field(ed, '질문', c, 'q', { area: 1, rows: 2 });
-  c.options.forEach(function (o, i) { ed.appendChild(el('h3', '', (i + 1) + '번 선택지')); field(ed, '이름', o, 'label', { relabel: 1 }); field(ed, '대사', o, 'say', { area: 1, rows: 2 }); }); ed.appendChild(el('div', 'hint', '선택지에는 얻는 것·잃는 것을 보여주지 않습니다. 결과는 선택 뒤 컷에서 보여주세요.')); }
-function formVerdict(ed, n) { ed.appendChild(el('h2', '', '판결 뒤 한 줄 · 근거 약함')); field(ed, '판결 뒤 한 줄', n.ch, 'verdict', { area: 1, rows: 2, hint: '판결 컷에서 이 인물의 영향력이 어디까지 닿았는지 보여주는 문장.' }); field(ed, '근거 약함 문구', n.ch, 'weakLine', { area: 1, rows: 2, hint: '근거가 약한 선택을 했을 때 선택 2의 첫 대사 다음에 끼어드는 내레이션.' }); }
-function formEnding(ed, n) { var e = n.e; ed.appendChild(el('h2', '', '엔딩 ' + e.id)); field(ed, '이름', e, 'name', { relabel: 1 }); field(ed, '조건(메모)', e, 'rule'); field(ed, '판결 헤드라인 설명', e, 'why', { area: 1, rows: 2 }); field(ed, '컷 번호', e, 'img'); field(ed, '장면 설명', e, 'desc', { area: 1, rows: 2 });
-  var s = { who: e.say[0], text: e.say[1] }; var r1 = field(ed, '위쪽 첫 대사 — 사람', s, 'who'), r2 = field(ed, '위쪽 첫 대사', s, 'text', { area: 1, rows: 2 }); [r1, r2].forEach(function (i) { i.addEventListener('input', function () { e.say = [s.who, s.text]; }); });
-  ed.appendChild(el('h3', '', '인물별 엔딩 컷')); S.chars.forEach(function (c, i) { var r = el('div', 'row'); r.appendChild(el('label', '', c.name)); var x = el('textarea'); x.rows = 3; x.value = e.mine[i]; x.oninput = function () { e.mine[i] = x.value; mark(true); }; r.appendChild(x); ed.appendChild(r); });
-  ed.appendChild(el('h3', '', '다른 인물이 본 장면 (그 인물을 고르지 않은 사람에게 보임)')); S.chars.forEach(function (c, i) { var r = el('div', 'row'); r.appendChild(el('label', '', c.name)); var x = el('textarea'); x.rows = 2; x.value = e.cross[i]; x.oninput = function () { e.cross[i] = x.value; mark(true); }; r.appendChild(x); ed.appendChild(r); });
-  field(ed, '딜레마 문장', e, 'dil', { area: 1, rows: 2 }); if (e.extra != null) field(ed, '덧붙임', e, 'extra', { area: 1, rows: 2 });
-  if (e.subs) { ed.appendChild(el('h3', '', '세부 변형 (' + e.id + ')')); e.subs.forEach(function (sb) { var r = el('div', 'row'); r.appendChild(el('label', '', sb[0])); var x = el('textarea'); x.rows = 2; x.value = sb[1]; x.oninput = function () { sb[1] = x.value; mark(true); }; r.appendChild(x); ed.appendChild(r); }); } }
+function formChar(ed, n) { ed.appendChild(el('h2', '', '인물 카드 (선택 화면)')); var c = n.ch; field(ed, '이름', c, 'name', { relabel: 1 }); field(ed, '역할', c, 'role'); field(ed, '영문 키워드', c, 'kw'); field(ed, '소개 문구', c, 'prem', { area: 1, rows: 2 }); field(ed, '프로필 사진', c, 'portrait', { hint: '예: chars/prof_pizza.png (public 기준 경로). 비우면 PROFILE 자리표시.' }); }
+function formOrg(ed, n) { ed.appendChild(el('h2', '', '길티 바이 디폴트 소개 카드')); ed.appendChild(el('div', 'hint', '오프닝 직후 브리핑과 길티 바이 디폴트 인물이 처음 나오는 컷에 뜨는 팝업 글입니다. 컷 편집 화면의 ‘소개 팝업’에서 어느 컷에 띄울지 고릅니다.')); field(ed, '제목', S.org, 'title'); field(ed, '내용', S.org, 'text', { area: 1, rows: 5 }); }
+function formChoice(ed, n) { ed.appendChild(el('h2', '', '선택지')); var c = n.c; field(ed, '표시 제목', c, 'kicker'); field(ed, '질문(제목)', c, 'q', { area: 1, rows: 2 });
+  c.options.forEach(function (o, i) { ed.appendChild(el('h3', '', (i + 1) + '번 선택지')); field(ed, '이름', o, 'label', { relabel: 1 }); field(ed, '설명', o, 'say', { area: 1, rows: 3 }); }); ed.appendChild(el('div', 'hint', '선택 직후의 단기 파장은 왼쪽 목록의 ‘→ 선택지 이름’ 아래 컷에서 고칩니다.')); }
+function formMap(ed, n) { var c = n.ch; ed.appendChild(el('h2', '', '엔딩 매핑표 · ' + c.name)); ed.appendChild(el('div', 'hint', '가로 = 선택 2, 세로 = 선택 1. 칸마다 도달하는 엔딩을 고르세요. 바로 게임과 옆 화면 통계에 반영됩니다(저장 후).'));
+  var t = el('table'); t.style.cssText = 'border-collapse:separate;border-spacing:8px;font-size:14px;width:100%'; var h = '<tr><th></th>'; c.c2.options.forEach(function (o, j) { h += '<th style="text-align:left">' + (j + 1) + '. ' + esc(o.label) + '</th>'; }); t.innerHTML = h + '</tr>';
+  c.c1.options.forEach(function (o, i) { var r = el('tr'); r.innerHTML = '<th style="text-align:left;vertical-align:top;width:26%">' + (i + 1) + '. ' + esc(o.label) + '</th>';
+    c.c2.options.forEach(function (_, j) { var td = el('td'), sel = el('select'); sel.style.cssText = 'width:100%;padding:7px;border:2px solid #ECD5B3;border-radius:10px;background:#fff'; c.endings.forEach(function (e, k) { var op = el('option', '', esc(e.id + ' ' + e.name)); op.value = k; sel.appendChild(op); }); sel.value = c.map[i][j]; sel.onchange = function () { c.map[i][j] = +sel.value; mark(true); }; td.appendChild(sel); r.appendChild(td); }); t.appendChild(r); });
+  ed.appendChild(t); }
 /* ---------- 상단 버튼 ---------- */
 $('#save').onclick = function () { msg('저장 중…'); fetch('/api/script', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(S) }).then(function (r) { return r.json(); }).then(function (j) { if (j.ok) { mark(false); msg('저장됨 · ' + new Date().toLocaleTimeString()); } else msg('저장 실패: ' + (j.msg || '')); }).catch(function () { msg('저장 실패 — npm run dev 로 연 주소(localhost)에서 열었는지 확인하세요'); }); };
 $('#dl').onclick = function () { var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' })); a.download = 'script-backup.json'; a.click(); };

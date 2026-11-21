@@ -11,26 +11,28 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); 
 .top b { color: var(--ink); font-size: 2.8vmin; font-family: var(--font-display); }
 .stage { position: relative; display: grid; align-content: center; }
 .line { font-family: var(--font-display); font-size: 6vmin; font-weight: 700; line-height: 1.35; text-align: center; opacity: 0; transition: opacity 1.2s; }
-.line.on { opacity: 1; } .line em { font-style: normal; color: var(--pink); }
+.line.on { opacity: 1; }
 .chart { display: none; } .chart.on { display: block; }
-.cols { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2.4vmin; align-items: end; height: 50vmin; }
-.col { display: grid; align-items: end; justify-items: center; height: 100%; gap: 1vmin; grid-template-rows: 1fr auto auto auto; text-align: center; }
-.col .bar { width: 100%; background: var(--green); border-radius: 1vmin 1vmin 0 0; min-height: .6vmin; transition: height 1.2s cubic-bezier(.2,.8,.2,1); align-self: end; }
-.col .v { font-size: 3vmin; font-weight: 800; font-variant-numeric: tabular-nums; }
-.col .id { font-size: 2vmin; color: var(--pink); font-weight: 700; letter-spacing: .08em; }
-.col .l { font-size: 2.1vmin; color: var(--muted); line-height: 1.3; }
+.cols3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3vmin; }
+.pn { border: .3vmin solid var(--line); border-radius: 2.4vmin; padding: 2.6vmin 2.4vmin; display: grid; gap: 1.2vmin; align-content: start; }
+.pn h3 { margin: 0; font-size: 3.4vmin; font-family: var(--font-display); } .pn h3 small { font-size: 2vmin; color: var(--muted); font-weight: 400; margin-left: 1vmin; }
+.br { display: grid; grid-template-columns: 5vmin 1fr 6vmin; grid-template-rows: auto auto; column-gap: 1.2vmin; align-items: center; }
+.br .id { font-size: 1.9vmin; color: var(--pink); font-weight: 700; letter-spacing: .06em; grid-row: 1 / 3; }
+.br .nm { font-size: 2.1vmin; line-height: 1.25; } .br b { font-size: 2.6vmin; font-variant-numeric: tabular-nums; text-align: right; grid-row: 1 / 3; }
+.br .trk { height: 1.4vmin; background: var(--line); border-radius: 1vmin; overflow: hidden; margin-top: .5vmin; }
+.br .trk i { display: block; height: 100%; width: 0; background: var(--green); transition: width 1.2s cubic-bezier(.2,.8,.2,1); }
+.pn .ch { font-size: 2vmin; color: var(--muted); line-height: 1.5; border-top: .2vmin solid var(--line); padding-top: 1.2vmin; } .pn .ch b { color: var(--ink); font-size: 2.3vmin; margin-right: 1.4vmin; }
+.pn .wait { color: var(--muted); font-size: 2.2vmin; padding: 3vmin 0; }
 .cap { text-align: center; color: var(--muted); font-size: 2.3vmin; margin-top: 2.4vmin; }
-.sub { display: flex; justify-content: center; gap: 4vmin; margin-top: 2.4vmin; font-size: 2.3vmin; color: var(--muted); flex-wrap: wrap; }
-.sub b { color: var(--ink); font-size: 3vmin; }
 .who { display: flex; justify-content: center; gap: 4vmin; margin-top: 3vmin; font-size: 2.4vmin; color: var(--muted); }
 .who b { color: var(--ink); font-size: 3.4vmin; }
 .flash { position: absolute; left: 0; right: 0; top: 0; text-align: center; font-size: 2.6vmin; color: var(--pink); opacity: 0; transition: opacity .6s; }
 .flash.on { opacity: 1; }
-.pulse .bar { animation: pulse 1.6s ease; }
-@keyframes pulse { 0%,100% { filter: none; } 40% { filter: brightness(1.8) drop-shadow(0 0 2vmin var(--green)); } }
+.pulse .trk i { animation: pulse 1.6s ease; }
+@keyframes pulse { 0%,100% { filter: none; } 40% { filter: brightness(1.8) drop-shadow(0 0 1.4vmin var(--green)); } }
 .bottom { display: flex; justify-content: space-between; font-size: 2vmin; color: var(--muted); }
 .live { color: var(--pink); }
-@media (prefers-reduced-motion: reduce) { .col .bar, .line { transition: none; } .pulse .bar { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .br .trk i, .line { transition: none; } .pulse .trk i { animation: none; } }
 </style></head>
 <body><div class="screen">
   <div class="top"><b>Guilty by Default</b><span id="count"></span></div>
@@ -38,9 +40,8 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); 
     <div class="flash" id="flash"></div>
     <div class="line" id="line"></div>
     <div class="chart" id="chart">
-      <div class="cols" id="cols"></div>
-      <div class="cap">관람객이 도달한 엔딩의 비율</div>
-      <div class="sub" id="sub"></div>
+      <div class="cols3" id="cols"></div>
+      <div class="cap">인물별로, 관람객이 도달한 엔딩과 선택의 비율</div>
     </div>
     <div class="who" id="who"></div>
   </div>
@@ -49,21 +50,26 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); 
 <script>
 (function () {
   'use strict';
-  var LINES = ['“AI가 밀었다. 그런데 누가 보냈지?”', '같은 사고, 다른 자리.', '당신은 누구를 위해 책임을 물었습니까?', '진실, 회복, 미래. 하나만 고를 수 있다면.'];
-  var END = [['E1', '면죄부의 일상'], ['E2', '인간의 법정'], ['E3', '새로운 책임 구조'], ['E4', '진실과 판결의 불일치'], ['E5', '목적의 역풍']];
-  var CHN = ['유족', '피자 가게 사장', '대통령'];
-  var STEPTXT = { start: '누군가 인물을 고르고 있습니다', p0: '누군가 사고 장면을 보고 있습니다', p1: '누군가 자기 자리에서 사건을 마주합니다', p2: '누군가 작은 선택 앞에 섰습니다', p3: '누군가 반전을 마주했습니다', c1: '누군가 CHOICE 01 앞에 섰습니다', p5: '누군가 첫 선택의 결과를 보고 있습니다', p6: '누군가 청문회에서 질문을 받고 있습니다', c2: '누군가 CHOICE 02 앞에 섰습니다', p8: '누군가 판결을 기다립니다', end: '누군가 엔딩을 보고 있습니다' };
-  var st = null, mode = 'idle', li = 0;
+  var LINES = ['“결함도 지시도 없었는데 사람이 죽었습니다.”', '당신은 누구를 위해 책임을 물었습니까?'];
+  var STEPTXT = { title: '누군가 첫 화면에서 시작을 기다립니다', p0: '누군가 사고 장면을 보고 있습니다', sel: '누군가 인물을 고르고 있습니다', p1: '누군가 자기 자리에서 사건을 마주합니다', c1: '누군가 CHOICE 01 앞에 섰습니다', p3: '누군가 첫 선택의 결과를 보고 있습니다', p4: '누군가 또 한 번 사건과 마주칩니다', c2: '누군가 CHOICE 02 앞에 섰습니다', end: '누군가 엔딩을 보고 있습니다' };
+  var CHS = [], END = {}, st = null, mode = 'idle', li = 0;
   var lineEl = document.getElementById('line'), chart = document.getElementById('chart');
   function pct(v) { return Math.round((v || 0) * 100); }
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
   function showLine() { lineEl.classList.remove('on'); setTimeout(function () { lineEl.textContent = LINES[li % LINES.length]; li++; lineEl.classList.add('on'); }, 1300); }
-  function drawWho() { var b = (st && st.byChar) || [0, 0, 0]; document.getElementById('who').innerHTML = CHN.map(function (n, i) { return '<span>' + n + ' <b>' + b[i] + '</b></span>'; }).join(''); }
+  function drawWho() { var b = (st && st.byChar) || [0, 0, 0]; document.getElementById('who').innerHTML = CHS.map(function (c, i) { return '<span>' + esc(c.name) + ' <b>' + (b[i] || 0) + '</b></span>'; }).join(''); }
   function drawChart() {
     var cols = document.getElementById('cols');
-    if (!st || !st.ready) { chart.classList.remove('on'); return false; }
-    if (!cols.children.length) cols.innerHTML = END.map(function () { return '<div class="col"><div class="bar" style="height:0"></div><div class="v"></div><div class="id"></div><div class="l"></div></div>'; }).join('');
-    END.forEach(function (e, k) { var c = cols.children[k]; c.querySelector('.bar').style.height = (pct(st.ending[e[0]]) * 0.9) + '%'; c.querySelector('.v').textContent = pct(st.ending[e[0]]) + '%'; c.querySelector('.id').textContent = e[0]; c.querySelector('.l').textContent = e[1]; });
-    document.getElementById('sub').innerHTML = '<span>첫 선택 · 회복 <b>' + pct(st.value.M) + '%</b> 진실 <b>' + pct(st.value.T) + '%</b> 미래 <b>' + pct(st.value.P) + '%</b></span><span>책임 · AI <b>' + pct(st.liab['AI']) + '%</b> 인간 <b>' + pct(st.liab['인간']) + '%</b> 공동 <b>' + pct(st.liab['공동']) + '%</b></span>';
+    if (!st || !st.ready || !CHS.length) { chart.classList.remove('on'); return false; }
+    if (!cols.children.length) cols.innerHTML = CHS.map(function () { return '<div class="pn"></div>'; }).join('');
+    CHS.forEach(function (c, i) {
+      var p = cols.children[i], d = st.chEnding && st.chEnding[i], n = st.byChar[i];
+      if (!d) { p.innerHTML = '<h3>' + esc(c.name) + '<small>' + (c.role ? esc(c.role) + ' · ' : '') + n + '명</small></h3><div class="wait">' + st.minChar + '명 이상 모이면 비율을 보여 드립니다</div>'; return; }
+      if (!p.querySelector('.br')) p.innerHTML = '<h3></h3>' + c.endings.map(function (e) { return '<div class="br"><span class="id">' + esc(e.id) + '</span><span class="nm">' + esc(e.name) + '</span><b></b><div class="trk"><i></i></div></div>'; }).join('') + '<div class="ch" data-k="c1"></div><div class="ch" data-k="c2"></div>';
+      p.querySelector('h3').innerHTML = esc(c.name) + '<small>' + (c.role ? esc(c.role) + ' · ' : '') + n + '명</small>';
+      Array.prototype.forEach.call(p.querySelectorAll('.br'), function (r, k) { r.querySelector('b').textContent = pct(d[k]) + '%'; r.querySelector('i').style.width = pct(d[k]) + '%'; });
+      ['c1', 'c2'].forEach(function (key, q) { p.querySelector('[data-k=' + key + ']').innerHTML = (q ? '선택 2' : '선택 1') + '<br>' + st[key][i].map(function (v, k) { return '<b>' + (k + 1) + '번 ' + pct(v) + '%</b>'; }).join(''); });
+    });
     return true;
   }
   function setStats(s) {
@@ -87,14 +93,16 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); 
       else if (m.type === 'play') {
         setStats(m.stats); live('');
         if (!m.test) {
-          var e = END.filter(function (x) { return x[0] === m.ending; })[0];
-          flash('방금 ' + CHN[m.ch] + '의 자리에서 ‘' + (e ? e[1] : '') + '’에 도달했습니다');
+          flash('방금 ' + (CHS[m.ch] ? CHS[m.ch].name : '') + '의 자리에서 ‘' + (END[m.ending] || '') + '’에 도달했습니다');
           if (mode === 'chart') { chart.classList.add('on'); lineEl.classList.remove('on'); chart.classList.remove('pulse'); void chart.offsetWidth; chart.classList.add('pulse'); }
         }
       }
     };
     es.onerror = function () { es.close(); setTimeout(connect, 3000); };
   }
+  /* 인물·엔딩 이름은 게임 스크립트에서 가져온다 (편집기로 고치면 여기도 바뀜) */
+  fetch('script.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.json(); }).catch(function () { return fetch('script.default.json').then(function (r) { return r.json(); }); })
+    .then(function (j) { CHS = j.chars; CHS.forEach(function (c) { c.endings.forEach(function (e) { END[e.id] = e.name; }); }); drawWho(); if (st) setStats(st); }).catch(function () {});
   drawWho(); connect(); showLine();
 })();
 </script></body></html>

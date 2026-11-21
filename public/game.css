@@ -48,7 +48,6 @@ button { font-family: inherit; }
 .opt { flex: 1; min-width: 0; text-align: left; cursor: pointer; background: var(--surface); color: var(--surface-ink); border: 3px solid var(--line); border-radius: 36px; padding: 28px 30px; display: flex; flex-direction: column; gap: 14px; position: relative; transition: transform .15s, background .15s; }
 .choice .opt { background: color-mix(in srgb, var(--ivory) 94%, var(--burgundy-dark)); color: var(--burgundy-dark); border-color: transparent; }
 .opt:hover, .opt:focus-visible { transform: translateY(-6px); background: var(--paleblue-light); }
-.opt .k { position: absolute; right: 24px; top: 18px; font-family: var(--font-display); font-size: 24px; opacity: .5; }
 .opt .lab { font-size: 28px; font-weight: 800; line-height: 1.25; padding-right: 36px; }
 .opt .lab em { display: inline-block; font-style: normal; font-size: 20px; font-weight: 700; color: var(--ivory); background: var(--burgundy); border-radius: 999px; padding: 0 12px; margin-left: 10px; vertical-align: middle; letter-spacing: .06em; }
 .opt .say { font-size: 22px; line-height: 1.4; font-weight: 600; }
@@ -141,3 +140,81 @@ html, body { width: 100%; }
 .pcard .pn { font-size: 40px; font-weight: 800; margin-top: 12px; }
 .pcard .pr { font-size: 22px; letter-spacing: .12em; color: var(--burgundy-dark); background: var(--paleblue-light); padding: 2px 18px; border-radius: 999px; font-weight: 700; }
 .choice .opts { align-items: center; }
+
+/* ===================== v4 (시나리오 대본집) 추가 ===================== */
+[data-scene="title"] { --bg: var(--burgundy-dark); --ink: var(--ivory); }
+
+/* 설정 층 (장면이 바뀌어도 유지): 톱니바퀴 + 설정창 */
+#ui { position: absolute; left: 0; top: 0; width: 1600px; height: 900px; transform-origin: 0 0; z-index: 10; pointer-events: none; font-family: var(--font-body); word-break: keep-all; }
+#gear { position: absolute; right: 40px; top: 24px; width: 56px; height: 56px; padding: 0; border: 0; border-radius: 0; background: none; color: var(--ivory); filter: drop-shadow(0 1px 6px rgba(0,0,0,.55)); display: grid; place-items: center; cursor: pointer; pointer-events: auto; transition: transform .15s; }
+#gear:hover, #gear:focus-visible { transform: rotate(30deg); outline: none; }
+[data-scene="1"] #gear { color: var(--burgundy-dark); filter: none; }
+#gear svg { width: 44px; height: 44px; }
+[data-scene="title"] #gear { display: none; }
+.setp { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(70,14,33,.76); pointer-events: auto; z-index: 3; }
+.setp .card { width: 760px; box-sizing: border-box; background: var(--ivory); color: var(--burgundy-dark); border-radius: 40px; padding: 40px 52px 36px; box-shadow: 0 30px 80px rgba(0,0,0,.5); }
+.setp h3 { font-family: var(--font-display); font-size: 44px; margin: 0 0 26px; }
+.srow { display: grid; grid-template-columns: 56px 1fr 72px; align-items: center; gap: 20px; padding: 16px 0; border-top: 2px solid var(--ivory-dark); }
+.srow.one { grid-template-columns: 1fr; }
+.smute { width: 56px; height: 56px; padding: 0; border: 0; background: none; color: var(--burgundy-dark); cursor: pointer; display: grid; place-items: center; } .smute svg { width: 40px; height: 40px; } .smute:hover { color: var(--burgundy); }
+.snote { font-size: 16px; opacity: .6; margin-right: auto; align-self: center; }
+.srow label { font-size: 24px; font-weight: 800; }
+.srow output { font-size: 24px; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
+.srow input[type=range] { width: 100%; height: 44px; accent-color: var(--burgundy); cursor: pointer; }
+.sbtn { font-size: 24px; font-weight: 800; padding: 10px 26px; border-radius: 999px; border: 0; background: none; color: var(--burgundy-dark); cursor: pointer; }
+.sbtn:hover, .sbtn:focus-visible { text-decoration: underline; text-underline-offset: 6px; outline: none; }
+.sbtn.primary { background: var(--burgundy-dark); color: var(--ivory); }
+.sbtn.primary:hover { background: var(--burgundy); text-decoration: none; }
+.sbtn small { opacity: .6; font-size: 18px; }
+.sfoot { display: flex; justify-content: flex-end; border-top: 2px solid var(--ivory-dark); padding-top: 22px; margin-top: 8px; }
+
+/* 첫 화면 */
+.title { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 64px; gap: 14px; text-align: center; box-sizing: border-box; z-index: 5; }
+.title .sub { font-size: 24px; letter-spacing: .14em; color: var(--paleblue-light); text-shadow: 0 2px 14px rgba(0,0,0,.6); }
+.title h1 { font-family: var(--font-display); font-weight: 700; font-size: 84px; line-height: 1.05; margin: 0; color: var(--ivory); text-shadow: 0 4px 30px rgba(0,0,0,.55); }
+.title .btns { display: flex; gap: 48px; margin-top: 0; }
+.tbtn { font-size: 46px; font-weight: 800; padding: 10px 28px; border: 0; background: none; color: var(--ivory); cursor: pointer; text-shadow: 0 3px 20px rgba(0,0,0,.6); }
+.tbtn:hover, .tbtn:focus-visible { text-decoration: underline; text-underline-offset: 10px; text-decoration-thickness: 3px; outline: none; }
+
+/* 길티 바이 디폴트 소개 팝업 */
+.icard { position: absolute; right: 56px; top: 118px; width: 520px; box-sizing: border-box; z-index: 6; background: rgba(250,244,239,.97); color: var(--burgundy-dark); border-radius: 28px; padding: 22px 28px 24px; box-shadow: 0 16px 40px rgba(0,0,0,.4); pointer-events: none; animation: fadein .5s ease; }
+.icard .it { font-weight: 800; font-size: 20px; letter-spacing: .03em; color: var(--burgundy); margin-bottom: 10px; }
+.icard .ix { font-size: 23px; line-height: 1.5; font-weight: 600; }
+.icard.big { right: auto; left: 50%; top: 46%; transform: translate(-50%, -50%); width: 1000px; padding: 44px 56px 48px; }
+.icard.big .it { font-size: 28px; margin-bottom: 18px; }
+.icard.big .ix { font-size: 34px; line-height: 1.55; }
+@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+
+/* 인물 카드: 역할 줄 */
+.sel .rl { font-size: 22px; font-weight: 800; background: var(--burgundy-dark); color: var(--ivory); border-radius: 999px; padding: 2px 18px; }
+.sel .opt { padding-left: 14px; padding-right: 14px; }
+.sel .pr { padding: 0 14px; }
+.opt .lab { font-size: 26px; }
+.final .dex span.cnt { border-color: var(--ivory); color: var(--ivory); }
+.cap.ai .tx { text-align: left; display: inline-block; max-width: 1180px; line-height: 1.5; }
+
+.title .ttl { position: absolute; left: 64px; top: 52px; text-align: left; color: var(--ivory); text-shadow: 0 3px 24px rgba(0,0,0,.6); }
+.title .ttl h1 { font-family: 'PP Frama', var(--font-display); font-weight: 400; font-size: 112px; line-height: 1; letter-spacing: -.01em; margin: 0; }
+.title .ttl p { font-size: 30px; font-weight: 500; letter-spacing: .02em; margin: 22px 0 0; }
+
+/* 인물 선택: 좌측 정렬, 고른 인물은 숨김 */
+.sel, .sel h1 { text-align: left; }
+.sel .opts { justify-content: flex-start; }
+.sel .opt { flex: 0 0 calc((100% - 56px) / 3); text-align: left; align-items: flex-start; padding-left: 0; padding-right: 0; }
+.sel .kw, .sel .nm, .sel .rl, .sel .pr { align-self: stretch; text-align: left; padding-left: 28px; padding-right: 28px; }
+.sel .rl { align-self: flex-start; margin-left: 28px; padding-left: 18px; padding-right: 18px; }
+.sel .done { display: none; }
+.sel h1 { margin: 14px 0 36px; }
+
+.final .more { font-size: 24px; color: var(--paleblue); opacity: 0; animation: rise 1s ease 1.2s forwards; text-align: center; }
+@media (prefers-reduced-motion: reduce) { .final .more { animation: none; opacity: .9; } }
+
+/* 첫 화면 버튼: 우측, 위(플레이·크게) 아래(설정) */
+.title .btns { position: absolute; right: 96px; bottom: 90px; flex-direction: column; align-items: flex-end; gap: 6px; margin: 0; }
+.title .tbtn { padding: 6px 0; text-align: right; font-size: 44px; }
+.title .tbtn:first-child { font-size: 96px; line-height: 1.05; }
+/* 첫 화면 버튼: 호버 시 글자 앞에 심볼 로고 */
+.title .tbtn { position: relative; }
+.title .tbtn::before { content: ''; position: absolute; right: 100%; top: 50%; margin-right: .32em; height: .6em; aspect-ratio: 136 / 94; transform: translateY(-50%); background: currentColor; -webkit-mask: url(logo_symbol.svg) center / contain no-repeat; mask: url(logo_symbol.svg) center / contain no-repeat; opacity: 0; transition: opacity .15s; pointer-events: none; }
+.title .tbtn:hover::before, .title .tbtn:focus-visible::before { opacity: 1; }
+.title .tbtn:hover, .title .tbtn:focus-visible { text-decoration: none; }
