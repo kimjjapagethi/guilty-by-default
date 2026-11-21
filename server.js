@@ -106,12 +106,12 @@ http.createServer(function (req, res) {
     return body(req, function (b) {
       var okS = b && Array.isArray(b.chars) && b.chars.length === 3 && Array.isArray(b.opening) && b.chars.every(function (c) { return c && Array.isArray(c.endings) && c.endings.length === 5 && Array.isArray(c.map) && c.map.length === 3 && Array.isArray(c.intro) && Array.isArray(c.after1) && c.after1.length === 3 && Array.isArray(c.mid) && c.c1 && c.c2; });
       if (!okS) return json(res, 400, { ok: false, msg: '구조가 맞지 않습니다' });
-      var f = path.join(PUBLIC, 'script.json');
-      try { if (fs.existsSync(f)) fs.copyFileSync(f, path.join(PUBLIC, 'script.prev.json')); fs.writeFileSync(f + '.tmp', JSON.stringify(b, null, 1)); fs.renameSync(f + '.tmp', f); } catch (e) { return json(res, 500, { ok: false }); }
+      var f = path.join(PUBLIC, 'play', 'script.json');
+      try { if (fs.existsSync(f)) fs.copyFileSync(f, path.join(PUBLIC, 'play', 'script.prev.json')); fs.writeFileSync(f + '.tmp', JSON.stringify(b, null, 1)); fs.renameSync(f + '.tmp', f); } catch (e) { return json(res, 500, { ok: false }); }
       console.log('[script] script.json 저장됨'); json(res, 200, { ok: true });
     }, 2000000);
   }
-  if (u.pathname === '/api/scene-image' && req.method === 'POST') { /* 편집기에서 스토리보드 이미지 올리기 → public/scenes/<컷번호>.<확장자> */
+  if (u.pathname === '/api/scene-image' && req.method === 'POST') { /* 편집기에서 스토리보드 이미지 올리기 → public/play/scenes/<컷번호>.<확장자> */
     if (MODE === 'web') return json(res, 403, { ok: false });
     var nm = String(u.searchParams.get('id') || '').replace(/[^a-zA-Z0-9_-]/g, ''), ct = String(req.headers['content-type'] || '');
     var ext = /png/.test(ct) ? 'png' : /jpe?g/.test(ct) ? 'jpg' : /webp/.test(ct) ? 'webp' : null;
@@ -120,7 +120,7 @@ http.createServer(function (req, res) {
     req.on('data', function (c) { size += c.length; if (size > 25e6) req.destroy(); else chunks.push(c); });
     return req.on('end', function () {
       try {
-        var dir = path.join(PUBLIC, 'scenes'); fs.mkdirSync(dir, { recursive: true });
+        var dir = path.join(PUBLIC, 'play', 'scenes'); fs.mkdirSync(dir, { recursive: true });
         ['png', 'jpg', 'webp'].forEach(function (e) { if (e !== ext) try { fs.unlinkSync(path.join(dir, nm + '.' + e)); } catch (x) {} });
         fs.writeFileSync(path.join(dir, nm + '.' + ext), Buffer.concat(chunks));
       } catch (e) { return json(res, 500, { ok: false }); }
@@ -142,9 +142,15 @@ http.createServer(function (req, res) {
     return json(res, 404, { ok: false });
   }
   /* static */
-  var rel = u.pathname === '/' ? '/index.html' : u.pathname === '/side' ? '/side.html' : u.pathname === '/design' ? '/design.html' : u.pathname === '/editor' ? '/editor.html' : decodeURIComponent(u.pathname);
+  /* 옛 주소 호환: /side · /editor 는 play 폴더 안의 페이지로 보낸다 (상대 경로가 맞도록 주소를 바꿔서 이동) */
+  var SHORT = { '/side': '/play/side.html', '/editor': '/play/editor.html', '/design': '/design.html' };
+  if (SHORT[u.pathname]) { res.writeHead(302, { Location: SHORT[u.pathname] }); return res.end(); }
+  var rel = decodeURIComponent(u.pathname);
   var file = path.normalize(path.join(PUBLIC, rel));
   if (file.indexOf(PUBLIC) !== 0) { res.writeHead(403); return res.end(); }
+  try { if (fs.statSync(file).isDirectory()) { /* 폴더 주소: /play → /play/ 로 이동, /play/ → index.html */
+    if (rel.slice(-1) !== '/') { res.writeHead(301, { Location: rel + '/' + (u.search || '') }); return res.end(); }
+    file = path.join(file, 'index.html'); } } catch (e) {}
   if (!fs.existsSync(file) && path.basename(file) === 'opening_pig.mp4') file = path.join(__dirname, 'opening_pig.mp4'); /* 프로젝트 폴더 바로 아래에 둬도 됨 */
   fs.stat(file, function (err, st) {
     if (err || !st.isFile()) { res.writeHead(404); return res.end('not found'); }
@@ -159,7 +165,7 @@ http.createServer(function (req, res) {
     fs.createReadStream(file).pipe(res);
   });
 }).listen(PORT, function () {
-  console.log('[Guilty by Default] MODE=' + MODE + '  http://localhost:' + PORT + '  (옆 화면: /side · 스크립트 편집기: /editor)');
+  console.log('[Guilty by Default] MODE=' + MODE + '  http://localhost:' + PORT + '  (게임: /play/ · 옆 화면: /side · 편집기: /editor)');
   console.log('저장 파일: ' + LOG + '  (현재 ' + plays.length + '건)');
   console.log('관리 토큰: ' + ADMIN_TOKEN + (process.env.ADMIN_TOKEN ? '' : '  (환경변수 ADMIN_TOKEN 으로 고정 가능)'));
 });

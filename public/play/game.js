@@ -49,7 +49,7 @@ function openSettings() {
   panel = el('div', 'setp', '<div class="card" role="dialog" aria-label="설정"><h3>설정</h3>' +
     '<div class="srow"><button class="smute" id="smute" aria-label="소리 켜기/끄기"></button><input id="svol" type="range" min="0" max="100" step="5" aria-label="음량"><output id="sout"></output></div>' +
     (inGame ? '<div class="srow one"><button class="sbtn" id="shome">처음 화면으로</button></div>' : '') +
-    '<div class="sfoot"><span class="snote">Esc로 설정을 열고 닫을 수 있어요</span><button class="sbtn primary" id="sclose">닫기</button></div></div>');
+    '<div class="sfoot"><span class="snote">Esc로 설정을 열고 닫을 수 있어요' + ' · F로 전체 화면' + '</span><button class="sbtn primary" id="sclose">닫기</button></div></div>');
   uiEl.appendChild(panel);
   var rv = panel.querySelector('#svol'), ro = panel.querySelector('#sout'), rm = panel.querySelector('#smute');
   function draw() { rv.value = VOL.mute ? 0 : Math.round(VOL.v * 100); ro.textContent = VOL.mute ? '꺼짐' : rv.value; rm.innerHTML = VOL.mute ? ICON_OFF : ICON_ON; rv.style.opacity = VOL.mute ? 0.4 : 1; }
@@ -66,6 +66,9 @@ function closeSettings() { if (!setOpen) return; setOpen = false; if (panel) pan
   var g = el('button', '', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>');
   g.id = 'gear'; g.setAttribute('aria-label', '설정'); g.onclick = function () { setOpen ? closeSettings() : openSettings(); };
   if (uiEl) uiEl.appendChild(g);
+  if (!KIOSK && uiEl) { /* 웹 방문자 전용: 홈으로 돌아가기 (전시장 ?zone=1 에서는 없음) */
+    var h = el('a', '', '← 홈'); h.id = 'home'; h.href = '../index.html'; h.setAttribute('aria-label', '사이트 홈으로'); uiEl.appendChild(h);
+  }
 })();
 
 /* 입력: 선택 대기 / 다음 대기 */
@@ -76,11 +79,18 @@ function poke() {
 }
 document.addEventListener('keydown', function (e) {
   poke();
+  if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey) { /* F = 전체 화면 켜기/끄기 (웹·전시장 공통) */
+    e.preventDefault();
+    if (document.fullscreenElement) { if (document.exitFullscreen) document.exitFullscreen(); }
+    else if (root.requestFullscreen) { try { var p = root.requestFullscreen(); if (p && p.catch) p.catch(function () {}); } catch (x) {} }
+    return;
+  }
   if (e.key === 'Escape') { e.preventDefault(); setOpen ? closeSettings() : openSettings(); return; }
   if (setOpen) return;
   if ((e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') && onNext) { e.preventDefault(); onNext(); }
 });
-document.addEventListener('pointerdown', poke);
+function goFull() { if (document.fullscreenElement || !root.requestFullscreen) return; try { var p = root.requestFullscreen(); if (p && p.catch) p.catch(function () {}); } catch (x) {} }
+document.addEventListener('pointerdown', function () { poke(); if (KIOSK) goFull(); }); /* 전시장: 화면을 클릭하면 전체 화면으로 (브라우저는 클릭·키 입력 뒤에만 허용) */
 
 /* ---------- 서버 기록 ---------- */
 function postJson(url, o) { return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(o) }); }

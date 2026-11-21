@@ -33,3 +33,20 @@ npm run dev
 
 ## 기록 스키마 (`/api/play`)
 `{ sid, src, test, ch(0~2), c1(0~2), c2(0~2), ending('A-1'~'C-5') }` — 엔딩은 선택한 인물의 것이어야 저장됩니다. 20판 이상 모이면 전체 통계, 인물별 5판 이상이면 그 인물의 비율을 공개합니다. 이전 `plays*.jsonl` 은 읽지 않습니다.
+
+## 폴더 구조 (웹사이트 포함)
+
+```
+public/
+  index.html            메인
+  statement/ research/ team/   사이트 페이지 (tools/mk_site.py 로 생성)
+  play/                 게임 (game.js, game.css, script.json, side.html, editor.html)
+  shared/               ds.css(디자인 시스템), site.css(사이트), logo_*.svg, fonts/
+  research/img/         리서치 피드 이미지
+tools/mk_script.py      게임 대본 생성:  python3 tools/mk_script.py public/play/script.json
+tools/mk_site.py        사이트 페이지 생성:  python3 tools/mk_site.py
+```
+
+- 전시 PC: `node server.js` 후 `/play/?zone=1`. 옆 화면 `/side`, 편집기 `/editor`.
+- 사이트 글(리서치 피드, 팀 소개)은 `tools/mk_site.py` 위쪽 데이터를 고치고 다시 실행하세요.
+- GitHub Pages는 정적 호스팅이라 서버 API(`/api/*`)가 없습니다. 웹 플레이 통계 저장은 추후 Google Sheets 연동 예정.

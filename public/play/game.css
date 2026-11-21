@@ -215,6 +215,12 @@ html, body { width: 100%; }
 .title .tbtn:first-child { font-size: 96px; line-height: 1.05; }
 /* 첫 화면 버튼: 호버 시 글자 앞에 심볼 로고 */
 .title .tbtn { position: relative; }
-.title .tbtn::before { content: ''; position: absolute; right: 100%; top: 50%; margin-right: .32em; height: .6em; aspect-ratio: 136 / 94; transform: translateY(-50%); background: currentColor; -webkit-mask: url(logo_symbol.svg) center / contain no-repeat; mask: url(logo_symbol.svg) center / contain no-repeat; opacity: 0; transition: opacity .15s; pointer-events: none; }
+.title .tbtn::before { content: ''; position: absolute; right: 100%; top: 50%; margin-right: .32em; height: .6em; aspect-ratio: 136 / 94; transform: translateY(-50%); background: currentColor; -webkit-mask: url(../shared/logo_symbol.svg) center / contain no-repeat; mask: url(../shared/logo_symbol.svg) center / contain no-repeat; opacity: 0; transition: opacity .15s; pointer-events: none; }
 .title .tbtn:hover::before, .title .tbtn:focus-visible::before { opacity: 1; }
 .title .tbtn:hover, .title .tbtn:focus-visible { text-decoration: none; }
+
+/* 웹 방문자용 홈 버튼 (전시장 ?zone=1 에서는 만들어지지 않음) */
+#home { position: absolute; right: 112px; top: 36px; font-size: 26px; line-height: 1; color: var(--ivory); text-decoration: none; filter: drop-shadow(0 1px 6px rgba(0,0,0,.55)); pointer-events: auto; padding: 8px 4px; }
+#home:hover, #home:focus-visible { text-decoration: underline; outline: none; }
+[data-scene="1"] #home { color: var(--burgundy-dark); filter: none; }
+[data-scene="title"] #home { right: 40px; }
