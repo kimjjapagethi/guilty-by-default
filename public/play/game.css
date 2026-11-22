@@ -224,3 +224,116 @@ html, body { width: 100%; }
 #home:hover, #home:focus-visible { text-decoration: underline; outline: none; }
 [data-scene="1"] #home { color: var(--burgundy-dark); filter: none; }
 [data-scene="title"] #home { right: 40px; }
+
+/* 장면 전환: 배경은 서서히 바뀌고(game.js), 그라디언트도 서서히 나타난다 */
+#ghost { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
+#ghost .bgimg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+#back .layer.shade, #back .layer.scrim { animation: gfade .7s ease both; }
+@keyframes gfade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { #back .layer.shade, #back .layer.scrim { animation: none; } }
+
+/* ---- v5: 좌측 위 인물 표시 · 좌측 정렬 대사(말한 사람 사진) · 자리표시 제거 ---- */
+.hud { gap: 14px; }
+.hud .av, .cap .av { flex: none; display: block; border-radius: 50%; overflow: hidden; background: var(--paleblue-light); border: 4px solid var(--ivory); box-sizing: border-box; }
+.hud .av { width: 64px; height: 64px; }
+.hud .av img, .cap .av img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+.cap { left: 96px; right: 360px; text-align: left; display: flex; align-items: flex-start; gap: 28px; }
+.cap .av { width: 96px; height: 96px; }
+.cap .body { flex: 1; min-width: 0; }
+.cap .nm:empty { display: none; }
+.cap.right { left: 760px; right: 80px; }
+.cap.ai .tx { display: block; max-width: none; }
+
+/* ---- v6: 좌측 위 인물(타원, 이름은 아래) · 말하는 사람 타원 사진 · 인물 선택 = 버건디 페인트 벽 + 거울 액자 ---- */
+.hud { right: auto; flex-direction: column; align-items: flex-start; gap: 10px; }
+.hud .av { width: 66px; height: 94px; border: 0; }
+.cap .av { width: 92px; height: 128px; border: 0; }
+
+[data-scene="1"] #gear { color: var(--ivory); }
+/* 인물 선택: 버건디 벽(media/burgandy wall.png) · 가운데 정렬 · 긴 타원 거울(연하늘 가는 선 하나) */
+.wall { position: absolute; inset: 0; background: #AB073D url("media/burgandy%20wall.png") center / cover no-repeat; }
+.sel { color: var(--ivory); padding: 44px 90px 30px; text-align: center; align-items: center; }
+.sel h1 { font-size: 42px; margin: 6px 0 30px; text-align: center; }
+.sel .opts { justify-content: center; gap: 90px; flex: none; margin: 0; align-items: flex-start; }
+.sel .opts .opt { flex: none; width: 320px; background: none; border: 0; border-radius: 0; padding: 0; overflow: visible; gap: 0; color: var(--ivory); text-align: center; align-items: center; transition: transform .25s ease; }
+.sel .opts .opt:hover, .sel .opts .opt:focus-visible { background: none; transform: translateY(-8px); outline: none; }
+.sel .top { display: block; height: 64px; padding: 0 0 16px; text-align: center; }
+.sel .top .rl { display: inline; margin: 0; padding: 0; background: none; color: var(--ivory); font-size: 38px; font-weight: 800; line-height: 1.2; border-radius: 0; }
+.sel .mirror { position: relative; width: 300px; height: 460px; border-radius: 50%; border: 3px solid var(--paleblue); box-sizing: border-box; overflow: hidden; background: var(--paleblue-light); box-shadow: none; }
+.sel .mirror .pf { position: absolute; inset: 0; width: auto; height: auto; margin: 0; background: none; display: flex; align-items: center; justify-content: center; }
+.sel .mirror .pf img { height: 100%; width: 100%; object-fit: cover; object-position: center top; filter: none; }
+.sel .mirror::before, .sel .mirror::after { content: none; }
+.sel .opts .opt .pr { align-self: stretch; padding: 22px 0 0; font-size: 22px; line-height: 1.5; text-align: center; color: var(--ivory); opacity: 0; transition: opacity .25s ease; min-height: 120px; }
+.sel .opts .opt:hover .pr, .sel .opts .opt:focus-visible .pr { opacity: 1; }
+@media (hover: none) { .sel .opts .opt .pr { opacity: 1; } }
+
+/* v7: 하단 그라데이션을 낮추고 대사 글자를 키움 */
+.shade { background: linear-gradient(to top, rgba(70,14,33,.88) 0, rgba(70,14,33,.55) 17%, rgba(70,14,33,0) 38%); }
+.shade.up { background: linear-gradient(to bottom, rgba(70,14,33,.9) 0, rgba(70,14,33,.65) 40%, rgba(70,14,33,0) 70%); }
+.cap { right: 200px; }
+.cap .tx { font-size: 38px; }
+.cap .nm { font-size: 24px; }
+.cap.ai .tx { font-size: 32px; }
+
+/* v8: 인물 선택 = 다크 버건디 단색 배경, 역할 키워드는 거울 아래 */
+.wall { background: #460E21; }
+.sel .top { height: auto; padding: 22px 0 0; }
+.sel .opts .opt .pr { padding-top: 14px; min-height: 110px; }
+
+/* v9: 선택지 = 하단 자막 자리, 세로 목록, 배경 없음. 호버하면 심볼 로고가 앞에 나오고 버건디로 */
+.scrim.dim { background: rgba(70,14,33,.62); }
+.choice { inset: auto; left: 96px; right: 200px; bottom: var(--cap-bottom); padding: 0; display: block; z-index: 7; }
+.choice .q { font-size: 30px; font-weight: 600; margin: 0 0 18px; color: var(--ivory); text-shadow: 0 2px 16px rgba(0,0,0,.55); }
+.choice .opts { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; flex: none; }
+.choice .opts .opt { display: flex; align-items: center; gap: 18px; width: auto; max-width: 100%; background: none; border: 0; border-radius: 0; padding: 8px 0; color: var(--ivory); text-align: left; cursor: pointer; transform: none; box-shadow: none; text-shadow: 0 2px 16px rgba(0,0,0,.55); }
+.choice .opts .opt:hover, .choice .opts .opt:focus-visible { background: none; transform: none; outline: none; color: var(--burgundy); text-shadow: none; }
+.choice .opt .lg { flex: none; width: 54px; height: 37px; background: var(--burgundy); opacity: 0; -webkit-mask: url("../shared/logo_symbol.svg") center / contain no-repeat; mask: url("../shared/logo_symbol.svg") center / contain no-repeat; transition: opacity .15s ease; }
+.choice .opt:hover .lg, .choice .opt:focus-visible .lg { opacity: 1; }
+.choice .opt .say { font-size: 34px; line-height: 1.35; font-weight: 600; }
+.choice .opts .opt { flex: none; flex-direction: row; min-height: 0; margin: 0; height: auto; justify-content: flex-start; }
+.choice .opts .opt.push { margin-top: 0; }
+
+/* v11: 인물 선택 전체를 아래로 — 소개 글 영역의 끝이 자막 끝선(아래에서 116px)에 오도록 */
+.sel { justify-content: flex-end; padding-top: 0; padding-bottom: 116px; }
+.sel h1 { margin: 0 0 30px; }
+.sel { padding-bottom: 196px; }
+.sel .opts .opt { position: relative; }
+.sel .opts .opt .pr { position: absolute; left: 0; right: 0; top: 100%; min-height: 0; padding-top: 12px; }
+
+/* v12: 인물 선택(질문과 사진 간격, 이름 작게) · 선택지 작게 · 마지막 화면 · 자리 비움 안내 */
+.sel { justify-content: flex-start; padding-top: 48px; padding-bottom: 196px; }
+.sel h1 { margin: 0 0 auto; }
+.sel .mirror { width: 280px; height: 430px; }
+.sel .opts .opt { width: 300px; }
+.sel .top { padding-top: 18px; }
+.sel .top .rl { font-size: 26px; font-weight: 700; }
+.sel .opts .opt .pr { font-size: 20px; }
+
+.choice .q { font-size: 22px; font-weight: 500; margin: 0 0 12px; color: var(--ivory-dark); }
+.choice .opt .say { font-size: 28px; line-height: 1.4; }
+.choice .opt .lg { width: 44px; height: 30px; }
+
+.final .big { font-size: 52px; }
+.final .more { font-size: 26px; }
+.final .btns { gap: 28px; }
+.final .btn.primary { color: var(--burgundy-dark); background: var(--ivory); border-color: var(--ivory); }
+.final .lower { margin-top: 70px; opacity: 0; animation: rise 1s ease 1.6s forwards; }
+.final .btn.ghost { background: none; border: 0; color: var(--paleblue); font-size: 22px; font-weight: 600; text-decoration: underline; text-underline-offset: 6px; padding: 8px 14px; }
+.final .btn.ghost:hover { color: var(--ivory); }
+@media (prefers-reduced-motion: reduce) { .final .lower { animation: none; opacity: 1; } }
+
+.idle { position: fixed; inset: 0; z-index: 40; background: rgba(70,14,33,.82); cursor: pointer; }
+.idlein { position: absolute; left: 0; top: 0; width: 1600px; height: 900px; transform-origin: 0 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; color: var(--ivory); text-align: center; font-family: var(--font-body); }
+.idlein .it { font-size: 54px; font-weight: 800; }
+.idlein .in { font-family: var(--font-display); font-size: 150px; font-weight: 700; line-height: 1; color: var(--ivory); }
+.idlein .ih { font-size: 24px; color: var(--paleblue); }
+
+/* v13: 설정 딤은 화면 전체를 덮는다 */
+.setp { background: none; }
+.setdim { position: fixed; inset: 0; z-index: 9; background: rgba(70,14,33,.76); }
+
+/* v14: 인물별 사진 확대(--z) */
+.sel .mirror .pf img, .hud .av img, .cap .av img { transform: scale(var(--z, 1)); transform-origin: 50% 18%; }
+.sel .mirror .pf img { transform: scale(calc(var(--z, 1) * 1.05)); }
+
+.sel .mirror .pf img, .hud .av img, .cap .av img { transform-origin: 50% var(--zy, 18%); }

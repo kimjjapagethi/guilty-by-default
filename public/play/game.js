@@ -22,8 +22,23 @@ addEventListener('resize', fit); addEventListener('load', fit); if (window.visua
 /* ---------- 도우미 ---------- */
 function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
-function scene(name) { root.setAttribute('data-scene', name); cv.innerHTML = ''; backEl.innerHTML = ''; backEl.className = ''; }
-var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+var ghost = el('div', ''); ghost.id = 'ghost'; backEl.parentNode.insertBefore(ghost, backEl); /* 장면이 바뀌는 동안 이전 배경을 뒤에 남겨 두는 층 (번쩍임 방지) */
+function scene(name) {
+  ghost.style.transition = 'none'; ghost.style.opacity = '1';
+  var prev = backEl.querySelector('.bgimg');
+  if (prev && prev.dataset.done === '1') { ghost.innerHTML = ''; var g = prev.cloneNode(); g.removeAttribute('style'); g.className = 'bgimg'; ghost.appendChild(g); }
+  root.setAttribute('data-scene', name); cv.innerHTML = ''; backEl.innerHTML = ''; backEl.className = '';
+}
+function showBg(im) { /* 새 배경을 이전 배경 위에서 서서히 나타나게 */
+  im.style.opacity = '0'; backEl.insertBefore(im, backEl.firstChild); void im.offsetWidth;
+  im.style.transition = 'opacity .7s ease'; im.style.opacity = '1'; /* 이미지 전환의 페이드는 항상 켜 둔다 */
+  setTimeout(function () { if (im.parentNode) { im.dataset.done = '1'; ghost.innerHTML = ''; } }, 740);
+}
+function fadeOutGhost() { /* 다음 컷에 이미지가 없으면 이전 이미지가 서서히 사라진다 */
+  if (!ghost.firstChild) return; void ghost.offsetWidth; ghost.style.transition = 'opacity .7s ease'; ghost.style.opacity = '0';
+  setTimeout(function () { ghost.innerHTML = ''; ghost.style.transition = 'none'; ghost.style.opacity = '1'; }, 740);
+}
+var PH = !/[?&]ph=0/.test(Q); /* 이미지가 없는 컷은 컷 번호·스토리보드 설명을 보여 준다 (?ph=0 이면 숨김) */
 
 /* ---------- 소리 · 설정 ---------- */
 var VOL = { v: 0.7, mute: false };
@@ -40,7 +55,7 @@ function sfx(src) { if (!src || gain() === 0) return; try { var a = new Audio(sr
 function beep() { /* 설정에서 음량을 맞출 때 확인용으로 짧게 울리는 소리 */
   try { var C = window.AudioContext || window.webkitAudioContext; if (!C || gain() === 0) return; AU.ctx = AU.ctx || new C(); var o = AU.ctx.createOscillator(), g = AU.ctx.createGain(); o.type = 'sine'; o.frequency.value = 523; g.gain.value = gain() * 0.25; o.connect(g); g.connect(AU.ctx.destination); o.start(); o.stop(AU.ctx.currentTime + 0.18); } catch (e) {}
 }
-var setOpen = false, panel = null;
+var setOpen = false, panel = null, setDim = null;
 var ICON_ON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6"/><path d="M18 6.5a8 8 0 0 1 0 11"/></svg>';
 var ICON_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>';
 function openSettings() {
@@ -48,34 +63,49 @@ function openSettings() {
   var inGame = root.getAttribute('data-scene') !== 'title';
   panel = el('div', 'setp', '<div class="card" role="dialog" aria-label="설정"><h3>설정</h3>' +
     '<div class="srow"><button class="smute" id="smute" aria-label="소리 켜기/끄기"></button><input id="svol" type="range" min="0" max="100" step="5" aria-label="음량"><output id="sout"></output></div>' +
+    (!KIOSK ? '<div class="srow one"><button class="sbtn" id="sweb">웹사이트로 돌아가기</button></div>' : '') + /* 웹 방문자 전용 (전시장 ?zone=1 에는 없음) */
     (inGame ? '<div class="srow one"><button class="sbtn" id="shome">처음 화면으로</button></div>' : '') +
     '<div class="sfoot"><span class="snote">Esc로 설정을 열고 닫을 수 있어요' + ' · F로 전체 화면' + '</span><button class="sbtn primary" id="sclose">닫기</button></div></div>');
+  setDim = el('div', 'setdim'); document.body.appendChild(setDim); setDim.addEventListener('click', closeSettings); /* 화면 전체(레터박스 포함)를 덮는 딤 */
   uiEl.appendChild(panel);
   var rv = panel.querySelector('#svol'), ro = panel.querySelector('#sout'), rm = panel.querySelector('#smute');
   function draw() { rv.value = VOL.mute ? 0 : Math.round(VOL.v * 100); ro.textContent = VOL.mute ? '꺼짐' : rv.value; rm.innerHTML = VOL.mute ? ICON_OFF : ICON_ON; rv.style.opacity = VOL.mute ? 0.4 : 1; }
   rv.oninput = function () { VOL.v = rv.value / 100; VOL.mute = VOL.v === 0; applyVol(); saveVol(); draw(); };
   rv.onchange = function () { beep(); };
   rm.onclick = function () { VOL.mute = !VOL.mute; if (!VOL.mute && VOL.v === 0) VOL.v = 0.7; applyVol(); saveVol(); draw(); if (!VOL.mute) beep(); };
-  var h = panel.querySelector('#shome'); if (h) h.onclick = function () { location.href = location.pathname + location.search; };
+  var w = panel.querySelector('#sweb'); if (w) w.onclick = function () { location.href = '../index.html'; };
+  var h = panel.querySelector('#shome'); if (h) h.onclick = function () { restart(); };
   panel.querySelector('#sclose').onclick = closeSettings;
   panel.addEventListener('click', function (e) { if (e.target === panel) closeSettings(); });
   draw();
 }
-function closeSettings() { if (!setOpen) return; setOpen = false; if (panel) panel.remove(); panel = null; }
+function closeSettings() { if (!setOpen) return; setOpen = false; if (panel) panel.remove(); panel = null; if (setDim) setDim.remove(); setDim = null; }
 (function () {
   var g = el('button', '', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>');
   g.id = 'gear'; g.setAttribute('aria-label', '설정'); g.onclick = function () { setOpen ? closeSettings() : openSettings(); };
   if (uiEl) uiEl.appendChild(g);
-  if (!KIOSK && uiEl) { /* 웹 방문자 전용: 홈으로 돌아가기 (전시장 ?zone=1 에서는 없음) */
-    var h = el('a', '', '← 홈'); h.id = 'home'; h.href = '../index.html'; h.setAttribute('aria-label', '사이트 홈으로'); uiEl.appendChild(h);
-  }
 })();
 
 /* 입력: 선택 대기 / 다음 대기 */
 var onNext = null, idleT = 0;
+var IDLE_MS = (/[?&]idle=(\d+)/.exec(Q) ? +/[?&]idle=(\d+)/.exec(Q)[1] * 1000 : 90000), idleBox = null, idleCt = 0;
+function restart() { /* 처음으로: 페이지를 새로 불러오지 않고 상태만 초기화한다 (전체 화면이 풀리지 않게). 모든 인물이 다시 선택지에 나타남 */
+  run++; played = {}; reached = {}; S = { ci: 0, c1: 0, c2: 0 }; onNext = null;
+  closeSettings(); idleClose(); clearTimeout(idleT);
+  if (AU.bgm) { try { AU.bgm.pause(); } catch (e) {} AU.bgm = null; }
+  boot(); poke();
+}
+function idleClose() { clearInterval(idleCt); if (idleBox) { idleBox.remove(); idleBox = null; } }
+function idlePrompt() { /* 전시장: 무입력이 이어지면 화면을 어둡게 하고 5초 카운트다운, 그래도 반응이 없으면 처음 화면으로 */
+  if (root.getAttribute('data-scene') === 'title') return poke();
+  idleClose(); var n = 5;
+  idleBox = el('div', 'idle'); var inner = el('div', 'idlein', '<div class="it">아직 거기 계시나요?</div><div class="in">' + n + '</div><div class="ih">화면을 누르면 계속할 수 있어요</div>');
+  inner.style.transform = uiEl.style.transform; idleBox.appendChild(inner); document.body.appendChild(idleBox);
+  idleCt = setInterval(function () { n--; if (n <= 0) { clearInterval(idleCt); restart(); return; } var c = idleBox && idleBox.querySelector('.in'); if (c) c.textContent = n; }, 1000);
+}
 function poke() {
-  if (!KIOSK) return; clearTimeout(idleT);
-  idleT = setTimeout(function () { location.href = location.pathname + location.search; }, 90000);
+  if (!KIOSK) return; clearTimeout(idleT); idleClose();
+  idleT = setTimeout(idlePrompt, IDLE_MS);
 }
 document.addEventListener('keydown', function (e) {
   poke();
@@ -102,32 +132,37 @@ function report(p) { postJson('/api/play', p).then(function (r) { if (!r.ok && r
 flush();
 
 /* ---------- 장면 요소 ---------- */
+var IMG_PREFIX = { A: 'SY' }; /* 컷 A-S<n> → media/SY_S<n>.webp. 다른 인물은 이름이 정해지면 여기에 추가 (예: B: 'RS') */
+function imgCands(id, src) {
+  var c = src ? [src] : [], m = /^([A-Z])-S(\d+)$/.exec(id || '');
+  if (m && IMG_PREFIX[m[1]]) { var base = 'media/' + IMG_PREFIX[m[1]] + '_S' + m[2]; c.push(base + '.webp', base + '.png'); }
+  ['webp', 'png', 'jpg'].forEach(function (e) { c.push('scenes/' + id + '.' + e); });
+  return c;
+}
 function bg(id, desc, src) { /* 배경은 화면 전체(#back, cover)에 깔고, 안내 칩만 1600x900 안에 둔다 */
-  var b = el('div', 'layer bg ph');
-  b.innerHTML = '<span class="id">' + esc(id || '') + '</span><div class="ds">' + esc(desc || '') + '</div>';
-  cv.appendChild(b); backEl.className = 'ph';
-  var old = backEl.querySelector('.bgimg'); if (old) old.remove();
-  if (id) { /* public/scenes/<번호>.webp|png|jpg 가 있으면 자리표시 대신 사용 */
-    var exts = ['webp', 'png', 'jpg'], i = 0, im = new Image(); im.className = 'bgimg';
-    im.onload = function () { backEl.className = ''; backEl.insertBefore(im, backEl.firstChild); b.innerHTML = ''; b.className = 'layer bg'; };
-    im.onerror = function () { if (!src && ++i < exts.length) im.src = 'scenes/' + id + '.' + exts[i]; };
-    im.src = src || ('scenes/' + id + '.' + exts[0]);
-  }
+  var b = el('div', 'layer bg'); cv.appendChild(b);
+  function none() { fadeOutGhost(); if (!PH) return; backEl.className = 'ph'; b.classList.add('ph'); b.innerHTML = '<span class="id">' + esc(id || '') + '</span><div class="ds">' + esc(desc || '') + '</div>'; }
+  if (!id) { none(); return b; }
+  var c = imgCands(id, src), i = 0, im = new Image(); im.className = 'bgimg';
+  im.onload = function () { if (!b.isConnected) return; showBg(im); };
+  im.onerror = function () { if (!b.isConnected) return; if (++i < c.length) im.src = c[i]; else none(); };
+  im.src = c[0];
   return b;
 }
-function hud(step) {
-  var h = el('div', 'hud'), c = step > 0 ? CH[S.ci] : null;
-  h.innerHTML = (c ? '<span class="who">' + esc(c.name) + '</span>' : '') + '<span class="dots">' + STEPS.map(function (_, i) { return '<i class="' + (i <= step ? 'on' : '') + '"></i>'; }).join('') + '</span>';
-  cv.appendChild(h);
+function zoomOf(src) { var z = 1; CH.forEach(function (c) { if (c.portrait === src && +c.zoom > 0) z = +c.zoom; }); return z; }
+function zoomYOf(src) { var y = null; CH.forEach(function (c) { if (c.portrait === src && c.zoomY != null && c.zoomY !== '') y = +c.zoomY; }); return y; } /* 확대 기준점의 높이(%) : 클수록 사진의 더 아래쪽이 중심 */ /* 인물별 사진 확대 배율 (script.json 의 zoom) */
+function avatarEl(src) { /* 둥근 프로필 사진. 파일이 없으면 만들지 않는다 (자리표시 없음) */
+  if (!src) return null; var d = el('span', 'av'), im = new Image(); im.alt = ''; im.onerror = function () { d.remove(); }; im.src = src; if (zoomOf(src) !== 1) im.style.setProperty('--z', zoomOf(src)); if (zoomYOf(src) != null) im.style.setProperty('--zy', zoomYOf(src) + '%'); d.appendChild(im); return d;
 }
-function type(node, text) {
-  return new Promise(function (res) {
-    var i = 0, done = false;
-    function finish() { if (done) return; done = true; node.textContent = text; onNext = null; res(); }
-    if (reduce) return finish();
-    onNext = finish;
-    (function tick() { if (done) return; if (i >= text.length) return finish(); i++; node.textContent = text.slice(0, i); setTimeout(tick, 26); })();
-  });
+function speakerImg(ln) { /* 말한 사람의 사진: 줄의 img → 인물의 cast[이름] → 주인공 본인의 portrait */
+  var c = CH[S.ci], who = ln.who || ''; if (ln.img) return ln.img; if (!c || !who || ln.kind === 'hook') return '';
+  var base = who.replace(/\s*\(.*\)\s*$/, '').trim(), cast = c.cast || {};
+  if (cast[who]) return cast[who]; if (cast[base]) return cast[base];
+  return (who === c.name || base === c.name) ? (c.portrait || '') : '';
+}
+function hud(step) { /* 좌측 위: 인물 사진(타원)만. 이름은 표시하지 않는다 */
+  var c = step > 0 ? CH[S.ci] : null; if (!c) return;
+  var av = avatarEl(c.portrait); if (!av) return; var h = el('div', 'hud'); h.appendChild(av); cv.appendChild(h);
 }
 function frame(img, cls) { return '<div class="frame ' + (cls || '') + '">' + (img ? '<img src="' + esc(img) + '" alt="">' : '<span class="nop">PROFILE</span>') + '</div>'; }
 function showCard(html) { var d = el('div', 'pcard', html); cv.appendChild(d); return d; }
@@ -137,9 +172,27 @@ function infoCard(big) { /* [길티 바이 디폴트] 소개 팝업 */
 }
 /* 한 컷: 배경 + 자막 줄들. 클릭/Enter 로 넘김. 줄마다 ms>0 이면 그 시간 뒤 자동으로 넘어감
  * 컷 옵션: card='org'(소개 팝업) · mark={id,name}(엔딩 이름표) · top(자막 위쪽) · scene · sfx */
+function match(w) { /* 조건 {c1:[0,2], c2:[1]} : 고른 선택이 목록에 있어야 통과 (칸이 없으면 상관없음) */
+  if (!w) return true; var ok = true;
+  ['c1', 'c2'].forEach(function (k) { if (w[k] && w[k].length && w[k].indexOf(S[k]) < 0) ok = false; });
+  return ok;
+}
+function resolveLines(arr) { /* 조건에 안 맞는 줄은 빼고, 맞는 ‘다른 대사’가 있으면 그 줄을 바꿔 끼운다 */
+  var out = [];
+  (arr || []).forEach(function (ln) {
+    if (!match(ln.when)) return;
+    var r = ln, alts = ln.alts || [];
+    for (var i = 0; i < alts.length; i++) if (match(alts[i].when)) { r = Object.assign({}, ln, { who: alts[i].who != null && alts[i].who !== '' ? alts[i].who : ln.who, text: alts[i].text != null ? alts[i].text : ln.text, kind: alts[i].kind != null && alts[i].kind !== '' ? alts[i].kind : ln.kind }); break; }
+    out.push(r);
+  });
+  return out;
+}
 async function cut(o, my) {
   if (my !== run) return;
-  scene(o.scene || 'cine'); bg(o.id, o.desc, o.src); if ((o.lines || []).length) backEl.appendChild(el('div', 'layer shade' + (o.top ? ' up' : '')));
+  if (!match(o.when)) return; /* 컷 전체 조건 */
+  var lines = resolveLines(o.lines);
+  if ((o.lines || []).length && !lines.length && !o.profile && !o.mark && !o.card) return; /* 대사가 전부 조건에 안 맞으면 컷을 건너뜀 */
+  scene(o.scene || 'cine'); bg(o.id, o.desc, o.src); var shaded = false;
   if (o.step != null) hud(o.step);
   if (o.mark) cv.appendChild(el('div', 'endmark', '<div class="id">' + esc(o.mark.id) + '</div><h2>' + esc(o.mark.name) + '</h2>'));
   var tap = el('div', 'tap'); cv.appendChild(tap);
@@ -148,29 +201,35 @@ async function cut(o, my) {
   function hold(ms, showHit) { return new Promise(function (res) { var t = ms ? setTimeout(go, ms) : 0; function go() { clearTimeout(t); hit.classList.remove('on'); onNext = null; res(); } if (showHit) hit.classList.add('on'); onNext = go; }); }
   if (o.sfx) sfx(o.sfx);
   if (o.lead) await hold(o.lead, false);
-  var lines = o.lines || [];
   if (o.card && SC.org) infoCard(!lines.length);
   if (o.profile) { var p = o.profile, d = showCard(frame(p.img, 'sm') + '<div class="pn">' + esc(p.name) + '</div><div class="pr">' + esc(p.role) + '</div>'); await hold(0, true); d.remove(); }
   for (var i = 0; i < lines.length; i++) {
     if (my !== run) return;
-    var ln = lines[i], cap = el('div', 'cap ' + (ln.kind || '') + (o.right ? ' right' : '') + (o.top ? ' top' : '')), nm = el('span', 'nm'), tx = el('span', 'tx');
-    nm.textContent = ln.kind === 'hook' ? '' : (ln.who || ''); cap.appendChild(nm); cap.appendChild(tx);
-    var old = cv.querySelector('.cap'); if (old) old.remove();
-    cv.appendChild(cap);
-    await type(tx, ln.text); await hold(+ln.ms || 0, true);
+    var ln = lines[i], old = cv.querySelector('.cap'); if (old) old.remove();
+    if (+ln.delay > 0) await hold(+ln.delay, false); /* 이 줄이 뜨기 전에 이미지만 보여 주는 시간 (누르면 건너뜀) */
+    if (my !== run) return;
+    if (!shaded) { shaded = true; backEl.appendChild(el('div', 'layer shade' + (o.top ? ' up' : ''))); }
+    var cap = el('div', 'cap ' + (ln.kind || '') + (o.right ? ' right' : '') + (o.top ? ' top' : '')), nm = el('span', 'nm'), tx = el('span', 'tx'), body = el('div', 'body');
+    var av = avatarEl(speakerImg(ln)); if (av) cap.appendChild(av);
+    nm.textContent = ln.kind === 'hook' ? '' : (ln.who || ''); tx.textContent = ln.text; /* 타이핑 없이 바로 */
+    body.appendChild(nm); body.appendChild(tx); cap.appendChild(body); cv.appendChild(cap);
+    await hold(+ln.ms || 0, true);
   }
   if (!lines.length && !o.profile) await hold(0, true);
 }
 /* 선택: 카드 N장 (마우스 클릭) */
-function choose(o, my) {
+function choose(o, my) { /* 선택: 앞 컷의 이미지를 어둡게 깔고, 자막 자리에 선택지를 위에서 아래로 나열 (글자만, 호버하면 심볼 로고 + 버건디) */
   return new Promise(function (res) {
     if (my !== run) return;
-    scene('cine'); bg(o.id, o.desc).classList.add('quiet'); backEl.appendChild(el('div', 'layer scrim')); if (o.step != null) hud(o.step);
+    var pv = backEl.querySelector('.bgimg'), pvSrc = pv ? pv.getAttribute('src') : '';
+    scene('cine');
+    if (pvSrc) { var im = new Image(); im.className = 'bgimg'; im.onload = function () { if (root.getAttribute('data-scene') === 'cine' && backEl.isConnected) showBg(im); }; im.src = pvSrc; }
+    backEl.appendChild(el('div', 'layer scrim dim')); if (o.step != null) hud(o.step);
     var box = el('div', 'choice');
-    box.innerHTML = '<div class="kick">' + esc(o.kicker) + '</div><h2 class="q">' + esc(o.q) + '</h2>';
+    box.innerHTML = '<h2 class="q">' + esc(o.q) + '</h2>';
     var row = el('div', 'opts');
     o.options.forEach(function (op, i) {
-      var b = el('button', 'opt', '<div class="lab">' + esc(op.label) + '</div><div class="say">' + esc(op.say) + '</div>'); b.addEventListener('click', function () { onNext = null; res(i); }); row.appendChild(b);
+      var b = el('button', 'opt', '<span class="lg" aria-hidden="true"></span><span class="say">' + esc(op.label || op.say || '') + '</span>'); b.addEventListener('click', function () { onNext = null; res(i); }); row.appendChild(b);
     });
     box.appendChild(row); cv.appendChild(box);
   });
@@ -179,7 +238,7 @@ function choose(o, my) {
 /* ---------- 흐름 ---------- */
 function titleScreen() { /* 첫 화면: 오프닝 이미지 + 플레이 / 설정 */
   scene('title'); prog('title');
-  var im = new Image(); im.className = 'bgimg'; im.onerror = function () { backEl.className = 'ph'; }; im.src = 'media/s0_delivered.png'; backEl.appendChild(im);
+  var im = new Image(); im.className = 'bgimg'; im.onload = function () { if (root.getAttribute('data-scene') === 'title') showBg(im); }; im.onerror = function () { backEl.className = 'ph'; }; im.src = 'media/s0_delivered.png';
   backEl.appendChild(el('div', 'layer shade'));
   var box = el('div', 'title', '<div class="ttl"><h1>So Who’s<br>Responsible?</h1><p>그래서, 누가 책임질건데?</p></div><div class="btns"></div>');
   var row = box.querySelector('.btns');
@@ -195,22 +254,23 @@ async function openingSeq(my) {
   prog('p0');
   for (var k = 0; k < SC.opening.length; k++) await cut(Object.assign({ step: 0 }, SC.opening[k]), my);
 }
-async function selectScreen() {
+async function selectScreen() { /* 버건디 페인트 벽 + 거울 같은 아치 액자 속 인물. 마우스를 올린 인물의 소개가 아래에 뜬다 */
   S = { ci: 0, c1: 0, c2: 0 };
   scene('1'); prog('sel');
-  var box = el('div', 'sel'); box.innerHTML = '<h1>이 사건에서 당신은 누구를 위한 책임을 주장하시겠습니까?</h1>';
+  backEl.appendChild(el('div', 'wall'));
+  var box = el('div', 'sel'); box.innerHTML = '<h1>이 사건에서 당신은<br>누구를 위한 책임을 주장하시겠습니까?</h1>';
   var row = el('div', 'opts'); box.appendChild(row); cv.appendChild(box);
   return new Promise(function (res) {
     CH.forEach(function (c, i) {
       if (played[i]) return; /* 이미 플레이한 인물은 보여주지 않는다 */
-      var pic = c.portrait ? '<img src="' + esc(c.portrait) + '" alt="">' : '<span class="nop">PROFILE</span>';
-      var b = el('button', 'opt', '<div class="pf">' + pic + '</div><div class="kw">' + esc(c.kw) + '</div><div class="nm">' + esc(c.name) + '</div>' + (c.role ? '<div class="rl">' + esc(c.role) + '</div>' : '') + '<div class="pr">' + esc(c.prem) + '</div>');
+      var pic = c.portrait ? '<img src="' + esc(c.portrait) + '" alt=""' + ((+c.zoom > 0 && +c.zoom !== 1) || (c.zoomY != null && c.zoomY !== '') ? ' style="' + (+c.zoom > 0 && +c.zoom !== 1 ? '--z:' + (+c.zoom) + ';' : '') + (c.zoomY != null && c.zoomY !== '' ? '--zy:' + (+c.zoomY) + '%' : '') + '"' : '') + '>' : '<span class="nop">PROFILE</span>';
+      var b = el('button', 'opt', '<div class="mirror"><div class="pf">' + pic + '</div></div><div class="top"><span class="rl">' + esc(c.role || c.name) + '</span></div><div class="pr">' + esc(c.prem) + '</div>');
       b.addEventListener('click', function () { res(i); }); row.appendChild(b);
     });
   });
 }
 async function play(ci) {
-  var my = ++run; S = { ci: ci, c1: 0, c2: 0 }; var c = CH[ci], k;
+  var my = ++run; S = { ci: ci, c1: -1, c2: -1 }; var c = CH[ci], k; /* 아직 고르지 않은 선택은 -1 */
   prog('p1', ci);
   for (k = 0; k < c.intro.length; k++) await cut(Object.assign({ step: 1 }, c.intro[k]), my);
   prog('c1', ci);
@@ -232,12 +292,13 @@ async function play(ci) {
 }
 function finalScreen(c, ci) {
   scene('turn');
-  var f = el('div', 'final', '<div class="big">“당신은 누구를 위해 책임을 물었습니까?”</div><div class="more">이 자리에는 다른 엔딩이 ' + (c.endings.length - 1) + '개 더 있습니다</div><div class="btns"></div>');
-  var btns = f.querySelector('.btns');
+  var f = el('div', 'final', '<div class="big">누가, 누구를 위해 책임을 졌나요?</div><div class="more">이 캐릭터에는 다른 엔딩이 ' + (c.endings.length - 1) + '개 더 있습니다</div><div class="btns"></div><div class="lower"></div>');
+  var btns = f.querySelector('.btns'), lower = f.querySelector('.lower');
   var left = CH.some(function (_, i) { return !played[i]; });
-  var a = el('button', 'btn primary', left ? '다른 인물로' : '처음으로'), b = el('button', 'btn', '같은 인물로 다시');
-  a.onclick = function () { if (left) start(); else location.href = location.pathname + location.search; }; b.onclick = function () { play(ci); };
-  btns.appendChild(a); btns.appendChild(b);
+  function home() { restart(); } /* 새로 불러오면 모든 인물이 다시 선택지에 나타난다 */
+  if (left) { var a = el('button', 'btn primary', '다른 인물로'); a.onclick = function () { start(); }; btns.appendChild(a); }
+  var b = el('button', 'btn primary', '같은 인물로 다시'); b.onclick = function () { play(ci); }; btns.appendChild(b);
+  var h = el('button', 'btn ghost', '처음으로'); h.onclick = home; lower.appendChild(h);
   cv.appendChild(f); poke();
 }
 async function start() { run++; var ci = await selectScreen(); await play(ci); }

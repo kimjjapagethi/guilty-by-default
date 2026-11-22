@@ -120,11 +120,11 @@ http.createServer(function (req, res) {
     req.on('data', function (c) { size += c.length; if (size > 25e6) req.destroy(); else chunks.push(c); });
     return req.on('end', function () {
       try {
-        var dir = path.join(PUBLIC, 'play', 'scenes'); fs.mkdirSync(dir, { recursive: true });
+        var sub = u.searchParams.get('dir') === 'chars' ? 'chars' : 'scenes'; var dir = path.join(PUBLIC, 'play', sub); fs.mkdirSync(dir, { recursive: true });
         ['png', 'jpg', 'webp'].forEach(function (e) { if (e !== ext) try { fs.unlinkSync(path.join(dir, nm + '.' + e)); } catch (x) {} });
         fs.writeFileSync(path.join(dir, nm + '.' + ext), Buffer.concat(chunks));
       } catch (e) { return json(res, 500, { ok: false }); }
-      json(res, 200, { ok: true, url: 'scenes/' + nm + '.' + ext });
+      json(res, 200, { ok: true, url: (u.searchParams.get('dir') === 'chars' ? 'chars/' : 'scenes/') + nm + '.' + ext });
     });
   }
   if (u.pathname === '/api/progress' && req.method === 'POST') {
@@ -143,7 +143,8 @@ http.createServer(function (req, res) {
   }
   /* static */
   /* 옛 주소 호환: /side · /editor 는 play 폴더 안의 페이지로 보낸다 (상대 경로가 맞도록 주소를 바꿔서 이동) */
-  var SHORT = { '/side': '/play/side.html', '/editor': '/play/editor.html', '/design': '/design.html' };
+  var SHORT = { '/side': '/play/side.html', '/side.html': '/play/side.html', '/play/side': '/play/side.html', '/editor': '/play/editor.html', '/editor.html': '/play/editor.html', '/play/editor': '/play/editor.html', '/design': '/design.html' };
+  if (u.pathname === '/' && /[?&](zone|kiosk|test)=1/.test(u.search || '')) { res.writeHead(302, { Location: '/play/' + u.search }); return res.end(); } /* 옛 전시장 주소 /?zone=1 → 게임 */
   if (SHORT[u.pathname]) { res.writeHead(302, { Location: SHORT[u.pathname] }); return res.end(); }
   var rel = decodeURIComponent(u.pathname);
   var file = path.normalize(path.join(PUBLIC, rel));
@@ -153,7 +154,7 @@ http.createServer(function (req, res) {
     file = path.join(file, 'index.html'); } } catch (e) {}
   if (!fs.existsSync(file) && path.basename(file) === 'opening_pig.mp4') file = path.join(__dirname, 'opening_pig.mp4'); /* 프로젝트 폴더 바로 아래에 둬도 됨 */
   fs.stat(file, function (err, st) {
-    if (err || !st.isFile()) { res.writeHead(404); return res.end('not found'); }
+    if (err || !st.isFile()) { res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' }); return res.end('<meta charset="utf-8"><body style="font:16px/1.8 sans-serif;padding:40px"><b>없는 주소예요: ' + String(u.pathname).replace(/</g, '') + '</b><br>게임 <a href="/play/">/play/</a> · 전시장 <a href="/play/?zone=1">/play/?zone=1</a> · 편집기 <a href="/editor">/editor</a> · 옆 화면 <a href="/side">/side</a> · 사이트 <a href="/">/</a>'); }
     var type = TYPES[path.extname(file)] || 'application/octet-stream', range = req.headers.range;
     if (range && /^bytes=/.test(range)) { /* 영상 반복 재생을 위해 Range 요청 지원 */
       var m = /bytes=(\d*)-(\d*)/.exec(range), start = m[1] ? +m[1] : 0, end = m[2] ? Math.min(+m[2], st.size - 1) : st.size - 1;
