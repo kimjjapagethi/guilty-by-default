@@ -121,8 +121,13 @@ http.createServer(function (req, res) {
     return req.on('end', function () {
       try {
         var sub = u.searchParams.get('dir') === 'chars' ? 'chars' : 'scenes'; var dir = path.join(PUBLIC, 'play', sub); fs.mkdirSync(dir, { recursive: true });
+        var buf = Buffer.concat(chunks);
+        if (sub === 'chars') { /* 이미 폴더에 똑같은 사진이 있으면 새로 저장하지 않고 그 파일을 그대로 연결 */
+          var same = fs.readdirSync(dir).filter(function (f) { try { return /\.(png|jpe?g|webp)$/i.test(f) && fs.statSync(path.join(dir, f)).size === buf.length && fs.readFileSync(path.join(dir, f)).equals(buf); } catch (x) { return false; } })[0];
+          if (same) return json(res, 200, { ok: true, url: 'chars/' + same, reused: true });
+        }
         ['png', 'jpg', 'webp'].forEach(function (e) { if (e !== ext) try { fs.unlinkSync(path.join(dir, nm + '.' + e)); } catch (x) {} });
-        fs.writeFileSync(path.join(dir, nm + '.' + ext), Buffer.concat(chunks));
+        fs.writeFileSync(path.join(dir, nm + '.' + ext), buf);
       } catch (e) { return json(res, 500, { ok: false }); }
       json(res, 200, { ok: true, url: (u.searchParams.get('dir') === 'chars' ? 'chars/' : 'scenes/') + nm + '.' + ext });
     });
@@ -162,7 +167,9 @@ http.createServer(function (req, res) {
       res.writeHead(206, { 'Content-Type': type, 'Content-Range': 'bytes ' + start + '-' + end + '/' + st.size, 'Accept-Ranges': 'bytes', 'Content-Length': end - start + 1 });
       return fs.createReadStream(file, { start: start, end: end }).pipe(res);
     }
-    res.writeHead(200, { 'Content-Type': type, 'Content-Length': st.size, 'Accept-Ranges': 'bytes', 'Cache-Control': 'no-cache' });
+    var etag = '"' + st.size.toString(36) + '-' + Math.floor(st.mtimeMs).toString(36) + '"'; /* 같은 파일이면 큰 이미지를 다시 받지 않도록 304 */
+    if (req.headers['if-none-match'] === etag) { res.writeHead(304, { ETag: etag, 'Cache-Control': 'no-cache' }); return res.end(); }
+    res.writeHead(200, { 'Content-Type': type, 'Content-Length': st.size, 'Accept-Ranges': 'bytes', 'Cache-Control': 'no-cache', ETag: etag });
     fs.createReadStream(file).pipe(res);
   });
 }).listen(PORT, function () {

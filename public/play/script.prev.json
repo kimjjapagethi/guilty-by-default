@@ -52,7 +52,7 @@
    "name": "서연",
    "role": "유족",
    "kw": "JUSTICE",
-   "prem": "서연은 이번 사고로 사망한 마이클의 딸이다.",
+   "prem": "서연은 이번 사고로 \n사망한 마이클의 딸이다.",
    "portrait": "chars/prof_SY.png",
    "intro": [
     {
@@ -93,7 +93,7 @@
      "lines": [
       {
        "who": "",
-       "text": "쾅...",
+       "text": "쿵...",
        "kind": "",
        "ms": 0
       }
@@ -186,7 +186,7 @@
     [
      {
       "id": "A-R1",
-      "src": "",
+      "src": "scenes/A-R1.png",
       "desc": "1차 선택 직후 단기 파장 — 합의서에 서명한 뒤",
       "lead": 0,
       "right": false,
@@ -210,7 +210,7 @@
     [
      {
       "id": "A-R2",
-      "src": "",
+      "src": "scenes/A-R2.png",
       "desc": "1차 선택 직후 단기 파장 — 합의서를 찢은 뒤",
       "lead": 0,
       "right": false,
@@ -234,7 +234,7 @@
     [
      {
       "id": "A-R3",
-      "src": "",
+      "src": "scenes/A-R3.png",
       "desc": "1차 선택 직후 단기 파장 — 사장을 고발한 뒤",
       "lead": 0,
       "right": false,
@@ -259,7 +259,7 @@
    "mid": [
     {
      "id": "A-S3a",
-     "src": "",
+     "src": "scenes/A-S3a.png",
      "desc": "S#A3. 법원 앞 계단 & 국회 청문회 대기실 - 크로스 씬 - 낮",
      "lead": 0,
      "right": false,
@@ -267,7 +267,7 @@
      "lines": [
       {
        "who": "",
-       "text": "법원 앞 계단.",
+       "text": "법원 앞.",
        "kind": "nar",
        "ms": 0
       },
@@ -315,7 +315,7 @@
     },
     {
      "id": "A-S3b",
-     "src": "",
+     "src": "scenes/A-S3b.png",
      "desc": "S#A3 (이어서). 길티 바이 디폴트 대변인이 두 사람 사이로 걸어 들어온다. 대변인 이름표 아래 [길티 바이 디폴트] 툴팁이 뜬다.",
      "lead": 0,
      "right": false,
@@ -375,8 +375,7 @@
        "kind": "",
        "ms": 0
       }
-     ],
-     "card": "org"
+     ]
     }
    ],
    "c2": {
@@ -559,14 +558,20 @@
       }
      ]
     }
-   ]
+   ],
+   "cast": {
+    "루소": "chars/prof_pizza.png",
+    "길티 바이 디폴트": "chars/prof_agent.png",
+    "아버지": "chars/prof_oldman.png",
+    "변호사": "chars/prof_lawyer.png"
+   }
   },
   {
    "key": "B",
    "name": "루소",
    "role": "피자 가게 사장",
    "kw": "SURVIVAL",
-   "prem": "동네에서 피자 가게를 운영하던 중, 로봇 사고로 인해 하루 아침에 피의자가 된다.",
+   "prem": "피자 가게를 운영하던 중, \n사고로 하루 아침에 피의자가 된다.",
    "portrait": "chars/prof_pizza.png",
    "intro": [
     {
@@ -993,15 +998,18 @@
       }
      ]
     }
-   ]
+   ],
+   "cast": {
+    "길티 바이 디폴트": "chars/prof_agent.png"
+   }
   },
   {
    "key": "C",
    "name": "대통령",
    "role": "",
    "kw": "STABILITY",
-   "prem": "대통령은 우리 사회를 안정화했다는 평을 받으며 높은 지지율을 유지하고 있다.",
-   "portrait": "chars/C_mwrn43l276.png",
+   "prem": "대통령은 좋은 평을 받으며 \n높은 지지율을 유지하고 있다.",
+   "portrait": "chars/prof_president.png",
    "intro": [
     {
      "id": "C-S1a",
@@ -1387,7 +1395,13 @@
       }
      ]
     }
-   ]
+   ],
+   "zoom": 1.5,
+   "zoomY": 35,
+   "cast": {
+    "길티 바이 디폴트": "chars/prof_agent.png",
+    "서연": "chars/prof_SY.png"
+   }
   }
  ]
 }

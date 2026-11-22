@@ -15,7 +15,7 @@ function save() { /* 관람객 간에 기록이 이어지지 않도록 저장하
 function fit() {
   var W = root.clientWidth || innerWidth, H = root.clientHeight || innerHeight, s = Math.min(W / 1600, H / 900);
   var t = 'translate(' + Math.round((W - 1600 * s) / 2) + 'px,' + Math.round((H - 900 * s) / 2) + 'px) scale(' + s + ')';
-  cv.style.transform = t; if (uiEl) uiEl.style.transform = t;
+  cv.style.transform = t; if (uiEl) uiEl.style.transform = t; if (hudEl) hudEl.style.transform = t;
 }
 addEventListener('resize', fit); addEventListener('load', fit); if (window.visualViewport) visualViewport.addEventListener('resize', fit); fit();
 
@@ -23,11 +23,31 @@ addEventListener('resize', fit); addEventListener('load', fit); if (window.visua
 function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
 var ghost = el('div', ''); ghost.id = 'ghost'; backEl.parentNode.insertBefore(ghost, backEl); /* 장면이 바뀌는 동안 이전 배경을 뒤에 남겨 두는 층 (번쩍임 방지) */
+/* 그라데이션·딤은 컷마다 새로 만들지 않고 한 번만 만든 층의 투명도만 서서히 바꾼다 (깜빡임 방지) */
+var fxEl = el('div', ''); fxEl.id = 'fx'; fxEl.innerHTML = '<div class="layer shade dn"></div><div class="layer shade up"></div><div class="layer scrim dim"></div>'; backEl.parentNode.insertBefore(fxEl, backEl.nextSibling);
+function fxSet(shade, scrim) { fxEl.setAttribute('data-shade', shade || ''); fxEl.setAttribute('data-scrim', scrim ? '1' : ''); }
+/* 좌측 위 인물 사진도 컷마다 새로 그리지 않고, 인물이 같으면 그대로 둔다 */
+var hudEl = el('div', ''); hudEl.id = 'hudl'; cv.parentNode.insertBefore(hudEl, cv.nextSibling); fit();
+var hudWant = null, hudKey = null, hudQ = false;
+function setHud(c) { hudWant = c; if (hudQ) return; hudQ = true; Promise.resolve().then(function () { hudQ = false; applyHud(); }); }
+function applyHud() {
+  var c = hudWant; if (!c || !c.portrait) { hudEl.classList.remove('on'); return; }
+  if (hudKey !== c.portrait) { hudKey = c.portrait; hudEl.innerHTML = ''; var a = avatarEl(c.portrait); if (a) hudEl.appendChild(a); }
+  hudEl.classList.add('on');
+}
 function scene(name) {
   ghost.style.transition = 'none'; ghost.style.opacity = '1';
   var prev = backEl.querySelector('.bgimg');
   if (prev && prev.dataset.done === '1') { ghost.innerHTML = ''; var g = prev.cloneNode(); g.removeAttribute('style'); g.className = 'bgimg'; ghost.appendChild(g); }
-  root.setAttribute('data-scene', name); cv.innerHTML = ''; backEl.innerHTML = ''; backEl.className = '';
+  root.setAttribute('data-scene', name); cv.innerHTML = ''; backEl.innerHTML = ''; backEl.className = ''; fxSet('', false); setHud(null);
+}
+var PRE = {}; /* 미리 불러 디코딩해 둔 이미지 (큰 PNG 때문에 전환이 툭 끊기거나 늦게 뜨는 것 방지) */
+function pre(src) { if (!src) return Promise.resolve(false); if (PRE[src]) return PRE[src].p; var im = new Image(), o = { im: im }; o.p = new Promise(function (ok) { im.onload = function () { (im.decode ? im.decode() : Promise.resolve()).catch(function () {}).then(function () { ok(true); }); }; im.onerror = function () { ok(false); }; }); im.src = src; PRE[src] = o; return o.p; }
+var WARM = -1;
+function warm(c) { /* 이 인물의 컷 이미지를 앞에서부터 하나씩 미리 받아 둔다 */
+  if (!c) return; var list = [], add = function (a) { (a || []).forEach(function (x) { if (x && x.src) list.push(x.src); }); };
+  add(c.intro); (c.after1 || []).forEach(add); add(c.mid); add(c.endings);
+  list.reduce(function (p, u) { return p.then(function () { return pre(u); }); }, Promise.resolve());
 }
 function showBg(im) { /* 새 배경을 이전 배경 위에서 서서히 나타나게 */
   im.style.opacity = '0'; backEl.insertBefore(im, backEl.firstChild); void im.offsetWidth;
@@ -144,15 +164,15 @@ function bg(id, desc, src) { /* 배경은 화면 전체(#back, cover)에 깔고,
   function none() { fadeOutGhost(); if (!PH) return; backEl.className = 'ph'; b.classList.add('ph'); b.innerHTML = '<span class="id">' + esc(id || '') + '</span><div class="ds">' + esc(desc || '') + '</div>'; }
   if (!id) { none(); return b; }
   var c = imgCands(id, src), i = 0, im = new Image(); im.className = 'bgimg';
-  im.onload = function () { if (!b.isConnected) return; showBg(im); };
-  im.onerror = function () { if (!b.isConnected) return; if (++i < c.length) im.src = c[i]; else none(); };
+  b.ready = new Promise(function (ok) {
+    im.onload = function () { (im.decode ? im.decode() : Promise.resolve()).catch(function () {}).then(function () { if (b.isConnected) showBg(im); ok(); }); }; /* 다 불러오고 디코딩한 뒤에 페이드 */
+    im.onerror = function () { if (!b.isConnected) return ok(); if (++i < c.length) im.src = c[i]; else { none(); ok(); } };
+  });
   im.src = c[0];
   return b;
 }
-function zoomOf(src) { var z = 1; CH.forEach(function (c) { if (c.portrait === src && +c.zoom > 0) z = +c.zoom; }); return z; }
-function zoomYOf(src) { var y = null; CH.forEach(function (c) { if (c.portrait === src && c.zoomY != null && c.zoomY !== '') y = +c.zoomY; }); return y; } /* 확대 기준점의 높이(%) : 클수록 사진의 더 아래쪽이 중심 */ /* 인물별 사진 확대 배율 (script.json 의 zoom) */
 function avatarEl(src) { /* 둥근 프로필 사진. 파일이 없으면 만들지 않는다 (자리표시 없음) */
-  if (!src) return null; var d = el('span', 'av'), im = new Image(); im.alt = ''; im.onerror = function () { d.remove(); }; im.src = src; if (zoomOf(src) !== 1) im.style.setProperty('--z', zoomOf(src)); if (zoomYOf(src) != null) im.style.setProperty('--zy', zoomYOf(src) + '%'); d.appendChild(im); return d;
+  if (!src) return null; var d = el('span', 'av'), im = new Image(); im.alt = ''; d.style.opacity = '0'; im.onerror = function () { d.remove(); }; im.onload = function () { (im.decode ? im.decode() : Promise.resolve()).catch(function () {}).then(function () { d.style.transition = 'opacity .25s ease'; d.style.opacity = '1'; }); }; im.src = src; d.appendChild(im); return d;
 }
 function speakerImg(ln) { /* 말한 사람의 사진: 줄의 img → 인물의 cast[이름] → 주인공 본인의 portrait */
   var c = CH[S.ci], who = ln.who || ''; if (ln.img) return ln.img; if (!c || !who || ln.kind === 'hook') return '';
@@ -192,9 +212,12 @@ async function cut(o, my) {
   if (!match(o.when)) return; /* 컷 전체 조건 */
   var lines = resolveLines(o.lines);
   if ((o.lines || []).length && !lines.length && !o.profile && !o.mark && !o.card) return; /* 대사가 전부 조건에 안 맞으면 컷을 건너뜀 */
-  scene(o.scene || 'cine'); bg(o.id, o.desc, o.src); var shaded = false;
-  if (o.step != null) hud(o.step);
+  scene(o.scene || 'cine'); var bgl = bg(o.id, o.desc, o.src); var shaded = false, fxMode = o.top ? 'up' : 'dn';
+  if (o.step > 1) setHud(CH[S.ci]); /* 시작(도입) 컷에서는 좌측 위 프로필을 띄우지 않는다 */
+  if (lines.length && !(+o.lead) && !(+lines[0].delay > 0) && !o.profile) { fxSet(fxMode); shaded = true; } /* 바로 자막이 뜨는 컷: 앞 컷의 그라데이션을 그대로 이어 간다 */
   if (o.mark) cv.appendChild(el('div', 'endmark', '<div class="id">' + esc(o.mark.id) + '</div><h2>' + esc(o.mark.name) + '</h2>'));
+  if (bgl.ready) { await Promise.race([bgl.ready, new Promise(function (r) { setTimeout(r, 5000); })]); if (my !== run) return; } /* 이미지가 뜬 다음에 대사·연출 시작 */
+  if (WARM !== S.ci) { WARM = S.ci; warm(CH[S.ci]); }
   var tap = el('div', 'tap'); cv.appendChild(tap);
   var hit = el('div', 'hit', '▼'); cv.appendChild(hit);
   tap.addEventListener('click', function () { if (onNext) onNext(); });
@@ -208,8 +231,8 @@ async function cut(o, my) {
     var ln = lines[i], old = cv.querySelector('.cap'); if (old) old.remove();
     if (+ln.delay > 0) await hold(+ln.delay, false); /* 이 줄이 뜨기 전에 이미지만 보여 주는 시간 (누르면 건너뜀) */
     if (my !== run) return;
-    if (!shaded) { shaded = true; backEl.appendChild(el('div', 'layer shade' + (o.top ? ' up' : ''))); }
-    var cap = el('div', 'cap ' + (ln.kind || '') + (o.right ? ' right' : '') + (o.top ? ' top' : '')), nm = el('span', 'nm'), tx = el('span', 'tx'), body = el('div', 'body');
+    if (!shaded) { shaded = true; fxSet(fxMode); }
+    var cap = el('div', 'cap ' + (ln.kind || '') + (o.right ? ' right' : '') + (o.top ? ' top' : '') + (i === 0 ? ' first' : '')), nm = el('span', 'nm'), tx = el('span', 'tx'), body = el('div', 'body');
     var av = avatarEl(speakerImg(ln)); if (av) cap.appendChild(av);
     nm.textContent = ln.kind === 'hook' ? '' : (ln.who || ''); tx.textContent = ln.text; /* 타이핑 없이 바로 */
     body.appendChild(nm); body.appendChild(tx); cap.appendChild(body); cv.appendChild(cap);
@@ -224,7 +247,7 @@ function choose(o, my) { /* 선택: 앞 컷의 이미지를 어둡게 깔고, �
     var pv = backEl.querySelector('.bgimg'), pvSrc = pv ? pv.getAttribute('src') : '';
     scene('cine');
     if (pvSrc) { var im = new Image(); im.className = 'bgimg'; im.onload = function () { if (root.getAttribute('data-scene') === 'cine' && backEl.isConnected) showBg(im); }; im.src = pvSrc; }
-    backEl.appendChild(el('div', 'layer scrim dim')); if (o.step != null) hud(o.step);
+    fxSet('', true); if (o.step > 1) setHud(CH[S.ci]);
     var box = el('div', 'choice');
     box.innerHTML = '<h2 class="q">' + esc(o.q) + '</h2>';
     var row = el('div', 'opts');
@@ -239,7 +262,7 @@ function choose(o, my) { /* 선택: 앞 컷의 이미지를 어둡게 깔고, �
 function titleScreen() { /* 첫 화면: 오프닝 이미지 + 플레이 / 설정 */
   scene('title'); prog('title');
   var im = new Image(); im.className = 'bgimg'; im.onload = function () { if (root.getAttribute('data-scene') === 'title') showBg(im); }; im.onerror = function () { backEl.className = 'ph'; }; im.src = 'media/s0_delivered.png';
-  backEl.appendChild(el('div', 'layer shade'));
+  fxSet('dn');
   var box = el('div', 'title', '<div class="ttl"><h1>So Who’s<br>Responsible?</h1><p>그래서, 누가 책임질건데?</p></div><div class="btns"></div>');
   var row = box.querySelector('.btns');
   cv.appendChild(box);
@@ -263,7 +286,7 @@ async function selectScreen() { /* 버건디 페인트 벽 + 거울 같은 아�
   return new Promise(function (res) {
     CH.forEach(function (c, i) {
       if (played[i]) return; /* 이미 플레이한 인물은 보여주지 않는다 */
-      var pic = c.portrait ? '<img src="' + esc(c.portrait) + '" alt=""' + ((+c.zoom > 0 && +c.zoom !== 1) || (c.zoomY != null && c.zoomY !== '') ? ' style="' + (+c.zoom > 0 && +c.zoom !== 1 ? '--z:' + (+c.zoom) + ';' : '') + (c.zoomY != null && c.zoomY !== '' ? '--zy:' + (+c.zoomY) + '%' : '') + '"' : '') + '>' : '<span class="nop">PROFILE</span>';
+      var pic = c.portrait ? '<img src="' + esc(c.portrait) + '" alt="">' : '<span class="nop">PROFILE</span>';
       var b = el('button', 'opt', '<div class="mirror"><div class="pf">' + pic + '</div></div><div class="top"><span class="rl">' + esc(c.role || c.name) + '</span></div><div class="pr">' + esc(c.prem) + '</div>');
       b.addEventListener('click', function () { res(i); }); row.appendChild(b);
     });
@@ -308,7 +331,7 @@ function load() {
     .catch(function () { return fetch('script.default.json').then(function (r) { return r.json(); }); });
 }
 if (location.protocol === 'file:') { cv.innerHTML = '<div style="position:absolute;inset:0;display:grid;place-items:center;text-align:center;font-size:34px;line-height:1.6;color:#FAF4EF;padding:0 120px">파일을 직접 열면 실행되지 않아요.<br>터미널에서 npm run dev 후<br>http://localhost:3000 으로 열어 주세요.</div>'; root.setAttribute('data-scene', 'turn'); } else load().then(function (j) {
-  SC = j; CH = SC.chars; CH.forEach(function (c, i) { c.n = i + 1; });
+  SC = j; CH = SC.chars; CH.forEach(function (c, i) { c.n = i + 1; [c.portrait].concat(Object.keys(c.cast || {}).map(function (k) { return c.cast[k]; })).forEach(function (u) { if (u) new Image().src = u; }); }); /* 사진 미리 불러오기 */
   poke(); boot();
 });
 window.addEventListener('beforeunload', function () { if (AU.bgm) AU.bgm.pause(); });

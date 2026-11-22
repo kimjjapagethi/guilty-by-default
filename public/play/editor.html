@@ -205,9 +205,7 @@ function pv() {
     cap.innerHTML = (ip ? '<span class="av"><img src="' + esc(ip) + '" alt=""></span>' : '') + '<div class="body"><span class="nm">' + (ln.kind === 'hook' ? '' : esc(ln.who)) + '</span><span class="tx" style="white-space:pre-line">' + esc(ln.text) + '</span></div>'; h.appendChild(cap); }
 }
 /* ---------- 그 밖의 폼 ---------- */
-function formChar(ed, n) { ed.appendChild(el('h2', '', '인물 카드 (선택 화면)')); var c = n.ch; field(ed, '이름', c, 'name', { relabel: 1 }); field(ed, '역할', c, 'role'); field(ed, '영문 키워드', c, 'kw'); field(ed, '소개 문구', c, 'prem', { area: 1, rows: 2 }); field(ed, '프로필 사진', c, 'portrait', { hint: '예: chars/prof_SY.png (public/play 기준 경로). 선택 카드, 화면 좌측 위, 이 인물이 말할 때 대사 옆에 쓰입니다. 비우면 사진 없이 이름만 보여요.' });
-  field(ed, '사진 확대 (배)', c, 'zoom', { num: 1, hint: '1 = 그대로, 1.5 = 1.5배 확대(얼굴 쪽 위를 기준으로). 선택 카드, 좌측 위, 대사 옆 프로필에 함께 적용됩니다. 비우거나 0이면 1배.' });
-  field(ed, '확대 기준 높이 (%)', c, 'zoomY', { num: 1, hint: '확대의 중심점 높이. 기본 18(사진 위쪽 얼굴 근처). 숫자를 키우면(예: 35, 50) 중심이 사진 아래로 내려가 더 아래쪽이 보입니다.' });
+function formChar(ed, n) { ed.appendChild(el('h2', '', '인물 카드 (선택 화면)')); var c = n.ch; field(ed, '이름', c, 'name', { relabel: 1 }); field(ed, '역할', c, 'role'); field(ed, '영문 키워드', c, 'kw'); field(ed, '소개 문구', c, 'prem', { area: 1, rows: 3, hint: '엔터로 줄을 바꾸면 선택 화면에서 그 줄바꿈 그대로 보입니다. (줄바꿈을 안 하면 칸 너비에 맞춰 자동으로 넘어가요)' }); field(ed, '프로필 사진', c, 'portrait', { hint: '예: chars/prof_SY.png (public/play 기준 경로). 선택 카드, 화면 좌측 위, 이 인물이 말할 때 대사 옆에 쓰입니다. 비우면 사진 없이 이름만 보여요.' });
   castPanel(ed, c); }
 function speakersOf(c) { /* 이 인물 이야기에 나오는 말한 사람 이름 전부 (괄호 뒤는 뺌) */
   var list = [], seen = {};
@@ -225,7 +223,7 @@ function castPanel(ed, c) { /* 말하는 사람 사진을 한 화면에서 한�
   many.appendChild(el('label', '', '여러 장 한 번에')); var mf = el('input'); mf.type = 'file'; mf.multiple = true; mf.accept = 'image/png,image/jpeg,image/webp'; var mb = el('div'); mb.appendChild(mf); mb.appendChild(el('br')); mb.appendChild(msgEl); many.appendChild(mb); ed.appendChild(many);
   function pathOf(n) { return n === c.name ? (c.portrait || '') : ((c.cast || {})[n] || ''); }
   function setPath(n, v) { if (n === c.name) c.portrait = v; else { c.cast = c.cast || {}; if (v) c.cast[n] = v; else delete c.cast[n]; if (!Object.keys(c.cast).length) delete c.cast; } mark(true); }
-  function up(n, f) { var stem = (c.key || 'X') + '_' + Date.now().toString(36) + Math.floor(Math.random() * 99);
+  function up(n, f) { var h = 0; for (var i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) >>> 0; var stem = (c.key || 'X') + '_' + (n === c.name ? 'main' : h.toString(36)); /* 같은 사람은 항상 같은 파일명 → 다시 올려도 덮어쓰기(새 파일 안 생김) */
     return fetch('/api/scene-image?dir=chars&id=' + encodeURIComponent(stem), { method: 'POST', headers: { 'Content-Type': f.type }, body: f }).then(function (r) { return r.json(); }).then(function (j) { if (!j.ok) throw new Error(j.msg || ''); setPath(n, j.url); return j.url; }); }
   function draw() {
     wrap.innerHTML = '';

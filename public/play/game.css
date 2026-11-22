@@ -332,8 +332,24 @@ html, body { width: 100%; }
 .setp { background: none; }
 .setdim { position: fixed; inset: 0; z-index: 9; background: rgba(70,14,33,.76); }
 
-/* v14: 인물별 사진 확대(--z) */
-.sel .mirror .pf img, .hud .av img, .cap .av img { transform: scale(var(--z, 1)); transform-origin: 50% 18%; }
-.sel .mirror .pf img { transform: scale(calc(var(--z, 1) * 1.05)); }
+/* v15: 인물 선택 질문과 프로필 전체를 더 아래로 */
+.sel { padding-top: 104px; padding-bottom: 140px; }
 
-.sel .mirror .pf img, .hud .av img, .cap .av img { transform-origin: 50% var(--zy, 18%); }
+/* v16: 인물 소개 문구는 입력한 줄바꿈 그대로 */
+.sel .opts .opt .pr { white-space: pre-line; }
+
+
+/* v17: 부드러운 전환 — 그라데이션·딤은 고정 층의 투명도만 바뀌고, 인물 사진은 컷이 바뀌어도 유지, 새 화면은 살짝 페이드 인 */
+#fx { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+#fx .layer { opacity: 0; transition: opacity .6s ease; }
+#fx[data-shade="dn"] .shade:not(.up), #fx[data-shade="up"] .shade.up, #fx[data-scrim="1"] .scrim { opacity: 1; }
+#hudl { position: absolute; left: 0; top: 0; width: 1600px; height: 900px; transform-origin: 0 0; pointer-events: none; z-index: 6; opacity: 0; transition: opacity .4s ease; }
+#hudl.on { opacity: 1; }
+#hudl .av { position: absolute; left: 48px; top: 28px; width: 66px; height: 94px; border: 0; border-radius: 50%; overflow: hidden; background: var(--paleblue-light); display: block; }
+#hudl .av img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+@keyframes uin { from { opacity: 0; } to { opacity: 1; } }
+.cap.first { animation: uin .25s ease both; }
+.choice, .sel { animation: uin .35s ease both; }
+.setdim { animation: uin .25s ease both; }
+.idle { animation: uin .4s ease both; }
+@media (prefers-reduced-motion: reduce) { .cap.first, .choice, .sel, .setdim, .idle { animation: none; } #fx .layer, #hudl { transition: none; } }
