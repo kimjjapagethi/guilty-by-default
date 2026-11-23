@@ -35,12 +35,23 @@ function applyHud() {
   if (hudKey !== c.portrait) { hudKey = c.portrait; hudEl.innerHTML = ''; var a = avatarEl(c.portrait); if (a) hudEl.appendChild(a); }
   hudEl.classList.add('on');
 }
+/* 배경 전환 규칙: #ghost 는 '지금 눈에 보이는 마지막 그림'만 들고 있다.
+   새 그림이 다 뜨면 비우고, 다음 컷에 그림이 없으면 서서히 지운다. 낡은 타이머는 BG.tok 으로 무효화해서
+   이미 지나간 그림이 다시 나타나거나 새 그림이 갑자기 사라지는 일이 없게 한다. */
+var BG = { tok: 0, fading: false };
+function ghostClear() { BG.tok++; BG.fading = false; ghost.innerHTML = ''; ghost.style.transition = 'none'; ghost.style.opacity = '1'; }
 function scene(name) {
-  ghost.style.transition = 'none'; ghost.style.opacity = '1';
   var prev = backEl.querySelector('.bgimg');
-  if (prev && prev.dataset.done === '1') { ghost.innerHTML = ''; var g = prev.cloneNode(); g.removeAttribute('style'); g.className = 'bgimg'; ghost.appendChild(g); }
+  if (prev) { /* 지금 보이는 그림을 ghost 로 넘겨 받는다 (페이드 도중이면 그 투명도 그대로) */
+    var o = parseFloat(getComputedStyle(prev).opacity); if (isNaN(o)) o = 1;
+    if (o >= 1 || BG.fading) ghostClear(); else BG.tok++;
+    var g = prev.cloneNode(); g.removeAttribute('style'); g.className = 'bgimg'; g.style.opacity = o; ghost.style.transition = 'none'; ghost.style.opacity = '1'; ghost.appendChild(g);
+    if (o < 1) { void g.offsetWidth; g.style.transition = 'opacity .25s ease'; g.style.opacity = '1'; }
+  } else if (backEl.classList.contains('ph')) ghostClear(); /* 자리표시 컷이 덮고 있던 옛 그림이 되살아나지 않게 */
+  else if (!BG.fading) BG.tok++;
   root.setAttribute('data-scene', name); cv.innerHTML = ''; backEl.innerHTML = ''; backEl.className = ''; fxSet('', false); setHud(null);
 }
+var CAV = { el: null, src: '' }; /* 말하는 사람 프로필(고정 자리) */
 var PRE = {}; /* 미리 불러 디코딩해 둔 이미지 (큰 PNG 때문에 전환이 툭 끊기거나 늦게 뜨는 것 방지) */
 function pre(src) { if (!src) return Promise.resolve(false); if (PRE[src]) return PRE[src].p; var im = new Image(), o = { im: im }; o.p = new Promise(function (ok) { im.onload = function () { (im.decode ? im.decode() : Promise.resolve()).catch(function () {}).then(function () { ok(true); }); }; im.onerror = function () { ok(false); }; }); im.src = src; PRE[src] = o; return o.p; }
 var WARM = -1;
@@ -52,11 +63,14 @@ function warm(c) { /* 이 인물의 컷 이미지를 앞에서부터 하나씩 �
 function showBg(im) { /* 새 배경을 이전 배경 위에서 서서히 나타나게 */
   im.style.opacity = '0'; backEl.insertBefore(im, backEl.firstChild); void im.offsetWidth;
   im.style.transition = 'opacity .7s ease'; im.style.opacity = '1'; /* 이미지 전환의 페이드는 항상 켜 둔다 */
-  setTimeout(function () { if (im.parentNode) { im.dataset.done = '1'; ghost.innerHTML = ''; } }, 740);
+  var t = BG.tok; setTimeout(function () { if (BG.tok === t && im.parentNode) { im.dataset.done = '1'; ghostClear(); } }, 760);
 }
 function fadeOutGhost() { /* 다음 컷에 이미지가 없으면 이전 이미지가 서서히 사라진다 */
-  if (!ghost.firstChild) return; void ghost.offsetWidth; ghost.style.transition = 'opacity .7s ease'; ghost.style.opacity = '0';
-  setTimeout(function () { ghost.innerHTML = ''; ghost.style.transition = 'none'; ghost.style.opacity = '1'; }, 740);
+  if (!ghost.firstChild) return; var t = ++BG.tok; BG.fading = true; void ghost.offsetWidth; ghost.style.transition = 'opacity .7s ease'; ghost.style.opacity = '0';
+  setTimeout(function () { if (BG.tok === t) ghostClear(); }, 780);
+}
+function coverGhost() { /* 이미지 없는 화면이 위에서 서서히 덮이는 동안 이전 그림은 뒤에 둔다 */
+  if (!ghost.firstChild) return false; var t = BG.tok; setTimeout(function () { if (BG.tok === t) ghostClear(); }, 780); return true;
 }
 var PH = !/[?&]ph=0/.test(Q); /* 이미지가 없는 컷은 컷 번호·스토리보드 설명을 보여 준다 (?ph=0 이면 숨김) */
 
@@ -161,7 +175,7 @@ function imgCands(id, src) {
 }
 function bg(id, desc, src) { /* 배경은 화면 전체(#back, cover)에 깔고, 안내 칩만 1600x900 안에 둔다 */
   var b = el('div', 'layer bg'); cv.appendChild(b);
-  function none() { fadeOutGhost(); if (!PH) return; backEl.className = 'ph'; b.classList.add('ph'); b.innerHTML = '<span class="id">' + esc(id || '') + '</span><div class="ds">' + esc(desc || '') + '</div>'; }
+  function none() { if (!PH) { fadeOutGhost(); return; } backEl.className = 'ph' + (coverGhost() ? ' fadein' : ''); b.classList.add('ph'); b.innerHTML = '<span class="id">' + esc(id || '') + '</span><div class="ds">' + esc(desc || '') + '</div>'; }
   if (!id) { none(); return b; }
   var c = imgCands(id, src), i = 0, im = new Image(); im.className = 'bgimg';
   b.ready = new Promise(function (ok) {
@@ -172,7 +186,7 @@ function bg(id, desc, src) { /* 배경은 화면 전체(#back, cover)에 깔고,
   return b;
 }
 function avatarEl(src) { /* 둥근 프로필 사진. 파일이 없으면 만들지 않는다 (자리표시 없음) */
-  if (!src) return null; var d = el('span', 'av'), im = new Image(); im.alt = ''; d.style.opacity = '0'; im.onerror = function () { d.remove(); }; im.onload = function () { (im.decode ? im.decode() : Promise.resolve()).catch(function () {}).then(function () { d.style.transition = 'opacity .25s ease'; d.style.opacity = '1'; }); }; im.src = src; d.appendChild(im); return d;
+  if (!src) return null; var d = el('span', 'av'), im = new Image(); im.alt = ''; d.style.opacity = '0'; im.onerror = function () { d.dataset.bad = '1'; d.remove(); }; im.onload = function () { (im.decode ? im.decode() : Promise.resolve()).catch(function () {}).then(function () { d.style.transition = 'opacity .25s ease'; d.style.opacity = '1'; }); }; im.src = src; d.appendChild(im); return d;
 }
 function speakerImg(ln) { /* 말한 사람의 사진: 줄의 img → 인물의 cast[이름] → 주인공 본인의 portrait */
   var c = CH[S.ci], who = ln.who || ''; if (ln.img) return ln.img; if (!c || !who || ln.kind === 'hook') return '';
@@ -233,7 +247,14 @@ async function cut(o, my) {
     if (my !== run) return;
     if (!shaded) { shaded = true; fxSet(fxMode); }
     var cap = el('div', 'cap ' + (ln.kind || '') + (o.right ? ' right' : '') + (o.top ? ' top' : '') + (i === 0 ? ' first' : '')), nm = el('span', 'nm'), tx = el('span', 'tx'), body = el('div', 'body');
-    var av = avatarEl(speakerImg(ln)); if (av) cap.appendChild(av);
+    var src = speakerImg(ln), cav = cv.querySelector('.cav'); /* 프로필은 대사 줄 수와 상관없이 고정된 자리에 두고, 같은 사람이면 그대로 둔다 */
+    if (!src) { if (cav) cav.remove(); cav = null; }
+    else {
+      if (cav && cav.dataset.src !== src) { cav.remove(); cav = null; }
+      if (!cav) { if (CAV.el && CAV.src === src && !CAV.el.dataset.bad) cav = CAV.el; else { cav = avatarEl(src); CAV.el = cav; CAV.src = src; } if (cav) { cav.classList.add('cav'); cav.dataset.src = src; cv.appendChild(cav); } }
+      if (cav) { cav.classList.toggle('right', !!o.right); cav.classList.toggle('top', !!o.top); }
+    }
+    if (cav) cap.classList.add('hasav');
     nm.textContent = ln.kind === 'hook' ? '' : (ln.who || ''); tx.textContent = ln.text; /* 타이핑 없이 바로 */
     body.appendChild(nm); body.appendChild(tx); cap.appendChild(body); cv.appendChild(cap);
     await hold(+ln.ms || 0, true);
@@ -280,7 +301,7 @@ async function openingSeq(my) {
 async function selectScreen() { /* 버건디 페인트 벽 + 거울 같은 아치 액자 속 인물. 마우스를 올린 인물의 소개가 아래에 뜬다 */
   S = { ci: 0, c1: 0, c2: 0 };
   scene('1'); prog('sel');
-  backEl.appendChild(el('div', 'wall'));
+  var wall = el('div', 'wall'); if (coverGhost()) wall.style.animation = 'fadein .7s ease both'; backEl.appendChild(wall);
   var box = el('div', 'sel'); box.innerHTML = '<h1>이 사건에서 당신은<br>누구를 위한 책임을 주장하시겠습니까?</h1>';
   var row = el('div', 'opts'); box.appendChild(row); cv.appendChild(box);
   return new Promise(function (res) {
@@ -309,13 +330,16 @@ async function play(ci) {
   if (my !== run) return;
   played[ci] = true; reached[e.id] = true; save(); prog('end', e.id);
   report({ sid: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), src: KIOSK ? 'kiosk' : 'browser', test: TEST, ch: ci, c1: S.c1, c2: S.c2, ending: e.id });
-  await cut(Object.assign({}, e, { scene: 'turn', top: true, mark: { id: e.id, name: e.name } }), my);
+  await cut(Object.assign({}, e, { scene: 'turn', mark: { id: (/-(\d+)$/.exec(e.id || '') ? 'Ending ' + /-(\d+)$/.exec(e.id)[1] : e.id), name: e.name } }), my);
   if (my !== run) return;
   finalScreen(c, ci);
 }
 function finalScreen(c, ci) {
+  var pv = backEl.querySelector('.bgimg'), pvSrc = pv ? pv.getAttribute('src') : ''; /* 방금 본 엔딩 이미지를 어둡게 깔아 둔다 */
   scene('turn');
-  var f = el('div', 'final', '<div class="big">누가, 누구를 위해 책임을 졌나요?</div><div class="more">이 캐릭터에는 다른 엔딩이 ' + (c.endings.length - 1) + '개 더 있습니다</div><div class="btns"></div><div class="lower"></div>');
+  if (pvSrc) { var bim = new Image(); bim.className = 'bgimg'; bim.onload = function () { if (root.getAttribute('data-scene') === 'turn' && backEl.isConnected) showBg(bim); }; bim.src = pvSrc; }
+  fxSet('', true);
+  var f = el('div', 'final', '<div class="big">누구를 위한 책임이었나요?</div><div class="more">이 캐릭터에는 다른 엔딩이 ' + (c.endings.length - 1) + '개 더 있습니다</div><div class="btns"></div><div class="lower"></div>');
   var btns = f.querySelector('.btns'), lower = f.querySelector('.lower');
   var left = CH.some(function (_, i) { return !played[i]; });
   function home() { restart(); } /* 새로 불러오면 모든 인물이 다시 선택지에 나타난다 */

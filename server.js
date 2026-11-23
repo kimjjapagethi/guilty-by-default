@@ -122,10 +122,9 @@ http.createServer(function (req, res) {
       try {
         var sub = u.searchParams.get('dir') === 'chars' ? 'chars' : 'scenes'; var dir = path.join(PUBLIC, 'play', sub); fs.mkdirSync(dir, { recursive: true });
         var buf = Buffer.concat(chunks);
-        if (sub === 'chars') { /* 이미 폴더에 똑같은 사진이 있으면 새로 저장하지 않고 그 파일을 그대로 연결 */
-          var same = fs.readdirSync(dir).filter(function (f) { try { return /\.(png|jpe?g|webp)$/i.test(f) && fs.statSync(path.join(dir, f)).size === buf.length && fs.readFileSync(path.join(dir, f)).equals(buf); } catch (x) { return false; } })[0];
-          if (same) return json(res, 200, { ok: true, url: 'chars/' + same, reused: true });
-        }
+        /* 이미 폴더에 똑같은 사진이 있으면 새로 저장(복사)하지 않고 그 파일을 그대로 연결 */
+        var hit = null; (sub === 'chars' ? ['chars'] : ['scenes', 'media']).forEach(function (sd) { if (hit) return; var dd = path.join(PUBLIC, 'play', sd); try { fs.readdirSync(dd).forEach(function (f) { if (hit || !/\.(png|jpe?g|webp)$/i.test(f)) return; try { if (fs.statSync(path.join(dd, f)).size === buf.length && fs.readFileSync(path.join(dd, f)).equals(buf)) hit = sd + '/' + f; } catch (x) {} }); } catch (x) {} });
+        if (hit) return json(res, 200, { ok: true, url: hit, reused: true });
         ['png', 'jpg', 'webp'].forEach(function (e) { if (e !== ext) try { fs.unlinkSync(path.join(dir, nm + '.' + e)); } catch (x) {} });
         fs.writeFileSync(path.join(dir, nm + '.' + ext), buf);
       } catch (e) { return json(res, 500, { ok: false }); }
