@@ -366,3 +366,10 @@ html, body { width: 100%; }
 
 /* v20 이미지 없는 컷(자리표시)도 이전 그림 위로 서서히 덮이게 */
 #back.ph.fadein { animation: fadein .7s ease both; }
+
+/* v21 선택지 호버: 글자와 심볼 로고를 pale blue 로 */
+.choice .opts .opt:hover, .choice .opts .opt:focus-visible { color: var(--paleblue); }
+.choice .opt .lg { background: var(--paleblue); }
+
+/* v22 엔딩 번호(Ending N): 밝은 배경에서도 보이도록 버건디 */
+.endmark .id { color: var(--burgundy); }
