@@ -958,7 +958,7 @@
    "endings": [
     {
      "id": "B-1",
-     "name": "진실의 파산자",
+     "name": "진실된 죄인",
      "rule": "조합: B1-1/2 + B2-1",
      "src": "media/RU_E1.png",
      "desc": "엔딩 B-1 · 진실의 파산자 (이미지 자리)",
@@ -984,7 +984,7 @@
      "id": "B-2",
      "name": "모범적인 죄인",
      "rule": "조합: B1-1/2/3 + B2-2",
-     "src": "",
+     "src": "media/RU_E2.png",
      "desc": "엔딩 B-2 · 모범적인 죄인 (이미지 자리)",
      "lead": 0,
      "right": false,
@@ -1038,7 +1038,7 @@
      "id": "B-4",
      "name": "고립된 고백",
      "rule": "조합: B1-3 + B2-1",
-     "src": "",
+     "src": "media/RU_E4.png",
      "desc": "엔딩 B-4 · 고립된 고백 (이미지 자리)",
      "lead": 0,
      "right": false,
@@ -1062,7 +1062,7 @@
      "id": "B-5",
      "name": "시스템의 유령",
      "rule": "조합: B1-3 + B2-3",
-     "src": "",
+     "src": "media/RU_E5.png",
      "desc": "엔딩 B-5 · 시스템의 유령 (이미지 자리)",
      "lead": 0,
      "right": false,
@@ -1193,7 +1193,7 @@
     [
      {
       "id": "C-R1",
-      "src": "",
+      "src": "media/EM_C1-1.png",
       "desc": "1차 선택 직후 단기 파장 — 보고서를 봉인한 뒤",
       "lead": 0,
       "right": false,
@@ -1217,7 +1217,7 @@
     [
      {
       "id": "C-R2",
-      "src": "",
+      "src": "media/EM_C1-2.png",
       "desc": "1차 선택 직후 단기 파장 — 보고서를 공개한 뒤",
       "lead": 0,
       "right": false,
@@ -1235,7 +1235,7 @@
     [
      {
       "id": "C-R3",
-      "src": "",
+      "src": "media/EM_C1-3.png",
       "desc": "1차 선택 직후 단기 파장 — 가동을 중지한 뒤",
       "lead": 0,
       "right": false,
@@ -1254,7 +1254,7 @@
    "mid": [
     {
      "id": "C-S2",
-     "src": "",
+     "src": "media/EM_S3.png",
      "desc": "S#C2. 사고 현장 추모 공간 - 크로스 씬 - 밤. 대표 이름표 아래 [길티 바이 디폴트] 툴팁이 뜬다.",
      "lead": 0,
      "right": false,
@@ -1346,7 +1346,7 @@
     },
     {
      "id": "C-S2",
-     "src": "",
+     "src": "media/EM_S4.png",
      "desc": "S#C2. 사고 현장 추모 공간 - 크로스 씬 - 밤. 대표 이름표 아래 [길티 바이 디폴트] 툴팁이 뜬다.",
      "lead": 0,
      "right": false,
@@ -1426,7 +1426,7 @@
      "id": "C-1",
      "name": "고철 위의 면죄부",
      "rule": "조합: C1-1/2 + C2-1",
-     "src": "",
+     "src": "media/SY_E2.png",
      "desc": "엔딩 C-1 · 통제된 디스토피아 (이미지 자리)",
      "lead": 0,
      "right": false,
@@ -1456,7 +1456,7 @@
      "id": "C-2",
      "name": "무결점의 성채",
      "rule": "조합: C1-1/2/3 + C2-2",
-     "src": "",
+     "src": "media/EM_E2.png",
      "desc": "엔딩 C-2 · 멈춰버린 도시 (이미지 자리)",
      "lead": 0,
      "right": false,
@@ -1480,7 +1480,7 @@
      "id": "C-3",
      "name": "폐허 위의 양심",
      "rule": "조합: C1-1/2 + C2-3",
-     "src": "",
+     "src": "media/EM_E3.png",
      "desc": "엔딩 C-3 · 책임의 실종 (이미지 자리)",
      "lead": 0,
      "right": false,
@@ -1494,7 +1494,7 @@
       },
       {
        "who": "",
-       "text": "회사는 뼈아픈 위기를 맞지만, 법정으로 향하는 엠의 마음은 평온하다.",
+       "text": "회사는 뼈아픈 위기를 맞지만, 법정으로 향하는 엠마의 마음은 평온하다.",
        "kind": "",
        "ms": 0
       },
@@ -1510,7 +1510,7 @@
      "id": "C-4",
      "name": "부메랑이 된 소견서",
      "rule": "조합: C1-3 + C2-1",
-     "src": "",
+     "src": "media/EM_E4.png",
      "desc": "엔딩 C-4 · 흔들리는 키잡이 (이미지 자리)",
      "lead": 0,
      "right": false,
@@ -1534,7 +1534,7 @@
      "id": "C-5",
      "name": "비용으로 정산된 비극",
      "rule": "조합: C1-3 + C2-3",
-     "src": "",
+     "src": "media/EM_E5.png",
      "desc": "엔딩 C-5 · 영수증만 남은 국가 (이미지 자리)",
      "lead": 0,
      "right": false,
@@ -1560,7 +1560,10 @@
    "cast": {
     "길티 바이 디폴트": "chars/prof_agent.png",
     "서연": "chars/prof_SY.png",
-    "변호사": "chars/prof_lawyer.png"
+    "변호사": "chars/prof_lawyer.png",
+    "유족": "chars/prof_SY.png",
+    "피자 가게 사장": "chars/prof_pizza.png",
+    "수석 엔지니어": "chars/prof_soosuk.png"
    }
   }
  ]
