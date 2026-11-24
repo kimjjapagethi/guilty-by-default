@@ -10,11 +10,11 @@ button { font-family: inherit; }
 .ph { display: grid; place-items: start; padding: 96px 90px; box-sizing: border-box; }
 #back::before, #back::after { content: none; }
 #back.ph { background: linear-gradient(135deg, var(--paleblue), var(--paleblue-light)); }
-#back.ph::before, #back.ph::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top right, transparent calc(50% - 1px), rgba(70,14,33,.14) 50%, transparent calc(50% + 1px)); }
+#back.ph::before, #back.ph::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top right, transparent calc(50% - 1px), rgba(46,3,18,.14) 50%, transparent calc(50% + 1px)); }
 #back.ph::after { transform: scaleX(-1); }
 .ph .id { position: relative; z-index: 1; font-family: var(--font-display); font-weight: 700; font-size: 26px; letter-spacing: .08em; color: var(--burgundy-dark); background: var(--ivory); padding: 4px 16px; border-radius: 999px; }
 .ph .ds { position: relative; z-index: 1; margin-top: 20px; max-width: 980px; font-size: 22px; line-height: 1.45; color: var(--burgundy-dark); background: rgba(250,244,239,.88); padding: 14px 22px; border-radius: 18px; }
-.shade { background: linear-gradient(to top, rgba(70,14,33,.88) 0, rgba(70,14,33,.6) 28%, rgba(70,14,33,0) 55%); pointer-events: none; }
+.shade { background: linear-gradient(to top, rgba(46,3,18,.88) 0, rgba(46,3,18,.6) 28%, rgba(46,3,18,0) 55%); pointer-events: none; }
 .scrim { background: rgba(70,14,33,.80); }
 
 /* ---- HUD ---- */
@@ -94,7 +94,7 @@ button { font-family: inherit; }
 .cap, .hit, .hud, .endmark, .dil, .pos { pointer-events: none; }
 .tap { position: absolute; inset: 0; z-index: 4; cursor: pointer; }
 .cap.top { bottom: auto; top: 250px; text-shadow: 0 2px 14px rgba(0,0,0,.6); }
-.shade.up { background: linear-gradient(to bottom, rgba(70,14,33,.9) 0, rgba(70,14,33,.65) 40%, rgba(70,14,33,0) 70%); }
+.shade.up { background: linear-gradient(to bottom, rgba(46,3,18,.9) 0, rgba(46,3,18,.65) 40%, rgba(46,3,18,0) 70%); }
 .endmark { top: 80px; } .endmark .id { font-size: 22px; }
 .opt .scope { font-size: 20px; color: var(--muted); border-top: 2px solid var(--line); padding-top: 10px; margin-top: auto; }
 /* 입장 카드 */
@@ -177,12 +177,6 @@ html, body { width: 100%; }
 .tbtn:hover, .tbtn:focus-visible { text-decoration: underline; text-underline-offset: 10px; text-decoration-thickness: 3px; outline: none; }
 
 /* 길티 바이 디폴트 소개 팝업 */
-.icard { position: absolute; right: 56px; top: 118px; width: 520px; box-sizing: border-box; z-index: 6; background: rgba(250,244,239,.97); color: var(--burgundy-dark); border-radius: 28px; padding: 22px 28px 24px; box-shadow: 0 16px 40px rgba(0,0,0,.4); pointer-events: none; animation: fadein .5s ease; }
-.icard .it { font-weight: 800; font-size: 20px; letter-spacing: .03em; color: var(--burgundy); margin-bottom: 10px; }
-.icard .ix { font-size: 23px; line-height: 1.5; font-weight: 600; }
-.icard.big { right: auto; left: 50%; top: 46%; transform: translate(-50%, -50%); width: 1000px; padding: 44px 56px 48px; }
-.icard.big .it { font-size: 28px; margin-bottom: 18px; }
-.icard.big .ix { font-size: 34px; line-height: 1.55; }
 @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
 
 /* 인물 카드: 역할 줄 */
@@ -268,8 +262,8 @@ html, body { width: 100%; }
 @media (hover: none) { .sel .opts .opt .pr { opacity: 1; } }
 
 /* v7: 하단 그라데이션을 낮추고 대사 글자를 키움 */
-.shade { background: linear-gradient(to top, rgba(70,14,33,.88) 0, rgba(70,14,33,.55) 17%, rgba(70,14,33,0) 38%); }
-.shade.up { background: linear-gradient(to bottom, rgba(70,14,33,.9) 0, rgba(70,14,33,.65) 40%, rgba(70,14,33,0) 70%); }
+.shade { background: linear-gradient(to top, rgba(46,3,18,.88) 0, rgba(46,3,18,.55) 17%, rgba(46,3,18,0) 38%); }
+.shade.up { background: linear-gradient(to bottom, rgba(46,3,18,.9) 0, rgba(46,3,18,.65) 40%, rgba(46,3,18,0) 70%); }
 .cap { right: 200px; }
 .cap .tx { font-size: 38px; }
 .cap .nm { font-size: 24px; }
@@ -373,3 +367,77 @@ html, body { width: 100%; }
 
 /* v22 엔딩 번호(Ending N): 밝은 배경에서도 보이도록 버건디 */
 .endmark .id { color: var(--burgundy); }
+
+/* v23 로딩 화면 */
+[data-scene="load"] { --bg: var(--burgundy-dark); --ink: var(--ivory); }
+.loading { position: absolute; inset: 0; z-index: 7; pointer-events: none; }
+.loading .ltip { position: absolute; left: 96px; right: 200px; bottom: 112px; }
+.loading .lh { font-family: var(--font-display); font-weight: 700; letter-spacing: .12em; font-size: 22px; color: var(--paleblue); margin-bottom: 14px; }
+.loading .lt { margin: 0; max-width: 1100px; font-size: 30px; line-height: 1.5; font-weight: 500; color: var(--ivory); white-space: pre-line; text-wrap: pretty; min-height: 3em; transition: opacity .35s ease; text-shadow: 0 2px 16px rgba(0,0,0,.55); }
+.loading .lbar { position: absolute; left: 96px; right: 200px; bottom: 64px; height: 4px; background: var(--burgundy); border-radius: 2px; overflow: hidden; }
+.loading .lbar i { display: block; height: 100%; width: 0; background: var(--paleblue); border-radius: 2px; transition: width .4s ease; }
+
+/* v24 로딩 제목 */
+.loading .lh.big { font-family: inherit; font-weight: 800; letter-spacing: -.01em; font-size: 54px; line-height: 1.25; color: var(--ivory); margin-bottom: 20px; white-space: pre-line; text-shadow: 0 2px 20px rgba(0,0,0,.5); }
+
+/* v24 AI 대사: 한글·영문·숫자를 한 서체(Pretendard)로 통일. 크기·행간은 그대로 */
+.cap.ai .tx { font-family: 'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif !important; word-spacing: normal !important; font-variant-numeric: normal; }
+
+/* v25 로딩: 로딩바를 제목 위로, 제목은 조금 작게 */
+.loading .ltip { bottom: 64px; }
+.loading .lbar { position: static; left: auto; right: auto; bottom: auto; margin-bottom: 26px; }
+.loading .lh.big { font-size: 40px; margin-bottom: 16px; }
+
+/* v25 하단 그라데이션 높이를 아주 살짝 높임 (17%/38% → 20%/43%) */
+.shade { background: linear-gradient(to top, rgba(46,3,18,.88) 0, rgba(46,3,18,.55) 20%, rgba(46,3,18,0) 43%); }
+
+/* v26 로딩바: 화면 가로 끝까지, 채워지는 건 JS가 매 프레임 부드럽게 */
+.loading .lbar { margin-left: -96px; margin-right: -200px; border-radius: 0; }
+.loading .lbar i { border-radius: 0; transition: none; }
+
+/* v27 로딩 화면: 로딩바와 같은 속도로 화면이 아래에서부터 버건디로 차오른다 */
+.loading .lfill { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: var(--burgundy); }
+.loading .ltip { z-index: 1; }
+.loading .lbar { background: var(--burgundy-dark); }
+
+/* v28 로딩 화면: 아래에 가로 꽉 찬 박스. 제목·안내 글이 박스 안에 있고, 박스 바탕이 로딩 진행에 맞춰 왼쪽→오른쪽으로 버건디로 찬다 (화면 전체 채우기는 취소) */
+.loading .lfill { display: none; }
+.loading .ltip { left: 0; right: 0; bottom: 0; z-index: 1; padding: 44px 96px 52px; background: var(--burgundy-dark); overflow: hidden; }
+.loading .lbar { position: absolute; left: 0; right: 0; top: 0; bottom: 0; height: auto; margin: 0; background: none; border-radius: 0; z-index: 0; overflow: hidden; }
+.loading .lbar i { height: 100%; background: var(--burgundy); border-radius: 0; }
+.loading .ltip .lh, .loading .ltip .lt { position: relative; z-index: 1; max-width: 1304px; }
+
+/* v29 로딩 화면: 글은 아래쪽에 그대로, 로딩바는 화면 맨 아래에 가로 꽉 차게(버건디로 찬다), 퍼센트는 우측에 작게 */
+.loading .lfill { display: none; }
+.loading .ltip { left: 96px; right: 200px; bottom: 76px; padding: 0; background: none; overflow: visible; z-index: 1; }
+.loading .lbar { position: absolute; left: 0; right: 0; top: auto; bottom: 0; height: 16px; margin: 0; background: var(--burgundy-dark); border-radius: 0; z-index: 1; overflow: hidden; }
+.loading .lbar i { display: block; height: 100%; width: 0; background: var(--burgundy); border-radius: 0; transition: none; }
+.loading .lpct { position: absolute; right: 40px; bottom: 32px; z-index: 1; font-family: var(--font-display); font-weight: 700; font-size: 18px; letter-spacing: .08em; color: var(--ivory); text-shadow: 0 2px 10px rgba(0,0,0,.6); }
+
+/* v30 자막을 전반적으로 아래로 (116 → 80), 다음 표시는 글 끝의 ▶ 삼각형 */
+.cap, .cav { --cap-bottom: calc(80 * var(--u)); }
+.hit.nx { position: static; display: inline-block; width: 0; height: 0; margin: 0 0 0 .5em; padding: 0; font-size: inherit; vertical-align: baseline; border-style: solid; border-width: .26em 0 .26em .44em; border-color: transparent transparent transparent var(--paleblue-light); background: none; text-shadow: none; }
+
+/* v31 ▶ 깜빡임을 더 천천히 (1.1s → 2s) */
+.hit.on.nx { animation-duration: 2s; }
+
+/* v32 선택지도 자막과 같은 높이로 (116 → 80) */
+.choice { --cap-bottom: calc(80 * var(--u)); }
+
+/* v33 첫 화면 플레이/설정 버튼을 아래로 (bottom 90 → 50) */
+.title .btns { bottom: 50px; }
+
+/* v34 프로필 사진도 대사·이름과 같은 순간·같은 페이드로 */
+.cav.first { animation: uin .25s ease both; }
+
+/* v35 로딩이 끝나면 클릭해서 다음으로 */
+.loading .ltap { position: absolute; inset: 0; z-index: 3; pointer-events: auto; cursor: pointer; }
+.loading .lgo { position: absolute; right: 40px; bottom: 32px; z-index: 1; font-weight: 700; font-size: 22px; letter-spacing: .04em; color: var(--ivory); text-shadow: 0 2px 10px rgba(0,0,0,.6); animation: blink 2s ease-in-out infinite; }
+.loading .lgo i { display: inline-block; width: 0; height: 0; margin-left: .5em; border-style: solid; border-width: .26em 0 .26em .44em; border-color: transparent transparent transparent var(--ivory); }
+
+/* v36 선택지 첫 번째는 처음부터 호버된 모양 */
+.choice .opts .opt.pre { background: none; transform: none; outline: none; color: var(--paleblue); text-shadow: none; }
+.choice .opt.pre .lg { opacity: 1; }
+
+/* v37 마지막 낱말 + ▶ 는 줄바꿈하지 않음 */
+.cap .tx .nw { white-space: nowrap; }

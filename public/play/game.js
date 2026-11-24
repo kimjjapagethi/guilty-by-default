@@ -57,8 +57,56 @@ function pre(src) { if (!src) return Promise.resolve(false); if (PRE[src]) retur
 var WARM = -1;
 function warm(c) { /* 이 인물의 컷 이미지를 앞에서부터 하나씩 미리 받아 둔다 */
   if (!c) return; var list = [], add = function (a) { (a || []).forEach(function (x) { if (x && x.src) list.push(x.src); }); };
-  add(c.intro); (c.after1 || []).forEach(add); add(c.mid); add(c.endings);
+  add(c.intro); (c.after1 || []).forEach(add); add(c.mid); add(c.endings); [].concat(c.intro || [], c.mid || [], c.endings || []).forEach(function (x) { if (x && x.cross && x.cross.src) list.push(x.cross.src); });
   list.reduce(function (p, u) { return p.then(function () { return pre(u); }); }, Promise.resolve());
+}
+/* ---------- 로딩 화면: 컷 앞에 '이 컷 앞에 로딩 화면'을 켜 두면, 거기서 다음 로딩 지점 전까지의 이미지를 미리 받는다 ---------- */
+function segUrls(arr, k) {
+  var u = [];
+  for (var j = k; j < arr.length; j++) {
+    var x = arr[j]; if (j > k && x.loadBefore) break;
+    (x.src ? [x.src] : imgCands(x.id, '')).forEach(function (s) { u.push(s); });
+    if (x.cross && x.cross.src) u.push(x.cross.src);
+    if (x.profile && x.profile.img) u.push(x.profile.img);
+  }
+  return u.filter(function (s, i) { return s && u.indexOf(s) === i; });
+}
+function loadScreen(urls, my) {
+  return new Promise(function (res) {
+    var L = SC.loading || {}, org = SC.org || {}, tips = (L.tips || []).filter(function (t) { return t && String(t).trim(); });
+    if (!tips.length && org.text) tips = [org.text];
+    var min = L.min >= 0 && L.min !== '' && L.min != null ? +L.min : 1500;
+    scene('load');
+    if (L.img) { var li = new Image(); li.className = 'bgimg'; li.onload = function () { if (root.getAttribute('data-scene') === 'load' && backEl.isConnected) showBg(li); }; li.src = L.img; }
+    fxSet('', false); /* 딤 없음 */
+    var box = el('div', 'loading', '<div class="lfill"></div><div class="ltip"><div class="lh"></div><p class="lt"></p></div><div class="lbar"><i></i></div><div class="lpct">0%</div>');
+    cv.appendChild(box);
+    var bar = box.querySelector('.lbar i'), fill = box.querySelector('.lfill'), pct = box.querySelector('.lpct'), lh = box.querySelector('.lh'), lt = box.querySelector('.lt'), ti = 0, timer = 0, done = 0, total = urls.length;
+    if (L.title && String(L.title).trim()) { lh.textContent = L.title; lh.className = 'lh big'; } else lh.textContent = org.title || ''; /* 제목을 적으면 크게, 비우면 단체 이름이 작게 */
+    function tip() { if (!tips.length) return; lt.style.opacity = '0'; setTimeout(function () { if (!box.isConnected) return; lt.textContent = tips[ti++ % tips.length]; lt.style.opacity = '1'; }, ti ? 350 : 0); }
+    tip(); if (tips.length > 1) timer = setInterval(function () { if (!box.isConnected) clearInterval(timer); else tip(); }, 5000);
+    /* 로딩바: 이미지 받은 비율과 '최소 표시 시간' 경과 비율 중 느린 쪽을 따라 부드럽게 차올라, 다 받고 시간이 다 찬 순간 100%가 된다 */
+    var t0 = Date.now(), cur = 0, raf = 0, fin = false;
+    function goal() { var t = min > 0 ? Math.min(1, (Date.now() - t0) / min) : 1, d = total ? done / total : 1; return Math.min(t, d); }
+    function prog() { if (!box.isConnected) return; cur += (goal() - cur) * 0.2; if (fin) cur = 1; bar.style.width = (cur * 100).toFixed(2) + '%'; pct.textContent = Math.round(cur * 100) + '%'; if (!fin) raf = requestAnimationFrame(prog); }
+    prog();
+    var jobs = urls.map(function (u) { return Promise.race([pre(u), new Promise(function (r) { setTimeout(r, 20000); })]).then(function () { done++; }); });
+    var minP = new Promise(function (r) { setTimeout(r, min); });
+    Promise.all([Promise.all(jobs), minP]).then(function () { clearInterval(timer); fin = true; cancelAnimationFrame(raf); bar.style.width = '100%'; pct.textContent = '100%';
+      setTimeout(function () { /* 다 받으면 자동으로 넘어가지 않고, 플레이어가 클릭하면 다음으로 */
+        if (!box.isConnected) return;
+        pct.textContent = ''; box.appendChild(el('div', 'lgo', '클릭해서 계속<i></i>'));
+        var tap = el('div', 'ltap'); box.appendChild(tap); tap.addEventListener('click', function () { tap.remove(); res(); });
+      }, 250);
+    });
+  });
+}
+async function runArr(arr, step, my) {
+  for (var k = 0; k < arr.length; k++) {
+    if (my !== run) return;
+    if (arr[k].loadBefore) { await loadScreen(segUrls(arr, k), my); if (my !== run) return; }
+    await cut(Object.assign({ step: step }, arr[k]), my);
+  }
 }
 function showBg(im) { /* 새 배경을 이전 배경 위에서 서서히 나타나게 */
   im.style.opacity = '0'; backEl.insertBefore(im, backEl.firstChild); void im.offsetWidth;
@@ -186,7 +234,7 @@ function bg(id, desc, src) { /* 배경은 화면 전체(#back, cover)에 깔고,
   return b;
 }
 function avatarEl(src) { /* 둥근 프로필 사진. 파일이 없으면 만들지 않는다 (자리표시 없음) */
-  if (!src) return null; var d = el('span', 'av'), im = new Image(); im.alt = ''; d.style.opacity = '0'; im.onerror = function () { d.dataset.bad = '1'; d.remove(); }; im.onload = function () { (im.decode ? im.decode() : Promise.resolve()).catch(function () {}).then(function () { d.style.transition = 'opacity .25s ease'; d.style.opacity = '1'; }); }; im.src = src; d.appendChild(im); return d;
+  if (!src) return null; var d = el('span', 'av'), im = new Image(); im.alt = ''; im.onerror = function () { d.dataset.bad = '1'; d.remove(); }; im.src = src; /* 사진은 대사가 뜨기 전에 미리 받아 두므로(아래 pre) 대사·이름과 같은 순간에 보인다 */ d.appendChild(im); return d;
 }
 function speakerImg(ln) { /* 말한 사람의 사진: 줄의 img → 인물의 cast[이름] → 주인공 본인의 portrait */
   var c = CH[S.ci], who = ln.who || ''; if (ln.img) return ln.img; if (!c || !who || ln.kind === 'hook') return '';
@@ -200,12 +248,8 @@ function hud(step) { /* 좌측 위: 인물 사진(타원)만. 이름은 표시�
 }
 function frame(img, cls) { return '<div class="frame ' + (cls || '') + '">' + (img ? '<img src="' + esc(img) + '" alt="">' : '<span class="nop">PROFILE</span>') + '</div>'; }
 function showCard(html) { var d = el('div', 'pcard', html); cv.appendChild(d); return d; }
-function infoCard(big) { /* [길티 바이 디폴트] 소개 팝업 */
-  var o = SC.org || {}, d = el('div', 'icard' + (big ? ' big' : ''), '<div class="it">' + esc(o.title || '') + '</div><div class="ix">' + esc(o.text || '') + '</div>');
-  cv.appendChild(d); return d;
-}
 /* 한 컷: 배경 + 자막 줄들. 클릭/Enter 로 넘김. 줄마다 ms>0 이면 그 시간 뒤 자동으로 넘어감
- * 컷 옵션: card='org'(소개 팝업) · mark={id,name}(엔딩 이름표) · top(자막 위쪽) · scene · sfx */
+ * 컷 옵션: mark={id,name}(엔딩 이름표) · top(자막 위쪽) · scene · sfx */
 function match(w) { /* 조건 {c1:[0,2], c2:[1]} : 고른 선택이 목록에 있어야 통과 (칸이 없으면 상관없음) */
   if (!w) return true; var ok = true;
   ['c1', 'c2'].forEach(function (k) { if (w[k] && w[k].length && w[k].indexOf(S[k]) < 0) ok = false; });
@@ -221,6 +265,23 @@ function resolveLines(arr) { /* 조건에 안 맞는 줄은 빼고, 맞는 ‘�
   });
   return out;
 }
+function crossfx(x, b, my) { /* 이미지 A(컷 이미지) 위에 이미지 B 를 깜빡이며 얹는다. 간격이 점점 짧아져 빨라진다 */
+  var A = backEl.querySelector('.bgimg'); if (!A || !x || !x.src) return;
+  var B = new Image(); B.className = 'bgimg xb'; B.style.opacity = '0'; B.src = x.src; backEl.appendChild(B);
+  var t = Math.max(40, +x.start || 700), e = Math.max(30, +x.end || 70), dur = Math.max(500, +x.dur || 5000), on = false, el_ = 0, soft = !!x.soft;
+  function alive() { return my === run && b.isConnected && B.parentNode === backEl; }
+  function finish() {
+    if (!alive()) return; B.style.transition = '';
+    if (x.endOn === 'B') { B.style.opacity = '1'; B.className = 'bgimg'; if (A.parentNode) A.remove(); } else { B.remove(); }
+  }
+  function step() {
+    if (!alive()) return; on = !on; B.style.transition = soft ? 'opacity ' + Math.round(t * 0.7) + 'ms linear' : 'none'; B.style.opacity = on ? '1' : '0';
+    el_ += t; t = Math.max(e, t * 0.88);
+    if (el_ >= dur) { setTimeout(function () { if (alive()) { if (x.endOn === 'B' && !on) { B.style.transition = 'none'; B.style.opacity = '1'; } if (x.endOn !== 'B' && on) { B.style.transition = 'none'; B.style.opacity = '0'; } finish(); } }, Math.round(t)); return; }
+    setTimeout(step, Math.round(t));
+  }
+  setTimeout(step, Math.round(t));
+}
 async function cut(o, my) {
   if (my !== run) return;
   if (!match(o.when)) return; /* 컷 전체 조건 */
@@ -230,7 +291,8 @@ async function cut(o, my) {
   if (o.step > 1) setHud(CH[S.ci]); /* 시작(도입) 컷에서는 좌측 위 프로필을 띄우지 않는다 */
   if (lines.length && !(+o.lead) && !(+lines[0].delay > 0) && !o.profile) { fxSet(fxMode); shaded = true; } /* 바로 자막이 뜨는 컷: 앞 컷의 그라데이션을 그대로 이어 간다 */
   if (o.mark) cv.appendChild(el('div', 'endmark', '<div class="id">' + esc(o.mark.id) + '</div><h2>' + esc(o.mark.name) + '</h2>'));
-  if (bgl.ready) { await Promise.race([bgl.ready, new Promise(function (r) { setTimeout(r, 5000); })]); if (my !== run) return; } /* 이미지가 뜬 다음에 대사·연출 시작 */
+  if (bgl.ready) { await Promise.race([Promise.all([bgl.ready, o.cross && o.cross.src ? pre(o.cross.src) : 0]), new Promise(function (r) { setTimeout(r, 5000); })]); if (my !== run) return; } /* 이미지가 뜬 다음에 대사·연출 시작 */
+  if (o.cross && o.cross.src) crossfx(o.cross, bgl, my); /* 이미지 A·B 교차 연출 */
   if (WARM !== S.ci) { WARM = S.ci; warm(CH[S.ci]); }
   var tap = el('div', 'tap'); cv.appendChild(tap);
   var hit = el('div', 'hit', '▼'); cv.appendChild(hit);
@@ -238,14 +300,14 @@ async function cut(o, my) {
   function hold(ms, showHit) { return new Promise(function (res) { var t = ms ? setTimeout(go, ms) : 0; function go() { clearTimeout(t); hit.classList.remove('on'); onNext = null; res(); } if (showHit) hit.classList.add('on'); onNext = go; }); }
   if (o.sfx) sfx(o.sfx);
   if (o.lead) await hold(o.lead, false);
-  if (o.card && SC.org) infoCard(!lines.length);
   if (o.profile) { var p = o.profile, d = showCard(frame(p.img, 'sm') + '<div class="pn">' + esc(p.name) + '</div><div class="pr">' + esc(p.role) + '</div>'); await hold(0, true); d.remove(); }
   for (var i = 0; i < lines.length; i++) {
     if (my !== run) return;
-    var ln = lines[i], old = cv.querySelector('.cap'); if (old) old.remove();
+    var ln = lines[i], old = cv.querySelector('.cap'); hit.classList.remove('on'); cv.appendChild(hit); /* ▶를 지우지 않고 잠시 빼 둔다 */ if (old) old.remove();
     if (+ln.delay > 0) await hold(+ln.delay, false); /* 이 줄이 뜨기 전에 이미지만 보여 주는 시간 (누르면 건너뜀) */
     if (my !== run) return;
     if (!shaded) { shaded = true; fxSet(fxMode); }
+    var psrc = speakerImg(ln); if (psrc) { await Promise.race([pre(psrc), new Promise(function (r) { setTimeout(r, 1500); })]); if (my !== run) return; } /* 프로필 사진이 준비된 뒤에 이름·대사와 함께 띄운다 */
     var cap = el('div', 'cap ' + (ln.kind || '') + (o.right ? ' right' : '') + (o.top ? ' top' : '') + (i === 0 ? ' first' : '')), nm = el('span', 'nm'), tx = el('span', 'tx'), body = el('div', 'body');
     var src = speakerImg(ln), cav = cv.querySelector('.cav'); /* 프로필은 대사 줄 수와 상관없이 고정된 자리에 두고, 같은 사람이면 그대로 둔다 */
     if (!src) { if (cav) cav.remove(); cav = null; }
@@ -253,10 +315,14 @@ async function cut(o, my) {
       if (cav && cav.dataset.src !== src) { cav.remove(); cav = null; }
       if (!cav) { if (CAV.el && CAV.src === src && !CAV.el.dataset.bad) cav = CAV.el; else { cav = avatarEl(src); CAV.el = cav; CAV.src = src; } if (cav) { cav.classList.add('cav'); cav.dataset.src = src; cv.appendChild(cav); } }
       if (cav) { cav.classList.toggle('right', !!o.right); cav.classList.toggle('top', !!o.top); }
+      if (cav && cap.classList.contains('first')) { cav.classList.remove('first'); void cav.offsetWidth; cav.classList.add('first'); }
     }
     if (cav) cap.classList.add('hasav');
     nm.textContent = ln.kind === 'hook' ? '' : (ln.who || ''); tx.textContent = ln.text; /* 타이핑 없이 바로 */
     body.appendChild(nm); body.appendChild(tx); cap.appendChild(body); cv.appendChild(cap);
+    hit.className = 'hit nx'; hit.textContent = '';
+    var lm = /^([\s\S]*?)(\S+)\s*$/.exec(ln.text || ''); /* 마지막 낱말과 ▶를 한 덩어리로 묶어, ▶만 다음 줄로 떨어지지 않게 */
+    if (lm) { tx.textContent = lm[1]; var nw = el('span', 'nw'); nw.textContent = lm[2]; nw.appendChild(hit); tx.appendChild(nw); } else tx.appendChild(hit); /* 다음 표시: 글 끝, 오른쪽을 향한 삼각형 */
     await hold(+ln.ms || 0, true);
   }
   if (!lines.length && !o.profile) await hold(0, true);
@@ -276,6 +342,11 @@ function choose(o, my) { /* 선택: 앞 컷의 이미지를 어둡게 깔고, �
       var b = el('button', 'opt', '<span class="lg" aria-hidden="true"></span><span class="say">' + esc(op.label || op.say || '') + '</span>'); b.addEventListener('click', function () { onNext = null; res(i); }); row.appendChild(b);
     });
     box.appendChild(row); cv.appendChild(box);
+    var first = row.firstChild; /* 첫 번째 선택지는 처음부터 호버된 모양: 눌러도 된다는 걸 알 수 있게. 다른 선택지에 마우스를 올리면 그쪽으로 넘어가고, 마우스가 벗어나면 첫 번째로 돌아온다 */
+    if (first) { first.classList.add('pre');
+      row.addEventListener('mouseover', function (e) { if (e.target.closest && e.target.closest('.opt')) first.classList.remove('pre'); });
+      row.addEventListener('mouseleave', function () { first.classList.add('pre'); });
+      row.addEventListener('focusin', function () { first.classList.remove('pre'); }); }
   });
 }
 
@@ -296,7 +367,7 @@ function titleScreen() { /* 첫 화면: 오프닝 이미지 + 플레이 / 설정
 }
 async function openingSeq(my) {
   prog('p0');
-  for (var k = 0; k < SC.opening.length; k++) await cut(Object.assign({ step: 0 }, SC.opening[k]), my);
+  await runArr(SC.opening, 0, my);
 }
 async function selectScreen() { /* 버건디 페인트 벽 + 거울 같은 아치 액자 속 인물. 마우스를 올린 인물의 소개가 아래에 뜬다 */
   S = { ci: 0, c1: 0, c2: 0 };
@@ -316,20 +387,21 @@ async function selectScreen() { /* 버건디 페인트 벽 + 거울 같은 아�
 async function play(ci) {
   var my = ++run; S = { ci: ci, c1: -1, c2: -1 }; var c = CH[ci], k; /* 아직 고르지 않은 선택은 -1 */
   prog('p1', ci);
-  for (k = 0; k < c.intro.length; k++) await cut(Object.assign({ step: 1 }, c.intro[k]), my);
+  await runArr(c.intro, 1, my);
   prog('c1', ci);
   S.c1 = await choose({ step: 2, id: c.key + '-C1', desc: c.c1.q, kicker: c.c1.kicker, q: c.c1.q, options: c.c1.options }, my);
   prog('p3', ci);
   var a1 = c.after1[S.c1];
-  for (k = 0; k < a1.length; k++) await cut(Object.assign({ step: 3 }, a1[k]), my);
+  await runArr(a1, 3, my);
   prog('p4', ci);
-  for (k = 0; k < c.mid.length; k++) await cut(Object.assign({ step: 4 }, c.mid[k]), my);
+  await runArr(c.mid, 4, my);
   prog('c2', ci);
   S.c2 = await choose({ step: 5, id: c.key + '-C2', desc: c.c2.q, kicker: c.c2.kicker, q: c.c2.q, options: c.c2.options }, my);
   var e = c.endings[c.map[S.c1][S.c2]];
   if (my !== run) return;
   played[ci] = true; reached[e.id] = true; save(); prog('end', e.id);
   report({ sid: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), src: KIOSK ? 'kiosk' : 'browser', test: TEST, ch: ci, c1: S.c1, c2: S.c2, ending: e.id });
+  if (e.loadBefore) { await loadScreen(segUrls([e], 0), my); if (my !== run) return; }
   await cut(Object.assign({}, e, { scene: 'turn', mark: { id: (/-(\d+)$/.exec(e.id || '') ? 'Ending ' + /-(\d+)$/.exec(e.id)[1] : e.id), name: e.name } }), my);
   if (my !== run) return;
   finalScreen(c, ci);
@@ -348,7 +420,17 @@ function finalScreen(c, ci) {
   var h = el('button', 'btn ghost', '처음으로'); h.onclick = home; lower.appendChild(h);
   cv.appendChild(f); poke();
 }
-async function start() { run++; var ci = await selectScreen(); await play(ci); }
+var SELLOADED = false;
+async function start() {
+  var my = ++run;
+  if (!SELLOADED) { /* 인물 선택 화면 앞 로딩: 선택 화면 인물 사진 + 각 인물의 도입 컷 이미지를 미리 받는다 */
+    SELLOADED = true;
+    var u = []; CH.forEach(function (c) { if (c.portrait) u.push(c.portrait); segUrls(c.intro || [], 0).forEach(function (s) { u.push(s); }); });
+    u = u.filter(function (s, i) { return s && u.indexOf(s) === i; });
+    await loadScreen(u, my); if (my !== run) return;
+  }
+  var ci = await selectScreen(); await play(ci);
+}
 async function boot() { var my = ++run; await titleScreen(); if (my !== run) return; await openingSeq(my); if (my !== run) return; await start(); }
 function load() {
   return fetch('script.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.json(); })

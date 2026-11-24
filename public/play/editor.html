@@ -76,7 +76,7 @@ function build() {
   function grp(parent, title, cls) { var d = el('details', cls || ''); d.open = true; d.appendChild(el('summary', '', title)); parent.appendChild(d); return d; }
   function link(parent, key, label, node) { node.key = key; nodes[key] = node; var a = el('a', '', esc(label)); a.dataset.key = key; a.onclick = function () { pick(key); }; parent.appendChild(a); }
   var g = grp(nav, '공통 · 오프닝 · 브리핑'); S.opening.forEach(function (c, k) { link(g, 'open-' + k, c.id + ' · ' + sum(c), { type: 'cut', arr: S.opening, idx: k }); });
-  link(g, 'org', '소개 카드 (팝업 글)', { type: 'org' });
+  link(g, 'loading', '로딩 화면 (이미지 · 안내 글)', { type: 'loading' });
   S.chars.forEach(function (c, i) {
     var gc = grp(nav, (i + 1) + '. ' + c.name + (c.role ? ' (' + c.role + ')' : ''));
     link(gc, 'char-' + i, '인물 카드 (선택 화면)', { type: 'char', ch: c });
@@ -93,7 +93,7 @@ function sum(c) { var l = (c.lines || [])[0]; return c.profile ? '[프로필] ' 
 function pick(key) {
   var n = nodes[key]; if (!n) return; cur = n; pvLine = 0;
   Array.prototype.forEach.call(document.querySelectorAll('nav a'), function (a) { a.classList.toggle('on', a.dataset.key === key); });
-  var ed = $('#ed'); ed.innerHTML = ''; ({ cut: formCut, char: formChar, choice: formChoice, map: formMap, org: formOrg })[n.type](ed, n);
+  var ed = $('#ed'); ed.innerHTML = ''; ({ cut: formCut, char: formChar, choice: formChoice, map: formMap, loading: formLoading })[n.type](ed, n);
 }
 /* ---------- 입력 도우미 ---------- */
 function field(parent, label, obj, key, o) {
@@ -117,7 +117,6 @@ function formCut(ed, n) {
   field(left, '컷 번호', c, 'id', { pv: 1, relabel: 1, hint: '이미지를 안 고르면 서연 컷(A-S<번호>)은 public/play/media/SY_S<번호>.webp|png, 그 외는 public/play/scenes/<컷 번호>.webp|png|jpg 가 자동으로 쓰입니다.' });
   if ('name' in c) { field(left, '엔딩 이름', c, 'name', { relabel: 1 }); field(left, '조건 (메모)', c, 'rule', { hint: '어떤 선택 조합이 이 엔딩으로 오는지는 ‘엔딩 매핑표’에서 바꿉니다. 이 칸은 메모예요.' }); }
   var wr = el('div', 'row'); wr.appendChild(el('label', '', '이 컷이 나오는 조건')); var wbox = el('div'); wbox.appendChild(whenEd(wbox, c, chOfCut(c))); wbox.appendChild(el('div', 'hint', '번호를 고르면 그 선택을 한 사람에게만 이 컷이 나옵니다. 비워 두면 모두에게 나옵니다. (선택 2 조건은 선택 2 뒤 장면에서만)')); wr.appendChild(wbox); left.appendChild(wr);
-  var cr = el('div', 'row'); cr.appendChild(el('label', '', '소개 카드 팝업')); var cs = el('select', '', '<option value="">없음</option><option value="org">길티 바이 디폴트 정보 카드 띄우기</option>'); cs.value = c.card || ''; cs.onchange = function () { if (cs.value) c.card = cs.value; else delete c.card; mark(true); }; cr.appendChild(cs); left.appendChild(cr);
   field(left, '스토리보드 설명', c, 'desc', { area: 1, rows: 2, pv: 1, hint: '이미지가 없을 때 자리표시에 보이는 설명(그림 지시)입니다.' });
   var r = el('div', 'row'); r.appendChild(el('label', '', '이미지 파일')); var up = el('div', 'up');
   var srcI = el('input'); srcI.type = 'text'; srcI.value = c.src || ''; srcI.placeholder = '(비움 = scenes/컷번호 자동)'; srcI.style.flex = '1'; srcI.oninput = function () { c.src = srcI.value; mark(true); pv(); };
@@ -127,6 +126,21 @@ function formCut(ed, n) {
   up.appendChild(srcI); up.appendChild(fi); up.appendChild(um); r.appendChild(up); left.appendChild(r);
   var rr = el('div', 'row'); rr.appendChild(el('label', '', '자막 위치')); var sel = el('select', '', '<option value="0">가운데 아래</option><option value="1">오른쪽 아래</option>'); sel.value = c.right ? '1' : '0'; sel.onchange = function () { c.right = sel.value === '1'; mark(true); pv(); }; rr.appendChild(sel); left.appendChild(rr);
   field(left, '처음 이미지만 (ms)', c, 'lead', { num: 1, hint: '컷이 시작되고 대사 없이 이미지만 보여주는 시간(1000 = 1초). 이미지는 항상 서서히 나타납니다. 누르면 바로 넘어가요. 0 = 바로 대사.' });
+  var xr = el('div', 'row'); xr.appendChild(el('label', '', '이미지 교차 연출')); var xb = el('div'); xr.appendChild(xb); left.appendChild(xr);
+  function drawCross() { xb.innerHTML = '';
+    if (!c.cross) { var xa = el('button', 'add', '+ 이미지 B 를 번갈아 깜빡이기 (점점 빠르게)'); xa.onclick = function () { c.cross = { src: '', start: 700, end: 70, dur: 5000, endOn: 'A', soft: false }; mark(true); drawCross(); }; xb.appendChild(xa); return; }
+    xb.appendChild(el('div', 'hint', '위의 ‘이미지 파일’이 이미지 A 입니다. A 위에 이미지 B 를 깜빡이며 번갈아 보여 주고, 간격이 점점 짧아집니다. 시작·끝 간격과 총 시간은 ms(1000 = 1초).'));
+    var br = el('div', 'row'); br.appendChild(el('label', '', '이미지 B')); var bu = el('div', 'up'), bi = el('input'); bi.type = 'text'; bi.style.flex = '1'; bi.value = c.cross.src || ''; bi.placeholder = '(경로 입력 또는 파일 고르기)'; bi.oninput = function () { c.cross.src = bi.value; mark(true); };
+    var bf = el('input'); bf.type = 'file'; bf.accept = 'image/png,image/jpeg,image/webp'; var bm = el('span', 'msg');
+    bf.onchange = function () { var f = bf.files[0]; if (!f) return; bm.textContent = '올리는 중…'; fetch('/api/scene-image?id=' + encodeURIComponent((c.id || 'cut') + '_B'), { method: 'POST', headers: { 'Content-Type': f.type }, body: f }).then(function (r) { return r.json(); }).then(function (j) { if (j.ok) { c.cross.src = j.url; bi.value = j.url; mark(true); bm.textContent = '올렸어요: ' + j.url; } else bm.textContent = '실패: ' + (j.msg || ''); }).catch(function () { bm.textContent = '실패 (서버 확인)'; }); };
+    bu.appendChild(bi); bu.appendChild(bf); bu.appendChild(bm); br.appendChild(bu); xb.appendChild(br);
+    field(xb, '시작 간격 (ms)', c.cross, 'start', { num: 1, hint: '처음에는 이 간격으로 바뀝니다. 클수록 천천히 시작.' });
+    field(xb, '끝 간격 (ms)', c.cross, 'end', { num: 1, hint: '점점 줄어 이 간격까지 빨라집니다. 작을수록 빠른 깜빡임(너무 작으면 눈이 아플 수 있어요: 60 이상 추천).' });
+    field(xb, '총 시간 (ms)', c.cross, 'dur', { num: 1, hint: '연출이 이어지는 시간. 5000 = 5초.' });
+    var er = el('div', 'row'); er.appendChild(el('label', '', '끝났을 때 남는 이미지')); var es = el('select', '', '<option value="A">이미지 A</option><option value="B">이미지 B</option>'); es.value = c.cross.endOn === 'B' ? 'B' : 'A'; es.onchange = function () { c.cross.endOn = es.value; mark(true); }; er.appendChild(es); xb.appendChild(er);
+    var sr = el('div', 'row'); sr.appendChild(el('label', '', '바뀌는 방식')); var ss = el('select', '', '<option value="0">딱딱 끊어서</option><option value="1">살짝 섞이며</option>'); ss.value = c.cross.soft ? '1' : '0'; ss.onchange = function () { c.cross.soft = ss.value === '1'; mark(true); }; sr.appendChild(ss); xb.appendChild(sr);
+    var xd = el('button', 'del', '교차 연출 없애기'); xd.onclick = function () { delete c.cross; mark(true); drawCross(); }; xb.appendChild(xd); }
+  drawCross();
   var pr = el('div', 'row'); pr.appendChild(el('label', '', '프로필 카드')); var pb = el('div'); pr.appendChild(pb); left.appendChild(pr);
   function drawProfile() { pb.innerHTML = ''; if (c.profile) { field(pb, '이름', c.profile, 'name', { pv: 1 }); field(pb, '역할', c.profile, 'role', { pv: 1 }); field(pb, '사진 경로', c.profile, 'img'); var d = el('button', 'add', '프로필 카드 없애기'); d.onclick = function () { c.profile = null; mark(true); drawProfile(); pv(); }; pb.appendChild(d); }
     else { var a = el('button', 'add', '+ 프로필 카드 넣기 (인물을 처음 보여줄 때)'); a.onclick = function () { c.profile = { name: '', role: '', img: '' }; mark(true); drawProfile(); pv(); }; pb.appendChild(a); } }
@@ -245,7 +259,20 @@ function castPanel(ed, c) { /* 말하는 사람 사진을 한 화면에서 한�
   };
   draw();
 }
-function formOrg(ed, n) { ed.appendChild(el('h2', '', '길티 바이 디폴트 소개 카드')); ed.appendChild(el('div', 'hint', '오프닝 직후 브리핑과 길티 바이 디폴트 인물이 처음 나오는 컷에 뜨는 팝업 글입니다. 컷 편집 화면의 ‘소개 팝업’에서 어느 컷에 띄울지 고릅니다.')); field(ed, '제목', S.org, 'title'); field(ed, '내용', S.org, 'text', { area: 1, rows: 5 }); }
+function formLoading(ed) {
+  S.loading = S.loading || {}; var L = S.loading; if (!Array.isArray(L.tips)) L.tips = (S.org && S.org.text) ? [S.org.text] : []; if (L.min == null) L.min = 1500; if (L.img == null) L.img = '';
+  ed.appendChild(el('h2', '', '로딩 화면'));
+  ed.appendChild(el('div', 'hint', '‘누구를 위한 책임을 주장하시겠습니까?’ 인물 선택 화면 직전에 한 번 뜹니다. 이때 인물 사진과 각 인물의 도입 컷 이미지를 미리 받고, 다 받으면 자동으로 넘어갑니다. (이미지가 크면 오래 걸립니다 — webp 로 줄이면 훨씬 빨라져요.)'));
+  var r = el('div', 'row'); r.appendChild(el('label', '', '배경 이미지')); var up = el('div', 'up'), ti = el('input'); ti.type = 'text'; ti.style.flex = '1'; ti.value = L.img || ''; ti.placeholder = '(비움 = 단색 버건디)'; ti.oninput = function () { L.img = ti.value; mark(true); };
+  var fi = el('input'); fi.type = 'file'; fi.accept = 'image/png,image/jpeg,image/webp'; var um = el('span', 'msg');
+  fi.onchange = function () { var f = fi.files[0]; if (!f) return; um.textContent = '올리는 중…'; fetch('/api/scene-image?id=loading', { method: 'POST', headers: { 'Content-Type': f.type }, body: f }).then(function (x) { return x.json(); }).then(function (j) { if (j.ok) { L.img = j.url; ti.value = j.url; mark(true); um.textContent = '올렸어요: ' + j.url; } else um.textContent = '실패: ' + (j.msg || ''); }).catch(function () { um.textContent = '실패 (서버 확인)'; }); };
+  up.appendChild(ti); up.appendChild(fi); up.appendChild(um); r.appendChild(up); ed.appendChild(r);
+  field(ed, '제목', L, 'title', { area: 1, rows: 2, hint: '안내 글 위에 크게 뜨는 제목입니다(줄바꿈 가능). 비워 두면 ‘길티 바이 디폴트’ 이름이 작게 붙습니다.' });
+  var tr = el('div', 'row'); tr.appendChild(el('label', '', '하단 안내 글')); var ta = el('textarea'); ta.rows = 8; ta.value = L.tips.join('\n\n'); ta.oninput = function () { L.tips = ta.value.split(/\n[ \t]*\n/).map(function (t) { return t.replace(/^\n+|\n+$/g, ''); }).filter(function (t) { return t.trim(); }); mark(true); }; tr.appendChild(ta); ed.appendChild(tr);
+  ed.appendChild(el('div', 'hint', '빈 줄(엔터 두 번)로 나눈 덩어리가 안내 글 하나입니다. 한 덩어리 안에서 엔터를 치면 그대로 줄바꿈되어 보이고, 여러 덩어리면 5초마다 돌아가며 바뀝니다. 위에 ‘길티 바이 디폴트’ 이름이 작게 붙습니다. 처음 들어 있는 글은 소개 카드의 글입니다.'));
+  var mr = el('div', 'row'); mr.appendChild(el('label', '', '최소 표시 시간 (초)')); var mi = el('input'); mi.type = 'number'; mi.step = '0.5'; mi.min = '0'; mi.value = (L.min / 1000); mi.oninput = function () { L.min = Math.max(0, (+mi.value || 0) * 1000); mark(true); }; mr.appendChild(mi); ed.appendChild(mr);
+  ed.appendChild(el('div', 'hint', '이미지가 금방 받아져도 최소 이 시간은 보여 줍니다(글을 읽을 시간). 0 = 받는 즉시 넘어감.'));
+}
 function formChoice(ed, n) { ed.appendChild(el('h2', '', '선택지')); var c = n.c; field(ed, '질문(제목)', c, 'q', { area: 1, rows: 2 });
   c.options.forEach(function (o, i) { ed.appendChild(el('h3', '', (i + 1) + '번 선택지')); field(ed, '선택지 글', o, 'label', { relabel: 1, area: 1, rows: 3, hint: i === 0 ? '게임에 보이는 선택지 글입니다. (표시 제목·설명은 쓰지 않습니다)' : '' }); }); ed.appendChild(el('div', 'hint', '선택 직후의 단기 파장은 왼쪽 목록의 ‘→ 선택지 이름’ 아래 컷에서 고칩니다.')); }
 function formMap(ed, n) { var c = n.ch; ed.appendChild(el('h2', '', '엔딩 매핑표 · ' + c.name)); ed.appendChild(el('div', 'hint', '가로 = 선택 2, 세로 = 선택 1. 칸마다 도달하는 엔딩을 고르세요. 바로 게임과 옆 화면 통계에 반영됩니다(저장 후).'));

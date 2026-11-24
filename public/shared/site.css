@@ -260,3 +260,12 @@ body.site[data-tone="ivory"] .huge.hot, body.site[data-tone="pale"] .huge.hot { 
   body.site, .hd, .hd .logo img, .eyebrow, .cite, .en { transition: none; }
   .js .rv { opacity: 1; transform: none; transition: none; }
 }
+
+/* 홈 첫 화면: 영상만 무한 반복 */
+.scene.hero.vid { padding: 0; min-height: calc(100vh - 64px); min-height: calc(100svh - 64px); background: var(--burgundy-dark); }
+.herovid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* 홈: 영상만 보이고 스크롤 없음 (아래 섹션·푸터는 파일에 남겨 두되 숨김. 되돌리려면 index.html 의 body 에서 homevid 를 지우면 됨) */
+html:has(body.homevid), body.homevid { height: 100%; overflow: hidden; overscroll-behavior: none; }
+body.homevid main > section:not(.hero), body.homevid .ft { display: none; }
+body.homevid .scene.hero.vid { height: calc(100vh - 64px); height: calc(100svh - 64px); min-height: 0; }
