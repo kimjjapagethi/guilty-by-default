@@ -11,8 +11,10 @@
   var KOF = "'Orbit Fit', 'Orbit', 'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif";
   var ENF = "'PP Frama', 'Orbit', " + KOF;
   var st = document.createElement('style');
-  st.textContent = '.fm-ko{font-family:' + KOF + ' !important;word-spacing:-.32em}.fm-en{font-family:' + ENF + ' !important}';
+  st.textContent = '.fm-ko{font-family:' + KOF + ' !important}.fm-ok .fm-ko{word-spacing:-.32em}.fm-en{font-family:' + ENF + ' !important}';
   (document.head || document.documentElement).appendChild(st);
+  /* Orbit 이 실제로 불러와진 뒤에만 띄어쓰기를 좁힌다 (못 불러왔을 때 글자가 붙어 보이는 것 방지) */
+  try { document.fonts.load("16px 'Orbit Fit'", '가').then(function (r) { if (r && r.length) document.documentElement.classList.add('fm-ok'); }); } catch (x) {}
   var SKIP = { SCRIPT: 1, STYLE: 1, TEXTAREA: 1, INPUT: 1, SELECT: 1, OPTION: 1, NOSCRIPT: 1, HTML: 1, HEAD: 1, BODY: 1, CODE: 1, PRE: 1 };
   function hasOwnText(e) { for (var n = e.firstChild; n; n = n.nextSibling) if (n.nodeType === 3 && /\S/.test(n.nodeValue)) return true; return false; }
   function fix(e) {

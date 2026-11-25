@@ -342,11 +342,11 @@ function choose(o, my) { /* 선택: 앞 컷의 이미지를 어둡게 깔고, �
       var b = el('button', 'opt', '<span class="lg" aria-hidden="true"></span><span class="say">' + esc(op.label || op.say || '') + '</span>'); b.addEventListener('click', function () { onNext = null; res(i); }); row.appendChild(b);
     });
     box.appendChild(row); cv.appendChild(box);
-    var first = row.firstChild; /* 첫 번째 선택지는 처음부터 호버된 모양: 눌러도 된다는 걸 알 수 있게. 다른 선택지에 마우스를 올리면 그쪽으로 넘어가고, 마우스가 벗어나면 첫 번째로 돌아온다 */
-    if (first) { first.classList.add('pre');
-      row.addEventListener('mouseover', function (e) { if (e.target.closest && e.target.closest('.opt')) first.classList.remove('pre'); });
-      row.addEventListener('mouseleave', function () { first.classList.add('pre'); });
-      row.addEventListener('focusin', function () { first.classList.remove('pre'); }); }
+    var first = row.firstChild; /* 마지막으로 호버(또는 포커스)한 선택지가 호버 모양을 그대로 유지한다. 처음에는 첫 번째 선택지 */
+    function keep(b) { if (!b) return; [].forEach.call(row.children, function (x) { x.classList.toggle('pre', x === b); }); }
+    if (first) { keep(first);
+      row.addEventListener('mouseover', function (e) { var b = e.target.closest && e.target.closest('.opt'); if (b) keep(b); });
+      row.addEventListener('focusin', function (e) { var b = e.target.closest && e.target.closest('.opt'); if (b) keep(b); }); }
   });
 }
 

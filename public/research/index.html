@@ -11,19 +11,36 @@
 <link rel="stylesheet" href="../shared/ds.css">
 <link rel="stylesheet" href="../shared/site.css">
 <script>document.documentElement.classList.add("js")</script>
-<script src="../shared/fontmix.js"></script>
+<script src="../shared/i18n.js" defer></script>
 </head>
 <body class="site" data-tone="ivory">
 <header class="hd"><div class="wrap">
   <a class="logo" href="../index.html" aria-label="Guilty by Default 홈"><img src="../shared/logo_type.svg" alt="Guilty by Default"></a>
-  <nav class="nav" aria-label="주요 메뉴"><a href="../statement/index.html">Statement</a><a href="../research/index.html" aria-current="page">Research</a><a href="../play/index.html" class="play">Play</a><a href="../team/index.html">Team</a></nav>
+  <nav class="nav" aria-label="주요 메뉴"><a href="../research/index.html" aria-current="page">Research</a><a href="../stakeholder/index.html">Stakeholder</a><a href="../team/index.html">Team</a><a class="play" href="../play/index.html">PLAY!</a></nav>
+  <div class="hd-r"><button type="button" class="lang" aria-label="Language / 언어"><span data-l="ko">KO</span><i>/</i><span data-l="en">EN</span></button></div>
 </div></header>
 <main>
+<nav class="toc" aria-label="챕터">
+  <a href="#overview">Overview</a><a href="#background">배경 조사</a><a href="#hitl">크럼플 존<br>× HITL</a><a href="#three">세 가지</a><a href="#timeline">Timeline</a>
+</nav>
 <section class="pg-head"><div class="wrap">
   <p class="eyebrow">Research</p>
   <h1>우리가 지나온 길</h1>
-  <p class="slede">배경 조사, 논리 정리, 그리고 주차별 기록을 모았다.</p>
-  <div class="btns"><a class="sbtn" href="#background">배경 조사</a><a class="sbtn" href="#logic">논리 정리</a><a class="sbtn" href="#weekly">주차별 기록</a></div>
+  <p class="slede">개요, 배경 조사, 도덕적 크럼플 존과 Human-in-the-loop, 그리고 시간 순서대로 쌓은 기록을 모았다.</p>
+  <div class="btns tocbtns"><a class="sbtn" href="#overview">Overview</a><a class="sbtn" href="#background">배경 조사</a><a class="sbtn" href="#hitl">크럼플 존 × HITL</a><a class="sbtn" href="#three">세 가지</a><a class="sbtn" href="#timeline">Timeline</a></div>
+</div></section>
+
+<section class="sec" id="overview"><div class="wrap">
+  <p class="eyebrow">Overview</p>
+  <h2>왜 이 질문을 하게 되었나</h2>
+  <p class="slede" style="max-width:34em">AI가 행위했을 때, 그 책임은 누구에게 가야 하는가. 우리가 이 질문에 이른 과정을 네 단계로 정리했다.</p>
+  <div class="logic">
+    <div class="lg"><span class="n">1</span><h3>행위 주체 ≠ 책임 주체</h3><p>AI가 통제 바깥의 행동을 할 가능성은 성능이 높아질수록 커진다. 그 행동의 주체는 AI라고 볼 수 있지만, 책임은 인간이 진다. 인간은 억울할 수밖에 없다. 이것이 도덕적 크럼플 존이다.</p></div>
+    <div class="lg"><span class="n">2</span><h3>책임 조건 미성립</h3><p>AI에도 프레임워크와 피드백 루프가 쌓이고 있다. 그래도 사회는 그것만으로 책임의 효과가 발현된다고 보지 않는다. AI가 책임 주체로 인정받지 못하기 때문이다.</p></div>
+    <div class="lg"><span class="n">3</span><h3>인간중심적 사고</h3><p>필드 리서치에서 모두가, AI는 책임 주체의 특성을 만족하지 못하므로 행위 주체도 책임 주체도 될 수 없다고 답했다.</p></div>
+    <div class="lg"><span class="n">4</span><h3>그렇지만, 미래에도?</h3><p>미래의 AI도 그 조건을 충족하지 못할까. 비인간 주체의 책임을 고민해야 하는 시대에는 AI 책임 윤리에 새로운 관점이 필요하다.</p></div>
+  </div>
+  <div class="btns"><a class="sbtn" href="../index.html#statement">우리의 입장 전체 보기</a></div>
 </div></section>
 
 <section class="sec" id="background"><div class="wrap">
@@ -50,53 +67,72 @@
   <div class="step" data-d="2"><span class="n">3</span><p class="st">인공지능이 찾아낸 <b>규칙의 허점이나 새로운 방법</b></p><p class="en">AI’s discovered loopholes or strategies</p>
     <div class="sc dk"><p class="big">“경쟁사의 정보를 해킹해서<br>우리 회사가 대신<br>이득을 볼 수 있게 하자!”</p><p class="en">“Let’s hack our competitors for profit!”</p></div></div>
 </div>
-  <h3 class="sub">도덕적 크럼플 존 <span>Moral Crumple Zone</span></h3>
+  <p class="hint">출처는 팀 슬라이드에 적힌 그대로이며, 링크와 원문은 아직 대조하지 않았다.</p>
+</div></section>
+
+
+
+<section class="sec" id="hitl"><div class="wrap argue">
+  <p class="eyebrow">Moral Crumple Zone × Human-in-the-loop</p>
+  <h2>고리 안의 사람이 충격을 받는다</h2>
+  <p class="sum">도덕적 크럼플 존은 결과이고, Human-in-the-loop는 그 원인이 되는 구조다. 사람이 판단의 고리에 어떻게 놓여 있는지에 따라 책임이 닿는 방식이 달라진다.</p>
+  <h3 class="sub" id="crumple">도덕적 크럼플 존 <span>Moral Crumple Zone</span></h3>
   <p class="sum">복잡한 시스템이나 인공지능(AI) 사고 발생 시, 실제 권한과 판단은 알고리즘이 내렸음에도 불구하고 모든 법적·도덕적 책임은 가장 취약한 말단 인간에게 전가되는 구조적 모순.</p>
   <div class="crumple" role="img" aria-label="권한과 판단은 알고리즘이 내렸지만 책임은 가장 말단의 인간에게 전가된다">
   <div class="cz-row"><span class="nd">알고리즘<small>실제 권한과 판단</small></span><i aria-hidden="true"></i><span class="nd">시스템</span><i aria-hidden="true"></i><span class="nd hu">말단 인간<small>책임이 도착하는 곳</small></span></div>
   <div class="cz-bar"><span>법적·도덕적 책임 전가</span></div>
 </div>
-  <p class="hint">출처는 팀 슬라이드에 적힌 그대로이며, 링크와 원문은 아직 대조하지 않았다.</p>
-</div></section>
-
-<section class="sec" id="logic"><div class="wrap">
-  <p class="eyebrow">논리 정리</p>
-  <h2>왜 이 질문을 하게 되었나</h2>
-  <div class="logic"><div class="lg"><span class="n">1</span><h3>행위 주체 ≠ 책임 주체</h3><p>AI의 성능이 높아질수록 AI가 통제 바깥의 행동을 할 가능성도 높아진다. 그 행동의 주체는 AI라고 볼 수 있다. 하지만 책임을 지고 있는 인간은 억울할 수밖에 없다 — 도덕적 크럼플 존.</p></div><div class="lg"><span class="n">2</span><h3>책임 조건 미성립</h3><p>현재 AI에도 프레임워크와 피드백 루프가 꾸준히 쌓이고 있다. 그래도 사회는 그것만으로 책임의 효과가 발현된다고 보지 않는다. AI가 애초에 책임 주체로 인정받지 못하기 때문이다.</p></div><div class="lg"><span class="n">3</span><h3>인간중심적 사고</h3><p>필드 리서치에서 모두가, AI는 인간이 가진 책임 주체의 특성을 만족하지 못하므로 행위 주체도 책임 주체도 될 수 없다고 답했다.</p></div><div class="lg"><span class="n">4</span><h3>그렇지만, 미래에도?</h3><p>미래의 AI도 그 조건을 충족하지 못할까. 비인간 주체의 책임을 고민해야 하는 시대에 AI 책임 윤리에 새로운 관점이 필요하다.</p></div></div>
-  <div class="btns"><a class="sbtn" href="../statement/index.html">우리의 입장 전체 보기</a></div>
-</div></section>
-
-<section class="sec" id="weekly"><div class="wrap">
-  <p class="eyebrow">주차별 기록</p>
-  <h2>주제 확정에서 워크숍까지</h2>
-</div>
-<div class="wrap feed">
-<article class="post" id="w8">
-  <div class="rail"><div class="wk">08<small>주차</small></div></div>
-  <div>
-    <span class="ptag now">워크숍 · 전시 계획 · 최신</span>
-    <h2>1차 워크숍을 마치고, 2차를 설계했다</h2>
-    <p class="sum">“AI도 책임을 져야 할까?”를 직접 물어보는 1차 워크숍을 열었다. 실화를 재구성한 네 가지 피해 시나리오(신상정보 노출, 부정 채용 탈락, 로봇팔 부상, 자율주행 사고사)를 놓고 책임이 누구에게 있는지 이야기했다.</p>
-    <ul class="pts"><li>참여자 모두 <b>인본주의적 사고</b>가 강했다. “AI는 도구에 불과하다”, “책임은 권리의 산물인데 AI는 권리가 없다”는 반응이 나왔다.</li><li>결국 책임은 인간(설계자·기업, 또는 사용자)에게 있다는 의견이 다수였지만, AI가 책임을 지는 일에 대한 우려도 계속 남았다.</li><li>워크숍 전 가설은 “AI의 자율성과 인지능력이 높아질수록 독립적인 책임 주체로 인식될 가능성”. 가설은 대체로 맞았고, 감정·의식·생체활동 같은 요소도 함께 작용한다는 점을 <b>수정</b>했다.</li><li>2차 워크숍은 극단적 피해 시나리오(인간 A가 사망함 / 피해를 입음)를 두고, 책임 주체가 되기 위한 조건과 책임의 형태를 묻는다.</li><li>전시는 세 구역으로 구상 중이다. 배경 설명 · 연구 결과(도덕적 주체와 책임 시나리오 영상) · 관객 참여.</li></ul>
-    <div class="shots"><figure><a href="img/w8-05.webp" target="_blank" rel="noopener"><img src="img/w8-05.webp" alt="1차 워크숍에서 쓴 네 가지 피해 사례" loading="lazy" width="1400" height="788"></a><figcaption>1차 워크숍에서 쓴 네 가지 피해 사례</figcaption></figure><figure><a href="img/w8-09.webp" target="_blank" rel="noopener"><img src="img/w8-09.webp" alt="워크숍 인사이트 — 참여자 발언 정리" loading="lazy" width="1400" height="788"></a><figcaption>워크숍 인사이트 — 참여자 발언 정리</figcaption></figure><figure><a href="img/w8-16.webp" target="_blank" rel="noopener"><img src="img/w8-16.webp" alt="워크숍 전 가설과, 확인·수정한 부분" loading="lazy" width="1400" height="788"></a><figcaption>워크숍 전 가설과, 확인·수정한 부분</figcaption></figure><figure><a href="img/w8-27.webp" target="_blank" rel="noopener"><img src="img/w8-27.webp" alt="예상 전경 — Zone 01 · 02 · 03" loading="lazy" width="1400" height="788"></a><figcaption>예상 전경 — Zone 01 · 02 · 03</figcaption></figure></div>
-    
+  <h3 class="sub">Human-in-the-loop <span>HITL</span></h3>
+  <p class="sum">AI가 내리는 판단이나 행동의 과정에 사람이 개입해 확인하고, 승인하고, 고치는 구조. 사람이 고리 안에 있을수록 결과는 사람이 승인한 것이 되고, 책임도 사람에게 향한다.</p>
+  <div class="hitl">
+    <div class="hl"><span class="k">In the loop</span><h3>사람이 승인한다</h3><p>AI가 제안하고, 사람이 매번 확인하고 승인한 뒤에 실행된다.</p></div>
+    <div class="hl"><span class="k">On the loop</span><h3>사람이 지켜본다</h3><p>AI가 스스로 실행하고, 사람은 지켜보다가 필요할 때 멈춘다.</p></div>
+    <div class="hl dk"><span class="k">Out of the loop</span><h3>사람이 개입할 수 없다</h3><p>AI가 끝까지 스스로 판단하고 실행한다. 사람은 결과만 마주한다.</p></div>
   </div>
-</article><article class="post" id="w6">
-  <div class="rail"><div class="wk">06<small>주차</small></div></div>
-  <div>
+  <h3 class="sub">두 개념이 만나는 곳</h3>
+  <p>고리 밖에 있는 사람에게 책임이 도착할 때 크럼플 존이 생긴다. 델리-04 사고가 그렇다. ‘30분 내 배달’이라는 목표만 주어졌을 뿐, 로봇이 사람을 밀치는 순간에는 사람의 지시도 승인도 없었다. 그런데도 책임은 말단의 인간에게 돌아온다.</p>
+  <p class="hint">HITL 개념 설명은 일반적으로 쓰이는 정의를 정리한 것이며, 출처는 아직 대조하지 않았다. 더 보탤 내용은 이 아래에 이어서 추가한다.</p>
+</div></section>
+
+<section class="sec pale" id="three"><div class="wrap argue">
+  <p class="eyebrow">관객에게 묻는 것</p>
+  <h2>우리가 설득하려는 세 가지</h2>
+  <ol class="three">
+    <li><b>AI는 행위 주체다.</b> AI가 잘못을 저지른 게 맞다.</li>
+    <li><b>AI가 책임 주체가 되어야 한다.</b></li>
+    <li><b>AI 책임 효과는 이미 만들어지고 있다.</b> 조건을 갖춰서 책임 주체로 봐야 한다.</li>
+  </ol>
+  <div class="open"><p class="k">아직 답하지 못한 질문</p>
+    <ul><li>인간이 억울하다는 이유만으로 AI에게 책임을 줘야 한다는 주장은 약하다.</li>
+        <li>AI 책임 효과가 이미 만들어지고 있다면, 왜 책임 주체로 봐야 하는가?</li></ul></div>
+  <p class="hint">이 질문들이 게임 속 선택으로 이어진다. 풀어가는 과정은 아래 <a href="#timeline">Timeline</a>에 있다.</p>
+</div></section>
+
+<section class="sec" id="timeline"><div class="wrap">
+  <p class="eyebrow">Timeline</p>
+  <h2>주제 확정에서 워크숍까지</h2>
+  <p class="slede" style="max-width:34em">시간 순서대로 쌓은 기록이다. 새 내용은 맨 아래(가장 최근)에 이어 붙인다.</p>
+  <!-- 새 항목 추가 방법: 아래 <li class="tl-item"> 블록 하나를 통째로 복사해 </ol> 바로 위에 붙이고, 시점(tl-mark)·제목(h3)·내용을 바꾸면 됩니다. -->
+  <ol class="tl">
+  <li class="tl-item" id="w6"><span class="tl-mark">06주차</span><div class="tl-body">
     <span class="ptag">주제 확정 · 데스크 리서치</span>
-    <h2>“Guilty by Default” — 사고가 난 뒤의 책임을 묻기 시작했다</h2>
+    <h3 class="tl-t">“Guilty by Default” — 사고가 난 뒤의 책임을 묻기 시작했다</h3>
     <p class="sum">이름이 처음 등장한 주. AI가 해주는 일이 늘어나는데, 사고를 치면 그 다음은 누가 어떻게 수습하는가를 물었다. 당시 방향은 사과 → 수습 → 피드백이 순환하는 AI 사후수습 인터랙션이었다.</p>
     <ul class="pts"><li>규범은 크게 <b>사전 규제</b>와 <b>사후 책임</b>으로 작동해 왔다. AI는 사전 규제 논의(EU AI Act 등)는 활발하지만 사후 책임에는 공백이 있다.</li><li>AI 사고 1060건을 분석한 연구에서 인정 54%, 귀책 47%, 구제 15%, 개혁 28%. 사과는 해도 실제 구제와 개혁까지 가는 경우는 적었다.</li><li>도덕적 복구의 핵심은 신뢰 회복. 책임 확인 · 도덕적 제스처 · 재신뢰 구축 · 상호 존중의 틀을 인터랙션 목표로 삼았다.</li><li>현장 리서치로는 사전 인터뷰, 사과문, 수습 액션 카드, 피드백 반영의 네 단계 워크숍을 설계했다.</li></ul>
-    <div class="shots"><figure><a href="img/w6-01.webp" target="_blank" rel="noopener"><img src="img/w6-01.webp" alt="Guilty by Default — 프로젝트 이름이 나온 표지" loading="lazy" width="1400" height="788"></a><figcaption>Guilty by Default — 프로젝트 이름이 나온 표지</figcaption></figure><figure><a href="img/w6-07.webp" target="_blank" rel="noopener"><img src="img/w6-07.webp" alt="AI 사고 1060건의 사후 대응 분석" loading="lazy" width="1400" height="788"></a><figcaption>AI 사고 1060건의 사후 대응 분석</figcaption></figure><figure><a href="img/w6-13.webp" target="_blank" rel="noopener"><img src="img/w6-13.webp" alt="사과 · 수습 · 변화 약속의 순환" loading="lazy" width="1400" height="788"></a><figcaption>사과 · 수습 · 변화 약속의 순환</figcaption></figure><figure><a href="img/w6-17.webp" target="_blank" rel="noopener"><img src="img/w6-17.webp" alt="현장 리서치 · 워크숍 설계" loading="lazy" width="1400" height="788"></a><figcaption>현장 리서치 · 워크숍 설계</figcaption></figure></div>
     <details class="refs"><summary>슬라이드에 적힌 출처</summary><ul><li>Steven Shavell, Liability for Harm versus Regulation of Safety, NBER Working Paper, 1984.</li><li>Xiao et al., What Comes After Harm? Mapping Reparative Actions in AI through Justice Frameworks, arXiv, 2026.</li><li>Walker, M. U. (2006). Moral repair: Reconstructing moral relations after wrongdoing. Cambridge University Press.</li><li>Wong, P.-H., &amp; Rieder, G. (2025). After harm: A plea for moral repair after algorithms have failed. Science and Engineering Ethics, 31, Article 26.</li></ul></details>
-  </div>
-</article>
+  </div></li>
+  <li class="tl-item" id="w8"><span class="tl-mark">08주차</span><div class="tl-body">
+    <span class="ptag now">워크숍 · 전시 계획 · 최신</span>
+    <h3 class="tl-t">1차 워크숍을 마치고, 2차를 설계했다</h3>
+    <p class="sum">“AI도 책임을 져야 할까?”를 직접 물어보는 1차 워크숍을 열었다. 실화를 재구성한 네 가지 피해 시나리오(신상정보 노출, 부정 채용 탈락, 로봇팔 부상, 자율주행 사고사)를 놓고 책임이 누구에게 있는지 이야기했다.</p>
+    <ul class="pts"><li>참여자 모두 <b>인본주의적 사고</b>가 강했다. “AI는 도구에 불과하다”, “책임은 권리의 산물인데 AI는 권리가 없다”는 반응이 나왔다.</li><li>결국 책임은 인간(설계자·기업, 또는 사용자)에게 있다는 의견이 다수였지만, AI가 책임을 지는 일에 대한 우려도 계속 남았다.</li><li>워크숍 전 가설은 “AI의 자율성과 인지능력이 높아질수록 독립적인 책임 주체로 인식될 가능성”. 가설은 대체로 맞았고, 감정·의식·생체활동 같은 요소도 함께 작용한다는 점을 <b>수정</b>했다.</li><li>2차 워크숍은 극단적 피해 시나리오(인간 A가 사망함 / 피해를 입음)를 두고, 책임 주체가 되기 위한 조건과 책임의 형태를 묻는다.</li><li>전시는 세 구역으로 구상 중이다. 배경 설명 · 연구 결과(도덕적 주체와 책임 시나리오 영상) · 관객 참여.</li></ul>
+  </div></li>
+  </ol>
 </div></section>
 </main>
 <footer class="ft"><div class="wrap">
   <div><img src="../shared/logo_type.svg" alt="Guilty by Default" style="filter:brightness(0) invert(1)"><p class="cap">2026 HIVCD Graduate Exhibit · 채현 · 혜림 · 지민</p></div>
-  <nav aria-label="푸터 메뉴"><a href="../index.html">Home</a><a href="../statement/index.html">Statement</a><a href="../research/index.html">Research</a><a href="../play/index.html">Play</a><a href="../team/index.html">Team</a></nav>
+  <nav aria-label="푸터 메뉴"><a href="../index.html">Home</a><a href="../research/index.html">Research</a><a href="../stakeholder/index.html">Stakeholder</a><a href="../team/index.html">Team</a><a href="../play/index.html">PLAY!</a></nav>
 </div></footer>
 <script>
 (function(){
@@ -107,6 +143,15 @@
   tones.forEach(function(s){io.observe(s)});
   var io2=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io2.unobserve(e.target)}})},{threshold:.15});
   document.querySelectorAll(".rv").forEach(function(x){io2.observe(x)});
+})();
+</script>
+<script>
+(function(){
+  var links=[].slice.call(document.querySelectorAll('.toc a'));if(!links.length)return;
+  var secs=links.map(function(a){return document.querySelector(a.getAttribute('href'))});
+  function on(){var y=window.innerHeight*0.35,cur=0;secs.forEach(function(sec,i){if(sec&&sec.getBoundingClientRect().top<=y)cur=i});
+    links.forEach(function(a,i){if(i===cur)a.setAttribute('aria-current','true');else a.removeAttribute('aria-current')})}
+  window.addEventListener('scroll',on,{passive:true});window.addEventListener('resize',on);on();
 })();
 </script>
 </body>
