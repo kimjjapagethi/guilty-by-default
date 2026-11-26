@@ -431,3 +431,94 @@ html:not([lang="en"]) .hd .lang [data-l="ko"], html[lang="en"] .hd .lang [data-l
 
 /* PLAY!도 다른 메뉴와 같은 굵기 */
 .hd .nav a.play { font-weight: 400; letter-spacing: 0; }
+
+/* ===== 리서치: 논리 파트(Part 1~4) ===== */
+.part .lead { max-width: 760px; }
+.part .lead p { margin: 14px 0 0; font-size: 19px; }
+.part h2 .neq { color: var(--burgundy); }
+.part .ps { margin-top: clamp(40px, 6vw, 72px); padding-top: clamp(28px, 4vw, 44px); border-top: 2px solid var(--line); }
+.part .ps > .sum, .part .ps > p, .part .ps > .hint { max-width: 760px; }
+.part .ps > h3.pt { margin: 0; font-size: clamp(22px, 2.6vw, 28px); }
+.part .ps > h3.pt span { display: inline-block; margin-right: 10px; font-size: .62em; letter-spacing: .08em; color: var(--burgundy); vertical-align: .15em; }
+.part > .wrap > .hint { margin-top: 28px; }
+a.lg { display: block; color: inherit; text-decoration: none; transition: border-color .2s ease; }
+a.lg:hover, a.lg:focus-visible { border-color: var(--burgundy); }
+.part { scroll-margin-top: 72px; }
+
+/* ===== 서체 v2: 본문 SUIT · 제목 PP Frama(영문) + SUIT(한글) · 내비바 SUIT ===== */
+@font-face { font-family: 'SUIT'; font-weight: 100 900; font-style: normal; font-display: block; src: url('fonts/SUIT/SUIT-Variable.woff2') format('woff2-variations'), url('fonts/SUIT/SUIT-Variable.woff2') format('woff2'); } /* SIL OFL, fonts/SUIT/SUIT-LICENSE.txt */
+body.site { --font-body: 'SUIT', 'Pretendard Variable', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif; --font-display: 'PP Frama', 'SUIT', 'Pretendard Variable', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif; font-family: var(--font-body); }
+.hd .nav a, .hd .nav a.play, .hd .lang { font-family: 'SUIT', 'Pretendard Variable', system-ui, sans-serif; font-weight: 400; font-synthesis: none; }
+/* 내비바는 서체가 준비된 뒤 한 번에 나타나게 (PLAY!만 늦게 바뀌어 보이던 문제) */
+html:not(.fk) .hd .nav, html:not(.fk) .hd-r { visibility: hidden; }
+.hd .nav, .hd-r { transition: opacity .15s ease; }
+
+/* 처음 불러올 때는 색 전환(트랜지션) 없이 최종 색으로 바로 표시 → PLAY!만 늦게 색이 바뀌던 문제 */
+html:not(.tn) .hd, html:not(.tn) .hd *, html:not(.tn) body.site { transition: none !important; }
+.hd .nav a, .hd .nav a.play, .hd .lang { transition: color .2s ease; }
+
+/* ===== 홈 하단 (Figma 4517:45) ===== */
+.hm { --hm-pad: clamp(20px, 5.6vw, 80px); padding: 60px var(--hm-pad); background: var(--ivory); color: var(--burgundy-dark); }
+.hm-in { max-width: 1280px; margin: 0 auto; }
+.hm-bar { background: var(--paleblue-light); padding-block: 40px; text-align: center; }
+.hm-bar .hm-in { display: grid; gap: 20px; }
+.hm-lb { margin: 0; font-family: 'PP Frama', 'SUIT', sans-serif; font-size: 24px; line-height: 1; letter-spacing: -.04em; color: var(--burgundy); text-align: center; }
+.hm-t20 { margin: 0; font-family: var(--font-body); font-weight: 500; font-size: 20px; line-height: 1.4; letter-spacing: -.011em; color: var(--burgundy-dark); }
+.hm-rule { border: 0; border-top: 1px solid var(--burgundy-dark); margin: 0 0 40px; }
+.hm-qbox { position: relative; min-height: 288px; display: grid; place-items: start center; }
+.hm-big { margin: 0; font-family: 'PP Frama', 'SUIT', sans-serif; font-weight: 400; font-size: clamp(38px, 5vw, 72px); line-height: 1; letter-spacing: -.04em; text-align: center; color: var(--burgundy-dark); }
+.hm-by, .hm-ko { position: absolute; margin: 0; font-family: var(--font-body); font-weight: 400; font-size: 24px; line-height: 1.2; letter-spacing: -.04em; color: var(--burgundy); }
+.hm-by { right: 0; top: 0; }
+.hm-ko { left: 0; bottom: 0; }
+.hm-fig { margin: 0; position: relative; overflow: hidden; border-radius: 1px; background: var(--ivory-dark); }
+.hm-fig img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.hm-fig-wide { width: min(784px, 100%); aspect-ratio: 784 / 438; margin: 80px auto 0; }
+.hm-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: baseline; }
+.hm-paras p { margin: 0 0 8px; }
+.hm-4col { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 40px; align-items: start; }
+.hm-span2 { grid-column: span 2; }
+.hm-fig-deo { aspect-ratio: 290 / 140; }
+.hm-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 80px; }
+.hm-card { grid-column: span 1; border-top: 1px solid var(--burgundy-dark); padding-top: 16px; min-height: 290px; display: flex; flex-direction: column; justify-content: space-between; gap: 40px; }
+.hm-card h3 { margin: 0; font-family: var(--font-body); font-weight: 700; font-size: 24px; line-height: 1.3; letter-spacing: -.011em; }
+.hm-card p { margin: 0; font-weight: 500; font-size: 18px; line-height: 1.4; letter-spacing: -.011em; }
+.hm-2035 { background: var(--burgundy-dark); color: var(--paleblue-light); padding: 80px var(--hm-pad); }
+.hm-fig-35 { aspect-ratio: 290 / 310; background: var(--burgundy); }
+.hm-big2 { margin: 0; font-family: var(--font-body); font-weight: 500; font-size: clamp(26px, 3.34vw, 48px); line-height: 1.3; letter-spacing: -.011em; color: var(--paleblue-light); }
+.hm-big2 b { font-weight: 700; }
+.hm-lb-n { color: var(--paleblue); }
+@media (max-width: 900px) {
+  .hm-qbox { min-height: 0; gap: 24px; place-items: start; }
+  .hm-big { text-align: left; }
+  .hm-by, .hm-ko { position: static; }
+  .hm-qbox .hm-by { order: 3; } .hm-qbox .hm-ko { order: 2; }
+  .hm-fig-wide { margin-top: 40px; }
+  .hm-2col, .hm-4col { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .hm-span2 { grid-column: auto; }
+  .hm-lb { text-align: left; }
+  .hm-2col .hm-lb { margin-bottom: 4px; }
+  .hm-cards { margin-top: 40px; }
+  .hm-card { min-height: 0; }
+  .hm-fig-deo, .hm-fig-35 { max-width: 420px; }
+}
+
+/* Figma 4517:66: 카드 3개 위에는 선이 하나로 이어짐, 첫 제목은 따옴표만 바깥으로 */
+.hm-cardrow { grid-column: 1 / span 3; border-top: 1px solid var(--burgundy-dark); padding: 16px 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; }
+.hm-card { border-top: 0; padding-top: 0; min-height: 258px; }
+.hm-c1 h3 { text-indent: -.45em; }
+@media (max-width: 900px) { .hm-cardrow { grid-column: auto; grid-template-columns: minmax(0, 1fr); } .hm-card { min-height: 0; } }
+
+.hm-c1 p { text-indent: 0; }
+@media (max-width: 900px) { .hm-br { display: none; } }
+
+/* Figma 갱신(4517:66): 카드 높이는 내용 중 가장 큰 것에 맞춤, 제목-설명 간격 32 */
+.hm-card { min-height: 0; gap: 32px; }
+.hm-cardrow { align-items: stretch; }
+
+/* ===== 리서치 챕터 인덱스: 오른쪽, 항목 사이에 선 ===== */
+@media (min-width: 1400px) {
+  .toc { left: auto; right: 24px; top: 150px; width: 120px; gap: 0; border-top: 1px solid var(--burgundy-dark); }
+  .toc a { padding: 12px 0; border-left: 0; border-radius: 0; border-bottom: 1px solid var(--burgundy-dark); font-size: 14px; line-height: 1.35; color: var(--fg); }
+  .toc a:hover { color: var(--hl); border-left-color: transparent; }
+  .toc a[aria-current="true"] { color: var(--hl); font-weight: 700; padding-left: 0; border-left-color: transparent; }
+}

@@ -8,6 +8,9 @@
 <meta property="og:title" content="Research — Guilty by Default">
 <meta property="og:description" content="배경 조사, 논리 정리, 주차별 기록까지 우리 리서치의 과정.">
 <link rel="icon" href="../shared/logo_symbol.svg" type="image/svg+xml">
+<link rel="preload" href="../shared/fonts/SUIT/SUIT-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../shared/logo_symbol.svg" as="image">
+<script>(function(d){var r=d.documentElement,f=function(){if(r.classList.contains('fk'))return;r.classList.add('fk');setTimeout(function(){r.classList.add('tn')},700)};setTimeout(f,1500);try{Promise.all([d.fonts.load("400 16px SUIT"),d.fonts.ready]).then(f,f)}catch(e){f()}})(document)</script>
 <link rel="stylesheet" href="../shared/ds.css">
 <link rel="stylesheet" href="../shared/site.css">
 <script>document.documentElement.classList.add("js")</script>
@@ -21,31 +24,32 @@
 </div></header>
 <main>
 <nav class="toc" aria-label="챕터">
-  <a href="#overview">Overview</a><a href="#background">배경 조사</a><a href="#hitl">크럼플 존<br>× HITL</a><a href="#three">세 가지</a><a href="#timeline">Timeline</a>
+  <a href="#overview">Overview</a><a href="#p1">1 행위 ≠ 책임</a><a href="#p2">2 조건 미성립</a><a href="#p3">3 인간중심적 사고</a><a href="#p4">4 미래에도?</a><a href="#timeline">Timeline</a>
 </nav>
 <section class="pg-head"><div class="wrap">
   <p class="eyebrow">Research</p>
   <h1>우리가 지나온 길</h1>
-  <p class="slede">개요, 배경 조사, 도덕적 크럼플 존과 Human-in-the-loop, 그리고 시간 순서대로 쌓은 기록을 모았다.</p>
-  <div class="btns tocbtns"><a class="sbtn" href="#overview">Overview</a><a class="sbtn" href="#background">배경 조사</a><a class="sbtn" href="#hitl">크럼플 존 × HITL</a><a class="sbtn" href="#three">세 가지</a><a class="sbtn" href="#timeline">Timeline</a></div>
+  <p class="slede">우리의 입장을 이루는 논리를 네 개의 파트로 나누고, 근거가 된 조사와 기록을 그 위에 쌓았다.</p>
+  <div class="btns tocbtns"><a class="sbtn" href="#overview">Overview</a><a class="sbtn" href="#p1">1 행위 ≠ 책임</a><a class="sbtn" href="#p2">2 조건 미성립</a><a class="sbtn" href="#p3">3 인간중심적 사고</a><a class="sbtn" href="#p4">4 미래에도?</a><a class="sbtn" href="#timeline">Timeline</a></div>
 </div></section>
 
 <section class="sec" id="overview"><div class="wrap">
   <p class="eyebrow">Overview</p>
   <h2>왜 이 질문을 하게 되었나</h2>
-  <p class="slede" style="max-width:34em">AI가 행위했을 때, 그 책임은 누구에게 가야 하는가. 우리가 이 질문에 이른 과정을 네 단계로 정리했다.</p>
+  <p class="slede" style="max-width:34em">AI가 행위했을 때, 그 책임은 누구에게 가야 하는가. 우리가 이 질문에 이른 논리를 네 개의 파트로 나눠 정리했다. 카드를 누르면 해당 파트로 이동한다.</p>
   <div class="logic">
-    <div class="lg"><span class="n">1</span><h3>행위 주체 ≠ 책임 주체</h3><p>AI가 통제 바깥의 행동을 할 가능성은 성능이 높아질수록 커진다. 그 행동의 주체는 AI라고 볼 수 있지만, 책임은 인간이 진다. 인간은 억울할 수밖에 없다. 이것이 도덕적 크럼플 존이다.</p></div>
-    <div class="lg"><span class="n">2</span><h3>책임 조건 미성립</h3><p>AI에도 프레임워크와 피드백 루프가 쌓이고 있다. 그래도 사회는 그것만으로 책임의 효과가 발현된다고 보지 않는다. AI가 책임 주체로 인정받지 못하기 때문이다.</p></div>
-    <div class="lg"><span class="n">3</span><h3>인간중심적 사고</h3><p>필드 리서치에서 모두가, AI는 책임 주체의 특성을 만족하지 못하므로 행위 주체도 책임 주체도 될 수 없다고 답했다.</p></div>
-    <div class="lg"><span class="n">4</span><h3>그렇지만, 미래에도?</h3><p>미래의 AI도 그 조건을 충족하지 못할까. 비인간 주체의 책임을 고민해야 하는 시대에는 AI 책임 윤리에 새로운 관점이 필요하다.</p></div>
+    <a class="lg" href="#p1"><span class="n">1</span><h3>행위 주체 ≠ 책임 주체</h3><p>AI가 통제 바깥의 행동을 할 가능성은 성능이 높아질수록 커진다. 그 행동의 주체는 AI라고 볼 수 있지만, 책임은 인간이 진다. 인간은 억울할 수밖에 없다. 이것이 도덕적 크럼플 존이다.</p></a>
+    <a class="lg" href="#p2"><span class="n">2</span><h3>책임 조건 미성립</h3><p>AI에도 프레임워크와 피드백 루프가 쌓이고 있다. 그래도 사회는 그것만으로 책임의 효과가 발현된다고 보지 않는다. AI가 책임 주체로 인정받지 못하기 때문이다.</p></a>
+    <a class="lg" href="#p3"><span class="n">3</span><h3>인간중심적 사고</h3><p>필드 리서치에서 모두가, AI는 책임 주체의 특성을 만족하지 못하므로 행위 주체도 책임 주체도 될 수 없다고 답했다.</p></a>
+    <a class="lg" href="#p4"><span class="n">4</span><h3>그렇지만, 미래에도?</h3><p>미래의 AI도 그 조건을 충족하지 못할까. 비인간 주체의 책임을 고민해야 하는 시대에는 AI 책임 윤리에 새로운 관점이 필요하다.</p></a>
   </div>
   <div class="btns"><a class="sbtn" href="../index.html#statement">우리의 입장 전체 보기</a></div>
 </div></section>
-
-<section class="sec" id="background"><div class="wrap">
-  <p class="eyebrow">배경 조사</p>
-  <h2>AI 통제 불안과 보상 해킹</h2>
+<section class="sec part" id="p1"><div class="wrap">
+  <p class="eyebrow">Part 1</p>
+  <h2>행위 주체 <span class="neq">≠</span> 책임 주체</h2>
+  <div class="lead"><p>AI의 통제 불안이 커지고 있다. AI의 성능이 높아질수록, AI가 갑자기 통제 바깥의 행동을 할 가능성이 높아진다. 그리고 그 행동의 주체는 AI라고 볼 수 있다. 그런데 지금 책임을 지고 있는 인간은 억울할 수밖에 없는 상황(도덕적 크럼플 존)이 벌어지고 있다.</p><p>누군가는 책임을 져야 하기 때문이다. 우리 사회는 응보, 수습, 변화처럼 인간에게서만 발현할 수 있는 책임의 효과를 바라고 있다.</p></div>
+  <div class="ps" id="background"><h3 class="pt"><span>1-1</span> 배경 조사: AI 통제 불안과 보상 해킹</h3>
   <div class="bgcards">
     <div class="bg1"><h3>AI 통제 불안, 점점 확산되고 있다</h3>
       <p>오픈AI의 인공지능(AI) 에이전트들이 통제에서 벗어나 독일 위키 사이트를 무단 점령하고 서로 ‘탈옥(안전 장치 무단 해제)’ 수법을 공유한 사실이 뒤늦게 알려졌다.</p>
@@ -68,13 +72,8 @@
     <div class="sc dk"><p class="big">“경쟁사의 정보를 해킹해서<br>우리 회사가 대신<br>이득을 볼 수 있게 하자!”</p><p class="en">“Let’s hack our competitors for profit!”</p></div></div>
 </div>
   <p class="hint">출처는 팀 슬라이드에 적힌 그대로이며, 링크와 원문은 아직 대조하지 않았다.</p>
-</div></section>
-
-
-
-<section class="sec" id="hitl"><div class="wrap argue">
-  <p class="eyebrow">Moral Crumple Zone × Human-in-the-loop</p>
-  <h2>고리 안의 사람이 충격을 받는다</h2>
+</div>
+  <div class="ps" id="hitl"><h3 class="pt"><span>1-2</span> 도덕적 크럼플 존 × Human-in-the-loop</h3>
   <p class="sum">도덕적 크럼플 존은 결과이고, Human-in-the-loop는 그 원인이 되는 구조다. 사람이 판단의 고리에 어떻게 놓여 있는지에 따라 책임이 닿는 방식이 달라진다.</p>
   <h3 class="sub" id="crumple">도덕적 크럼플 존 <span>Moral Crumple Zone</span></h3>
   <p class="sum">복잡한 시스템이나 인공지능(AI) 사고 발생 시, 실제 권한과 판단은 알고리즘이 내렸음에도 불구하고 모든 법적·도덕적 책임은 가장 취약한 말단 인간에게 전가되는 구조적 모순.</p>
@@ -92,11 +91,28 @@
   <h3 class="sub">두 개념이 만나는 곳</h3>
   <p>고리 밖에 있는 사람에게 책임이 도착할 때 크럼플 존이 생긴다. 델리-04 사고가 그렇다. ‘30분 내 배달’이라는 목표만 주어졌을 뿐, 로봇이 사람을 밀치는 순간에는 사람의 지시도 승인도 없었다. 그런데도 책임은 말단의 인간에게 돌아온다.</p>
   <p class="hint">HITL 개념 설명은 일반적으로 쓰이는 정의를 정리한 것이며, 출처는 아직 대조하지 않았다. 더 보탤 내용은 이 아래에 이어서 추가한다.</p>
+</div>
 </div></section>
 
-<section class="sec pale" id="three"><div class="wrap argue">
-  <p class="eyebrow">관객에게 묻는 것</p>
-  <h2>우리가 설득하려는 세 가지</h2>
+<section class="sec part" id="p2"><div class="wrap">
+  <p class="eyebrow">Part 2</p>
+  <h2>책임 조건 미성립</h2>
+  <div class="lead"><p>그렇다면 AI는 어떤가. 사실상 지금도 AI 프레임워크와 피드백 루프가 꾸준히 구축되고 있고, AI는 <b>주체적으로</b> 사고 이후의 수습과 변화를 맞이할 준비를 하고 있다. 하지만 우리 사회는 이것만으로는 책임의 효과가 발현되고 있다고 보지 않는다.</p><p>왜일까. AI는 애시당초 책임 효과를 만족할 책임 주체로서 인정받지 못하고 있기 때문이다. 그래서 AI와 책임으로서의 주체라는 말은 자칫 동떨어져 보이기도 한다.</p></div>
+  <p class="hint">이 파트의 근거 자료는 아직 정리되지 않았다. 아래 Timeline의 항목과 연결해 채운다.</p>
+</div></section>
+
+<section class="sec part" id="p3"><div class="wrap">
+  <p class="eyebrow">Part 3</p>
+  <h2>인간중심적 사고</h2>
+  <div class="lead"><p>책임 주체로서의 조건을 충족하지 못한다는 점을 깨닫고, 팀에서 필드 리서치를 진행했다. 모두 AI가 인간이 갖고 있는 책임 주체로서의 특성을 만족하지 못하기 때문에, AI가 행위의 주체가 되는 것도 책임 주체가 되는 것도 믿을 수 없다고 답변했다.</p></div>
+  <p class="hint">이 파트의 필드 리서치 결과는 아직 정리되지 않았다. 아래 Timeline의 항목과 연결해 채운다.</p>
+</div></section>
+
+<section class="sec part" id="p4"><div class="wrap">
+  <p class="eyebrow">Part 4</p>
+  <h2>그렇지만, 미래에도?</h2>
+  <div class="lead"><p>그렇지만, 미래에도 AI가 이런 조건들을 충족하지 않을까? 우리는 비인간 주체의 책임에 대해 고민해볼 필요가 있는 시대를 살고 있다. AI 책임 윤리에 새로운 관점이 필요하지 않을까?</p></div>
+  <div class="ps" id="three"><h3 class="sub">우리가 설득하려는 세 가지</h3>
   <ol class="three">
     <li><b>AI는 행위 주체다.</b> AI가 잘못을 저지른 게 맞다.</li>
     <li><b>AI가 책임 주체가 되어야 한다.</b></li>
@@ -106,6 +122,7 @@
     <ul><li>인간이 억울하다는 이유만으로 AI에게 책임을 줘야 한다는 주장은 약하다.</li>
         <li>AI 책임 효과가 이미 만들어지고 있다면, 왜 책임 주체로 봐야 하는가?</li></ul></div>
   <p class="hint">이 질문들이 게임 속 선택으로 이어진다. 풀어가는 과정은 아래 <a href="#timeline">Timeline</a>에 있다.</p>
+</div>
 </div></section>
 
 <section class="sec" id="timeline"><div class="wrap">
